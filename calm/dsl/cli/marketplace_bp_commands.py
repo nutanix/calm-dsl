@@ -418,7 +418,14 @@ def publish_bp(
     "-p",
     "projects",
     multiple=True,
-    help="Projects for marketplace blueprint",
+    help="Add projects to marketplace blueprint",
+)
+@click.option(
+    "--remove-project",
+    "-rp",
+    "remove_projects",
+    multiple=True,
+    help="Remove projects from marketplace blueprint",
 )
 @click.option(
     "--all_projects",
@@ -427,7 +434,7 @@ def publish_bp(
     default=False,
     help="Approve bp to all projects",
 )
-def approve_bp(name, version, category, all_projects, projects=[]):
+def approve_bp(name, version, category, all_projects, projects=[], remove_projects=[]):
     """Approves a marketplace manager blueprint"""
 
     approve_marketplace_item(
@@ -437,6 +444,7 @@ def approve_bp(name, version, category, all_projects, projects=[]):
         category=category,
         all_projects=all_projects,
         type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
+        remove_projects=remove_projects,
     )
 
 
@@ -504,7 +512,16 @@ def _publish_marketplace_bp(name, version, category, source, all_projects, proje
     type=click.Choice(APP_SOURCES),
     help="App Source for marketplace blueprint",
 )
-def _update_marketplace_bp(name, version, category, projects, description, source):
+@click.option(
+    "--all_projects",
+    "-ap",
+    is_flag=True,
+    default=False,
+    help="Update marketplace blueprints with all projects",
+)
+def _update_marketplace_bp(
+    name, version, category, projects, description, source, all_projects
+):
     """Update a marketplace manager blueprint"""
 
     update_marketplace_item(
@@ -514,6 +531,7 @@ def _update_marketplace_bp(name, version, category, projects, description, sourc
         projects=projects,
         description=description,
         app_source=source,
+        all_projects=all_projects,
         type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
 
@@ -565,7 +583,7 @@ def _reject_marketplace_bp(name, version):
 @marketplace_unpublish.command("bp")
 @click.argument("name")
 @click.option(
-    "--version", "-v", required=True, help="Version of marketplace blueprint"
+    "--version", "-v", default=None, help="Version of marketplace blueprint"
 )  # Required to prevent unwanted unpublish of unknown mpi
 @click.option(
     "--source",
@@ -574,7 +592,27 @@ def _reject_marketplace_bp(name, version):
     type=click.Choice(APP_SOURCES),
     help="App Source of marketplace blueprint",
 )
-def _unpublish_marketplace_bp(name, version, source):
+@click.option(
+    "--project",
+    "-p",
+    "projects",
+    multiple=True,
+    help="Unpublishes bp from specific project",
+)
+@click.option(
+    "--all_versions",
+    "-av",
+    is_flag=True,
+    default=False,
+    help="Unpublishes bp from all version",
+)
+def _unpublish_marketplace_bp(name, version, source, all_versions, projects=[]):
     """Unpublish marketplace store blueprint"""
 
-    unpublish_marketplace_bp(name=name, version=version, app_source=source)
+    unpublish_marketplace_bp(
+        name=name,
+        version=version,
+        app_source=source,
+        projects=projects,
+        all_versions=all_versions,
+    )

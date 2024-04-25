@@ -59,7 +59,7 @@ DSL_K8S_VANILLA_ACCOUNT_SERVICE_ACCOUNT_AUTH_FILEPATH = (
     "tests/example_accounts/test_k8s_vanilla_account_service_account_auth.py"
 )
 DSL_VMWARE_ACCOUNT_FILEPATH = "tests/example_accounts/test_vmware_account.py"
-DSL_NDB_ACCOUNT_FILEPATH = "tests/example_accounts/test_ndb_account.py"
+DSL_NDB_ACCOUNT_FILEPATH = "tests/example_accounts/ndb_account.py"
 DSL_CREDENTIAL_PROVIDER_ACCOUNT_FILEPATH = (
     "tests/example_accounts/test_credential_provider_account.py"
 )
@@ -87,7 +87,7 @@ DSL_VMWARE_UPDATE_ACCOUNT_FILEPATH = (
     "tests/example_accounts/updated_accounts/test_update_vmware_account.py"
 )
 DSL_NDB_UPDATE_ACCOUNT_FILEPATH = (
-    "tests/example_accounts/updated_accounts/test_update_ndb_account.py"
+    "tests/example_accounts/updated_accounts/update_ndb_account.py"
 )
 DSL_CREDENTIAL_PROVIDER_UPDATE_ACCOUNT_FILEPATH = (
     "tests/example_accounts/updated_accounts/test_update_credential_provider_account.py"

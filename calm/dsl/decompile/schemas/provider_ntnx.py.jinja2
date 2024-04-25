@@ -1,0 +1,13 @@
+{% macro ntnx_provider(obj) %}
+    Provider.Ntnx(
+      {% if obj.account_reference %}account=Ref.Account("{{obj.account_reference}}"),{% endif %}
+      {% if obj.subnet_reference_list %}subnets=[
+      {%- for subnet in obj.subnet_reference_list %}
+        Ref.Subnet(
+          {% if subnet.name %}name="{{subnet.name}}"{% endif %}
+          {% if subnet.cluster %}, cluster="{{subnet.cluster}}"{% endif %}
+        ),{%- endfor %}
+      ],{% endif %}
+    ),
+{% endmacro %}
+{{ ntnx_provider(obj) }}

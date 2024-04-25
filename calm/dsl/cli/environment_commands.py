@@ -1,12 +1,13 @@
 import click
 
-from .main import get, delete, create, update, compile
+from .main import get, delete, create, update, compile, decompile
 from .environments import (
     create_environment_from_dsl_file,
     get_environment_list,
     delete_environment,
     update_environment_from_dsl_file,
     compile_environment_command,
+    decompile_environment_command,
 )
 
 from calm.dsl.log import get_logging_handle
@@ -23,6 +24,7 @@ LOG = get_logging_handle(__name__)
     default=None,
     help="Filter environments by this string",
 )
+@click.argument("name", required=False)
 @click.option("--limit", "-l", default=20, help="Number of results to return")
 @click.option(
     "--offset", "-s", default=0, help="Offset results by the specified amount"
@@ -81,14 +83,21 @@ def _delete_environment(environment_name, project_name, no_cache_update):
     default=False,
     help="if true, cache is not updated for project",
 )
-def _create_environment(env_file, env_name, project_name, no_cache_update):
+@click.option(
+    "--force",
+    "-fc",
+    is_flag=True,
+    default=False,
+    help="Deletes existing environment with the same name before create, if entities are not associated with it.",
+)
+def _create_environment(env_file, env_name, project_name, no_cache_update, force):
     """
     Creates a environment to existing project.
     """
 
     if env_file.endswith(".py"):
         create_environment_from_dsl_file(
-            env_file, env_name, project_name, no_cache_update
+            env_file, env_name, project_name, no_cache_update, force
         )
     else:
         LOG.error("Unknown file format {}".format(env_file))
@@ -149,3 +158,34 @@ def _compile_environment_command(env_file, project_name, out):
     """Compiles a DSL (Python) environment into JSON or YAML"""
 
     compile_environment_command(env_file, project_name, out)
+
+
+@decompile.command("environment", experimental=True)
+@click.option(
+    "--name",
+    "-n",
+    "name",
+    default=None,
+    help="Environment name",
+)
+@click.option(
+    "--file",
+    "-f",
+    "environment_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to Environment file",
+)
+@click.option("--project", "-p", "project_name", help="Project name")
+@click.option(
+    "--dir",
+    "-d",
+    "environment_dir",
+    default=None,
+    help="Environment directory location used for placing decompiled entities",
+)
+def _decompile_environment_command(
+    name, environment_file, project_name, environment_dir
+):
+    """Decompiles environment present on server or json file"""
+
+    decompile_environment_command(name, environment_file, project_name, environment_dir)

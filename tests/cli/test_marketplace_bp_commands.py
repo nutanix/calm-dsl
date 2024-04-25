@@ -1296,36 +1296,7 @@ class TestMarketplaceBPCommands:
             )
         LOG.info("Success")
 
-        # Delete the marketplace blueprint
-        LOG.info(
-            "Deleting marketplace blueprint {} with version {}".format(
-                self.marketplace_bp_name, self.mpi1_version
-            )
-        )
-        command = [
-            "delete",
-            "marketplace",
-            "bp",
-            self.marketplace_bp_name,
-            "--version",
-            self.mpi1_version,
-        ]
-
-        result = runner.invoke(cli, command)
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-            pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
-        LOG.info("Success")
+        self._delete_mpi()
 
     def test_publish_to_marketplace_flag(self):
         """Test for publish_to_marketplace_flag for publsh command"""
@@ -1408,34 +1379,7 @@ class TestMarketplaceBPCommands:
             )
             pytest.fail("Unpublishing of marketplace blueprint failed")
 
-        LOG.info(
-            "Deleting marketplace blueprint {} with version {} in ACCEPTED state".format(
-                self.marketplace_bp_name, self.mpi1_version
-            )
-        )
-        command = [
-            "delete",
-            "marketplace",
-            "bp",
-            self.marketplace_bp_name,
-            "--version",
-            self.mpi1_version,
-        ]
-
-        result = runner.invoke(cli, command)
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-            pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
+        self._delete_mpi()
 
     def test_auto_approve_flag(self):
         """Test for auto_approve flag in publish command"""
@@ -1447,7 +1391,6 @@ class TestMarketplaceBPCommands:
         )
         self.mpi1_version = "1.0.0"
 
-        # Publish Bp directly to marketplace using --publish_to_marketplace flag
         LOG.info(
             "Publishing Bp {} as new marketplace blueprint {}".format(
                 self.created_dsl_bp_name, self.marketplace_bp_name
@@ -1489,34 +1432,7 @@ class TestMarketplaceBPCommands:
         bp_state = mpi_data["status"]["resources"]["app_state"]
         assert bp_state == MARKETPLACE_ITEM.STATES.ACCEPTED
 
-        LOG.info(
-            "Deleting marketplace blueprint {} with version {} in ACCEPTED state".format(
-                self.marketplace_bp_name, self.mpi1_version
-            )
-        )
-        command = [
-            "delete",
-            "marketplace",
-            "bp",
-            self.marketplace_bp_name,
-            "--version",
-            self.mpi1_version,
-        ]
-
-        result = runner.invoke(cli, command)
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-            pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
+        self._delete_mpi()
 
     def test_publish_bp_with_icon(self):
         self._create_bp()
@@ -1525,7 +1441,7 @@ class TestMarketplaceBPCommands:
         self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(
             str(uuid.uuid4())[-10:]
         )
-        self.mpi_version = "1.0.0"
+        self.mpi1_version = "1.0.0"
         self.icon_name = "test_icon{}".format(str(uuid.uuid4())[:10])
 
         LOG.info("Publishing the blueprint to marketplace manager")
@@ -1534,7 +1450,7 @@ class TestMarketplaceBPCommands:
             "bp",
             self.created_dsl_bp_name,
             "--version",
-            self.mpi_version,
+            self.mpi1_version,
             "--name",
             self.marketplace_bp_name,
             "-f",
@@ -1565,43 +1481,17 @@ class TestMarketplaceBPCommands:
         app_icon_uuid = app_icon_name_uuid_map.get(self.icon_name)
 
         bp_data = get_mpi_by_name_n_version(
-            name=self.marketplace_bp_name, version=self.mpi_version
+            name=self.marketplace_bp_name, version=self.mpi1_version
         )
         icon_reference = bp_data["status"]["resources"]["icon_reference_list"][0][
             "icon_reference"
         ]
         assert icon_reference["uuid"] == app_icon_uuid, "App icon not used for the bp"
 
-        LOG.info(
-            "Deleting the marketplace blueprint {}".format(self.marketplace_bp_name)
-        )
-        result = runner.invoke(
-            cli,
-            [
-                "delete",
-                "marketplace",
-                "bp",
-                self.marketplace_bp_name,
-                "--version",
-                self.mpi_version,
-            ],
-        )
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-            pytest.fail("Deleting of marketplace blueprint failed")
+        self._delete_mpi()
 
     def test_all_projects_flag_on_publising_bp_with_auto_approve_flag(self):
-        """Tests `--all_projects` flag to publish bp to marketplace manager"""
+        """Tests `--all_projects` flag to publish bp to marketplace manager with auto approval flag"""
 
         client = get_api_client()
         self._create_bp()
@@ -1661,34 +1551,7 @@ class TestMarketplaceBPCommands:
         for _proj in project_name_uuid_map.keys():
             assert _proj in bp_projects
 
-        LOG.info(
-            "Deleting marketplace blueprint {} with version {} in ACCEPTED state".format(
-                self.marketplace_bp_name, self.mpi1_version
-            )
-        )
-        command = [
-            "delete",
-            "marketplace",
-            "bp",
-            self.marketplace_bp_name,
-            "--version",
-            self.mpi1_version,
-        ]
-
-        result = runner.invoke(cli, command)
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-            pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
+        self._delete_mpi()
 
     def test_all_projects_flag_on_approving_marketplace_bp(self):
         """Tests `--all_projects` flag to approving bp to marketplace manager"""
@@ -1785,34 +1648,7 @@ class TestMarketplaceBPCommands:
         for _proj in project_name_uuid_map.keys():
             assert _proj in bp_projects
 
-        LOG.info(
-            "Deleting marketplace blueprint {} with version {} in ACCEPTED state".format(
-                self.marketplace_bp_name, self.mpi1_version
-            )
-        )
-        command = [
-            "delete",
-            "marketplace",
-            "bp",
-            self.marketplace_bp_name,
-            "--version",
-            self.mpi1_version,
-        ]
-
-        result = runner.invoke(cli, command)
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-            pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
+        self._delete_mpi()
 
     def test_all_projects_flag_on_publishing_marketplace_bp(self):
         """Tests `--all_projects` flag for publishing bp to marketplace store"""
@@ -1937,7 +1773,31 @@ class TestMarketplaceBPCommands:
             pytest.fail("Unpublishing of marketplace blueprint to marketplace failed")
         LOG.info("Success")
 
-        # Delete the marketplace blueprint
+        self._delete_mpi()
+
+    def _test_app_delete(self, app_name):
+
+        runner = CliRunner()
+        self.app_helper._wait_for_non_busy_state(app_name)
+        LOG.info("Deleting App {} ".format(app_name))
+        result = runner.invoke(cli, ["delete", "app", app_name])
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Deletion of application '{}' failed".format(app_name))
+        LOG.info("App is deleted successfully")
+
+    def _delete_mpi(self):
+        runner = CliRunner()
         LOG.info(
             "Deleting marketplace blueprint {} with version {}".format(
                 self.marketplace_bp_name, self.mpi1_version
@@ -1966,14 +1826,39 @@ class TestMarketplaceBPCommands:
                 )
             )
             pytest.fail("Deletion of marketplace blueprint failed")
+
         LOG.info("Success")
 
-    def _test_app_delete(self, app_name):
+    def test_all_projects_flag_on_publising_bp_without_auto_approve_flag(self):
+        """Tests `--all_projects` flag to publish bp to marketplace manager without auto approval flag"""
 
+        client = get_api_client()
+        self._create_bp()
+        self.created_bp_list.append(self.created_dsl_bp_name)
+        self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(
+            str(uuid.uuid4())[-10:]
+        )
+        self.mpi1_version = "1.0.0"
+
+        # Publish Bp marketplace using --all_projects flag
+        LOG.info(
+            "Publishing Bp {} as new marketplace blueprint {} with 'all_projects' flag".format(
+                self.created_dsl_bp_name, self.marketplace_bp_name
+            )
+        )
+        command = [
+            "publish",
+            "bp",
+            self.created_dsl_bp_name,
+            "--version",
+            self.mpi1_version,
+            "--name",
+            self.marketplace_bp_name,
+            "--all_projects",
+        ]
         runner = CliRunner()
-        self.app_helper._wait_for_non_busy_state(app_name)
-        LOG.info("Deleting App {} ".format(app_name))
-        result = runner.invoke(cli, ["delete", "app", app_name])
+
+        result = runner.invoke(cli, command)
         if result.exit_code:
             cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
             LOG.debug(
@@ -1986,5 +1871,118 @@ class TestMarketplaceBPCommands:
                     "".join(traceback.format_tb(result.exc_info[2]))
                 )
             )
-            pytest.fail("Deletion of application '{}' failed".format(app_name))
-        LOG.info("App is deleted successfully")
+            pytest.fail("Publishing Bp using all_projects flag failed")
+        LOG.info("Success")
+
+        mpi_data = get_mpi_by_name_n_version(
+            name=self.marketplace_bp_name,
+            version=self.mpi1_version,
+            app_source=MARKETPLACE_ITEM.SOURCES.LOCAL,
+        )
+
+        project_name_uuid_map = client.project.get_name_uuid_map({"length": 250})
+
+        bp_projects = []
+        for _proj in mpi_data["spec"]["resources"]["project_reference_list"]:
+            bp_projects.append(_proj["name"])
+
+        for _proj in project_name_uuid_map.keys():
+            assert _proj in bp_projects
+
+        self._delete_mpi()
+
+    def test_project_removal_flag_on_approving_marketplace_bp(self):
+        """Tests `--remove-project` flag on approving bp to marketplace manager"""
+
+        project_name = "default"  # This project will be removed while approving
+        self._create_bp()
+        self.created_bp_list.append(self.created_dsl_bp_name)
+        self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(
+            str(uuid.uuid4())[-10:]
+        )
+        self.mpi1_version = "1.0.0"
+
+        # Publish Bp to marketplace manager as new marketplace blueprint with all projects
+        LOG.info(
+            "Publishing Bp {} as new marketplace blueprint {}".format(
+                self.created_dsl_bp_name, self.marketplace_bp_name
+            )
+        )
+        command = [
+            "publish",
+            "bp",
+            self.created_dsl_bp_name,
+            "--version",
+            self.mpi1_version,
+            "--name",
+            self.marketplace_bp_name,
+            "--all_projects",
+            "--with_secrets",
+        ]
+        runner = CliRunner()
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail(
+                "Publishing of marketplace blueprint as new marketplace item failed"
+            )
+
+        # Approve the blueprint
+        LOG.info(
+            "Approving marketplace blueprint {} with version {} and removing {} project".format(
+                self.marketplace_bp_name, self.mpi1_version, project_name
+            )
+        )
+        command = [
+            "approve",
+            "marketplace",
+            "bp",
+            self.marketplace_bp_name,
+            "--version",
+            self.mpi1_version,
+            "--remove-project",
+            project_name,
+        ]
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail(
+                "Approving of marketplace blueprint using remove-project flag failed"
+            )
+        LOG.info("Success")
+
+        mpi_data = get_mpi_by_name_n_version(
+            name=self.marketplace_bp_name,
+            version=self.mpi1_version,
+            app_source=MARKETPLACE_ITEM.SOURCES.LOCAL,
+        )
+
+        bp_projects = []
+        for _proj in mpi_data["spec"]["resources"]["project_reference_list"]:
+            bp_projects.append(_proj["name"])
+
+        assert project_name not in bp_projects
+
+        self._delete_mpi()

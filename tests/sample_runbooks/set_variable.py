@@ -19,11 +19,11 @@ endpoint = Endpoint.Linux.ip([VM_IP], cred=Cred)
 def DslSetVariableTask(endpoints=[endpoint], default=False):
     "Runbook example with Set Variable Tasks"
 
-    Task.SetVariable.escript(script="print 'var1=test'", variables=["var1"])
+    Task.SetVariable.escript.py3(script="print('var1=test')", variables=["var1"])
     Task.SetVariable.ssh(
         filename="scripts/sample_script.sh", variables=["var2"], target=endpoints[0]
     )
-    Task.Exec.escript(script="print '@@{var1}@@ @@{var2}@@'")
+    Task.Exec.escript.py3(script="print('@@{var1}@@ @@{var2}@@')")
 
 
 def main():

@@ -3,6 +3,7 @@ from .entity import EntityType, Entity
 from calm.dsl.log import get_logging_handle
 from .validator import PropertyValidator
 from calm.dsl.constants import ENTITY
+from .utils import is_compile_secrets
 
 LOG = get_logging_handle(__name__)
 
@@ -16,8 +17,9 @@ class AhvAccountType(EntityType):
     def compile(cls):
         cdict = super().compile()
 
+        pswd = cdict.pop("password", "")
         cdict["password"] = {
-            "value": cdict.pop("password", ""),
+            "value": pswd if is_compile_secrets() else "",
             "attrs": {"is_secret_modified": True},
         }
 

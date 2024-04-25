@@ -7,11 +7,11 @@ from calm.dsl.runbooks import runbook, runbook_json
 from calm.dsl.runbooks import RunbookTask as Task, RunbookVariable as Variable
 
 
-code = """print "Hello @@{user_name}@@"
-print "Your Password is @@{password}@@"
-print "Date you selected is @@{date}@@"
-print "Time selected is @@{time}@@"
-print "User selected is @@{user}@@"
+code = """print("Hello @@{user_name}@@")
+print("Your Password is @@{password}@@")
+print("Date you selected is @@{date}@@")
+print("Time selected is @@{time}@@")
+print("User selected is @@{user}@@")
 """
 
 
@@ -30,7 +30,7 @@ def DslInputRunbook():
             ),
         ],
     )
-    Task.Exec.escript(name="Exec_Task", script=code)
+    Task.Exec.escript.py3(name="Exec_Task", script=code)
 
 
 def main():

@@ -5,7 +5,7 @@ from calm.dsl.decompile.ref_dependency import (
     get_service_name,
     get_endpoint_name,
     get_profile_name,
-    get_substrate_name,
+    get_entity_gui_dsl_name,
 )
 from calm.dsl.decompile.ref_dependency import get_package_name, get_deployment_name
 
@@ -35,7 +35,7 @@ def render_ref_template(cls):
         if cls_name:
             user_attrs["name"] = cls_name
     elif kind == "app_substrate":
-        cls_name = get_substrate_name(user_attrs["name"])
+        cls_name = get_entity_gui_dsl_name(user_attrs["name"])
         if cls_name:
             user_attrs["name"] = cls_name
     elif kind == "app_blueprint_deployment":

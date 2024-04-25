@@ -83,6 +83,7 @@ def get_escript_version_status(escript):
 
 
 @pytest.mark.escript
+@pytest.mark.nightly_380
 class TestEscript:
     @pytest.mark.parametrize(
         "escript, parallel_count",

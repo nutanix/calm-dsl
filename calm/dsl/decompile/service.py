@@ -9,7 +9,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_service_template(cls, secrets_dict=[]):
+def render_service_template(cls, secrets_dict=[], endpoints=[], ep_list=[]):
 
     LOG.debug("Rendering {} service template".format(cls.__name__))
     if not isinstance(cls, ServiceType):
@@ -66,7 +66,12 @@ def render_service_template(cls, secrets_dict=[]):
 
     for entity in user_attrs.get("actions", []):
         rendered_txt = render_action_template(
-            entity, entity_context, context=context, secrets_dict=secrets_dict
+            entity,
+            entity_context,
+            context=context,
+            secrets_dict=secrets_dict,
+            endpoints=endpoints,
+            ep_list=ep_list,
         )
         if rendered_txt:
             action_list.append(rendered_txt)

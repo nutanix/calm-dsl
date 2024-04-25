@@ -9,9 +9,10 @@ from calm.dsl.log import get_logging_handle
 from calm.dsl.config import get_context
 
 LOG = get_logging_handle(__name__)
+COMPILE_WITH_SECRETS = True
 
 
-def read_file(filename, depth=1):
+def read_file(filename, depth=1, default=None):
     """reads the file"""
 
     if not filename:
@@ -24,8 +25,18 @@ def read_file(filename, depth=1):
     )
 
     if not file_exists(file_path):
-        LOG.debug("file {} not found at location {}".format(filename, file_path))
-        raise ValueError("file {} not found".format(filename))
+        if default is None:
+            raise ValueError(
+                "file {} not found at location {}, no default value provided".format(
+                    filename, file_path
+                )
+            )
+        LOG.warning(
+            "file {} not found at location {}, using default value {}".format(
+                filename, file_path, default
+            )
+        )
+        return default
 
     with open(file_path, "r") as data:
         return data.read()
@@ -107,7 +118,7 @@ def file_exists(file_path):
     return os.path.exists(file_path)
 
 
-def read_local_file(filename):
+def read_local_file(filename, default=None):
     file_path = os.path.join(".local", filename)
 
     # Checking if file exists
@@ -120,7 +131,9 @@ def read_local_file(filename):
         ContextObj = get_context()
         init_data = ContextObj.get_init_config()
         file_path = os.path.join(init_data["LOCAL_DIR"]["location"], filename)
-        return read_file(file_path, 0).rstrip()  # To remove \n, use rstrip
+        return read_file(
+            file_path, 0, default=default
+        ).rstrip()  # To remove \n, use rstrip
 
     return read_file(file_path, depth=2)
 
@@ -152,3 +165,12 @@ def get_valid_identifier(data=None):
         data = "_{}".format(data)
 
     return data
+
+
+def set_compile_secrets_flag(compile_with_secrets):
+    global COMPILE_WITH_SECRETS
+    COMPILE_WITH_SECRETS = compile_with_secrets
+
+
+def is_compile_secrets():
+    return COMPILE_WITH_SECRETS

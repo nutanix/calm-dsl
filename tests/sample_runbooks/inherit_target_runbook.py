@@ -21,9 +21,9 @@ def DslInheritTargetRunbook():
     ) as d:
 
         if d.ok:
-            Task.Exec.escript(
+            Task.Exec.escript.py3(
                 name="Task1",
-                script="print 'Decision Task is Successful'",
+                script="print('Decision Task is Successful')",
                 inherit_target=True,
             )
 

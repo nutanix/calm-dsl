@@ -1,0 +1,56 @@
+    {
+        "critical": false,
+        "type": "user",
+        "uuid": "bbcf9a71-54bf-8fcf-3c3a-29f57fc80a3a",
+        "runbook": {
+            "main_task_local_reference": {
+                "kind": "app_task",
+                "uuid": "876c5e1c-91be-2e8a-feca-b99d7799365c"
+            },
+            "task_definition_list": [
+                {
+                    "target_any_local_reference": {
+                        "kind": "app_service",
+                        "uuid": "647a0917-e340-76a0-7fd4-9a8c5f1d8262"
+                    },
+                    "uuid": "876c5e1c-91be-2e8a-feca-b99d7799365c",
+                    "child_tasks_local_reference_list": [
+                        {
+                            "kind": "app_task",
+                            "uuid": "d3604aea-d534-42ad-7629-0ff7e851a038"
+                        }
+                    ],
+                    "attrs": {
+                        "edges": []
+                    },
+                    "type": "DAG",
+                    "variable_list": [],
+                    "name": "2902ea52_dag"
+                },
+                {
+                    "target_any_local_reference": {
+                        "kind": "app_service",
+                        "uuid": "647a0917-e340-76a0-7fd4-9a8c5f1d8262"
+                    },
+                    "uuid": "d3604aea-d534-42ad-7629-0ff7e851a038",
+                    "exec_target_reference": {
+                        "kind": "app_endpoint",
+                        "uuid": "c1b409e3-3135-42d6-615c-2d4c0361f43b",
+                        "name": "ep2"
+                    },
+                    "child_tasks_local_reference_list": [],
+                    "attrs": {
+                        "script_type": "sh",
+                        "script": "echo \"Hello\""
+                    },
+                    "type": "EXEC",
+                    "variable_list": [],
+                    "name": "Task1"
+                }
+            ],
+            "name": "ed5765cd_runbook",
+            "variable_list": [],
+            "uuid": "5e0b93bd-b871-cafb-8750-15378cd2d18d"
+        },
+        "name": "action1"
+    }

@@ -11,9 +11,12 @@ from .metadata_payload import get_metadata_obj
 from .helper import common as common_helper
 
 from calm.dsl.config import get_context
-from calm.dsl.constants import CACHE, PROVIDER_ACCOUNT_TYPE_MAP
+from calm.dsl.constants import CACHE, PROVIDER_ACCOUNT_TYPE_MAP, SUBSTRATE
 from calm.dsl.store import Cache
 from calm.dsl.store import Version
+from .task import dag, vm_power_action_task, check_login
+from .action import runbook_create, _action_create
+from calm.dsl.constants import SUBSTRATE, READINESS_PROBE
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -41,8 +44,13 @@ class SubstrateType(EntityType):
 
     ALLOWED_FRAGMENT_ACTIONS = {
         "__pre_create__": "pre_action_create",
+        "__post_create__": "post_action_create",
         "__post_delete__": "post_action_delete",
     }
+
+    ALLOWED_SYSTEM_ACTIONS = SUBSTRATE.VM_POWER_ACTIONS
+
+    ALLOWED_SYSTEM_ACTIONS_REV = SUBSTRATE.VM_POWER_ACTIONS_REV
 
     def get_profile_environment(cls):
         """returns the profile environment, if substrate has been defined in blueprint file"""
@@ -55,7 +63,8 @@ class SubstrateType(EntityType):
                     if cls_deployment.substrate.name != str(cls):
                         continue
 
-                    environment = getattr(cls_profile, "environment", {})
+                    profile_envs = getattr(cls_profile, "environments", [])
+                    environment = profile_envs[0].get_dict() if profile_envs else dict()
                     if environment:
                         LOG.debug(
                             "Found environment {} associated to app-profile {}".format(
@@ -113,21 +122,7 @@ class SubstrateType(EntityType):
         # If substrate is defined in blueprint file
         cls_bp = common_helper._walk_to_parent_with_given_type(cls, "BlueprintType")
         if cls_bp:
-            environment = {}
-            for cls_profile in cls_bp.profiles:
-                for cls_deployment in cls_profile.deployments:
-                    if cls_deployment.substrate.name != str(cls):
-                        continue
-
-                    profile_envs = getattr(cls_profile, "environments", [])
-                    environment = profile_envs[0].get_dict() if profile_envs else dict()
-                    if environment:
-                        LOG.debug(
-                            "Found environment {} associated to app-profile {}".format(
-                                environment.get("name"), cls_profile
-                            )
-                        )
-                    break
+            environment = cls.get_profile_environment()
 
             # If environment is given at profile level
             if environment:
@@ -554,10 +549,30 @@ class SubstrateType(EntityType):
         if "__name__" in cdict:
             cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
 
+        # Removing system defined vm power actions as they are not needed in decompile
+        deleted_actions = []
+        for action in cdict["action_list"]:
+            if action["name"] in list(SUBSTRATE.VM_POWER_ACTIONS_REV.keys()):
+                deleted_actions.append(action)
+
+        for action in deleted_actions:
+            cdict["action_list"].remove(action)
+
         return cdict
 
     @classmethod
     def decompile(mcls, cdict, context=[], prefix=""):
+        def make_empty_runbook(action_name):
+            suffix = getattr(cls, "name", "") or cls.__name__
+            user_dag = dag(
+                name="DAG_Task_for_Service_{}_{}".format(suffix, action_name),
+                target=cls.get_task_target(),
+            )
+            return runbook_create(
+                name="Runbook_for_Service_{}_{}".format(suffix, action_name),
+                main_task_local_reference=user_dag.get_ref(),
+                tasks=[user_dag],
+            )
 
         if cdict["type"] == "K8S_POD":
             LOG.error("Decompilation support for pod deployments is not available.")
@@ -572,10 +587,121 @@ class SubstrateType(EntityType):
 
             cls.provider_spec = vm_cls
 
+        # Checking if power on actions are included in decompiled blueprint
+        compulsory_actions = list(cls.ALLOWED_SYSTEM_ACTIONS.values())
+        for action_obj in cls.actions:
+            if action_obj.__name__ in compulsory_actions:
+                compulsory_actions.remove(action_obj.__name__)
+
+        # Adding power on actions (if absent) to include in decompiled blueprint
+        # necessary to create default vm power action after decompile.
+        for action_name in compulsory_actions:
+            user_action = _action_create(
+                **{
+                    "name": action_name,
+                    "description": "",
+                    "critical": True,
+                    "type": "system",
+                    "runbook": make_empty_runbook(action_name),
+                }
+            )
+            cls.actions.append(user_action)
+
         return cls
 
     def get_task_target(cls):
         return cls.get_ref()
+
+    def get_service_target(cls):
+        """Deployment couples substrate with services.
+        This helper finds target service for a substrate"""
+
+        # profiles clone same services therefore reading deployment from first profile
+        deployments = cls.__parent__.profiles[0].deployments
+        for deployment in deployments:
+            # finding which deployment couples this substrate with service
+            if cls is deployment.substrate.__self__:
+                # getting target service for this substrate
+                service_target = deployment.get_service_ref()
+                # returning target service for this substrate
+                return service_target
+
+        # if no service found return None
+        return None
+
+    def create_power_action_runbook(cls, action_name):
+
+        # Taking default readiness probe as system vm power actions have default check login only
+        readiness_probe_dict = readiness_probe().compile()
+        provider = "AHV_VM" if not hasattr(cls, "provider_type") else cls.provider_type
+
+        if provider in READINESS_PROBE.ADDRESS:
+            readiness_probe_dict["address"] = READINESS_PROBE.ADDRESS[provider]
+        else:
+            raise NotImplementedError(
+                "vm power action not implemented for {}".format(provider)
+            )
+
+        suffix = getattr(cls, "name", "") or cls.__name__
+        tasks = []
+        edges = []
+        if action_name == SUBSTRATE.POWER_ON:
+            tasks.append(
+                vm_power_action_task(
+                    action_name=action_name,
+                    provider=provider,
+                    target=cls.get_task_target(),
+                )
+            )
+            tasks.append(
+                check_login(
+                    readiness_probe=readiness_probe_dict, target=cls.get_task_target()
+                )
+            )
+            edges.append((tasks[0].get_ref(), tasks[1].get_ref()))
+        elif action_name == SUBSTRATE.POWER_OFF:
+            tasks.append(
+                vm_power_action_task(
+                    action_name=action_name,
+                    provider=provider,
+                    target=cls.get_task_target(),
+                )
+            )
+        elif action_name == SUBSTRATE.RESTART:
+            tasks.append(
+                vm_power_action_task(
+                    action_name=action_name,
+                    provider=provider,
+                    target=cls.get_task_target(),
+                )
+            )
+            tasks.append(
+                check_login(
+                    readiness_probe=readiness_probe_dict, target=cls.get_task_target()
+                )
+            )
+            edges.append((tasks[0].get_ref(), tasks[1].get_ref()))
+        elif action_name == SUBSTRATE.CHECK_LOGIN:
+            tasks.append(
+                check_login(
+                    readiness_probe=readiness_probe_dict, target=cls.get_task_target()
+                )
+            )
+        else:
+            LOG.error("Unsupported vm action supplied {}".format(action_name))
+
+        user_dag = dag(
+            name="DAG_Task_for_Substrate_{}_{}".format(suffix, action_name),
+            target=cls.get_task_target(),
+            child_tasks=tasks,
+            edges=edges,
+        )
+        tasks.insert(0, user_dag)
+        return runbook_create(
+            name="Runbook_for_Substrate_{}_{}".format(suffix, action_name),
+            main_task_local_reference=user_dag.get_ref(),
+            tasks=tasks,
+        )
 
 
 class SubstrateValidator(PropertyValidator, openapi_type="app_substrate"):

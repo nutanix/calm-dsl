@@ -72,12 +72,12 @@ def _set_quota_state(client, state, quota_entities):
     """
     spec = generate_quota_state_spec(state=state, quota_entities=quota_entities)
 
-    LOG.info("Spec sent for set quota state: {}".format(spec))
+    LOG.debug("Spec sent for set quota state: {}".format(spec))
 
     try:
         res, err = client.quotas.update_state(payload=spec)
         res = res.json()
-        LOG.info("Response from function call {}".format(res))
+        LOG.debug("Response from function call {}".format(res))
 
         if (
             isinstance(res, dict)
@@ -118,12 +118,12 @@ def _get_quota(client, quota_entities):
     """
     spec = generate_get_quota_spec(quota_entities=quota_entities)
 
-    LOG.info("Spec sent for get quota: {}".format(spec))
+    LOG.debug("Spec sent for get quota: {}".format(spec))
 
     try:
         res, err = client.quotas.list(payload=spec)
         res = res.json()
-        LOG.info("Response from function call {}".format(res))
+        LOG.debug("Response from function call {}".format(res))
 
         if isinstance(res, dict):
             return res, None
@@ -150,12 +150,12 @@ def _get_quota_uuid(res):
             res["entities"][0].get("status", {}).get("resources", {}).get("uuid")
         )
 
-    LOG.info("Quota Uuid {} ".format(quota_uuid))
+    LOG.debug("Quota Uuid {} ".format(quota_uuid))
 
     if quota_uuid:
         return quota_uuid, None
     else:
-        LOG.info("Quota is not set: {0}".format(res))
+        LOG.debug("Quota is not set: {0}".format(res))
         return None, "Quota is not set: {0}".format(res)
 
 
@@ -252,11 +252,11 @@ def _create_quota(client, quota, project_uuid, quota_entities, quota_uuid=None):
     )
 
     try:
-        LOG.info("Spec sent for creating quota: {}".format(spec))
+        LOG.debug("Spec sent for creating quota: {}".format(spec))
 
         res, err = client.quotas.create(payload=spec)
         res = res.json()
-        LOG.info("Response from function call {}".format(res))
+        LOG.debug("Response from function call {}".format(res))
 
         if isinstance(res, dict) and res.get("status", {}).get("state") == "SUCCESS":
             return res, None
@@ -349,11 +349,11 @@ def _set_quota(client, quota, project_uuid, quota_uuid, quota_entities):
         quota_entities=quota_entities,
     )
     try:
-        LOG.info("Spec sent for set quota: {}".format(spec))
+        LOG.debug("Spec sent for set quota: {}".format(spec))
 
         res, err = client.quotas.update(payload=spec, quota_uuid=quota_uuid)
 
-        LOG.info("Response from function call {}".format(res))
+        LOG.debug("Response from function call {}".format(res))
 
         if not err:
             return res, None
@@ -398,3 +398,46 @@ def set_quota_at_project(client, quota, project_uuid, quota_uuid, quota_entities
         quota=quota,
         quota_entities=quota_entities,
     )
+
+
+def read_quota_resources(client, project_name, quota_entities):
+    """
+    This routine returns quota resources at project level
+    Args:
+        project_name(str): Valid project name
+        quota_entities(dict): Contains quota entity (project)
+    Returns:
+        quota_resources(dict): Details of quota, if fetched, or empty dictionary
+    """
+    quota_resources = {}
+    quota_uuid, _ = get_quota_uuid_at_project(
+        client=client, quota_entities=quota_entities
+    )
+    if not quota_uuid:
+        LOG.info(
+            "Quota is either disabled or not set for project {}".format(project_name)
+        )
+    else:
+        res, err = _get_quota(client=client, quota_entities=quota_entities)
+        LOG.debug("Quota API response: res:{}, err:{}".format(res, err))
+        if res and res.get("entities") and len(res["entities"]):
+            state = (
+                res["entities"][0]
+                .get("status", {})
+                .get("resources", {})
+                .get("state", {})
+            )
+
+            # Returning empty quota_resources if quota is disabled
+            if state == QUOTA.STATE.DISABLED:
+                LOG.info("Quota is disabled for project {}".format(project_name))
+            else:
+                quota_resources = (
+                    res["entities"][0]
+                    .get("status", {})
+                    .get("resources", {})
+                    .get("data", {})
+                )
+                LOG.debug("Quota resources read: {} ".format(quota_resources))
+
+    return quota_resources

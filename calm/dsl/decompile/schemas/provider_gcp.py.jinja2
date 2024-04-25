@@ -1,0 +1,6 @@
+{% macro gcp_provider(obj) %}
+    Provider.Gcp(
+         {% if obj.account_reference %}account=Ref.Account("{{obj.account_reference}}"),{% endif %}
+    ),
+{% endmacro %}
+{{ gcp_provider(obj) }}

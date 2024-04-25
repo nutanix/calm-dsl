@@ -5,6 +5,7 @@ from .entity import EntityType, Entity
 from calm.dsl.log import get_logging_handle
 from .validator import PropertyValidator
 from calm.dsl.constants import ENTITY
+from .utils import is_compile_secrets
 
 LOG = get_logging_handle(__name__)
 
@@ -55,7 +56,10 @@ class VmwareAccountType(EntityType):
         cdict = super().compile()
 
         password = cdict.pop("password", "")
-        cdict["password"] = {"attrs": {"is_secret_modified": True}, "value": password}
+        cdict["password"] = {
+            "attrs": {"is_secret_modified": True},
+            "value": password if is_compile_secrets() else "",
+        }
 
         price_items = cdict.pop("price_items", {})
         if price_items:

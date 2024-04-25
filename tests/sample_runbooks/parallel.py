@@ -8,28 +8,28 @@ from calm.dsl.runbooks import runbook, runbook_json
 from calm.dsl.runbooks import RunbookTask as Task
 
 
-code = '''print "Start"
+code = """print("Start")
 sleep(20)
-print "End"'''
+print("End")"""
 
 
 @runbook
 def DslParallelRunbook():
     "Runbook example for running tasks in parallel"
 
-    Task.Exec.escript(name="root", script=code)
+    Task.Exec.escript.py3(name="root", script=code)
     with parallel() as p:
 
         with branch(p):
-            Task.Exec.escript(name="Task1", script=code)
+            Task.Exec.escript.py3(name="Task1", script=code)
 
         with branch(p):
-            Task.Exec.escript(name="Task2", script=code)
-            Task.Exec.escript(name="Task3", script=code)
+            Task.Exec.escript.py3(name="Task2", script=code)
+            Task.Exec.escript.py3(name="Task3", script=code)
 
         with branch(p):
-            Task.Exec.escript(name="Task4", script=code)
-            Task.Exec.escript(name="Task5", script=code)
+            Task.Exec.escript.py3(name="Task4", script=code)
+            Task.Exec.escript.py3(name="Task5", script=code)
 
 
 def main():

@@ -1,0 +1,154 @@
+{
+  "status": {
+    "state": "COMPLETE",
+    "execution_context": {
+      "task_uuid": [""]
+    },
+    "name": "test_dsl_decompile",
+    "resources": {
+      "account_reference_list": [
+        { "kind": "account", "uuid": "" }
+      ],
+      "resource_domain": { "resources": [] },
+      "directory_reference_list": [],
+      "enable_directory_and_identity_provider_shortlist": false,
+      "identity_providers_reference_list": [],
+      "user_reference_list": [
+        {
+          "kind": "user",
+          "name": "",
+          "uuid": ""
+        }
+      ],
+      "default_subnet_reference": {
+        "kind": "subnet",
+        "uuid": ""
+      },
+      "environment_reference_list": [
+        {
+          "kind": "environment",
+          "uuid": ""
+        },
+        {
+          "kind": "environment",
+          "uuid": ""
+        },
+        {
+          "kind": "environment",
+          "uuid": ""
+        },
+        {
+          "kind": "environment",
+          "uuid": ""
+        },
+        {
+          "kind": "environment",
+          "uuid": ""
+        }
+      ],
+      "is_default": false,
+      "tunnel_reference_list": [],
+      "external_user_group_reference_list": [],
+      "default_environment_reference": {
+        "kind": "environment",
+        "uuid": ""
+      },
+      "subnet_reference_list": [
+        {
+          "kind": "subnet",
+          "name": "",
+          "uuid": ""
+        }
+      ],
+      "cluster_reference_list": [
+        { "kind": "cluster", "uuid": "" }
+      ],
+      "vpc_reference_list": [],
+      "external_network_list": []
+    },
+    "description": ""
+  },
+  "spec": {
+    "name": "test_dsl_decompile",
+    "resources": {
+      "account_reference_list": [
+        { "kind": "account", "uuid": "" }
+      ],
+      "resource_domain": { "resources": [] },
+      "directory_reference_list": [],
+      "enable_directory_and_identity_provider_shortlist": false,
+      "default_subnet_reference": {
+        "kind": "subnet",
+        "uuid": ""
+      },
+      "user_reference_list": [
+        {
+          "kind": "user",
+          "name": "",
+          "uuid": ""
+        }
+      ],
+      "identity_providers_reference_list": [],
+      "environment_reference_list": [
+        {
+          "kind": "environment",
+          "uuid": ""
+        },
+        {
+          "kind": "environment",
+          "uuid": ""
+        },
+        {
+          "kind": "environment",
+          "uuid": ""
+        },
+        {
+          "kind": "environment",
+          "uuid": ""
+        },
+        {
+          "kind": "environment",
+          "uuid": ""
+        }
+      ],
+      "tunnel_reference_list": [],
+      "external_user_group_reference_list": [],
+      "cluster_reference_list": [
+        { "kind": "cluster", "uuid": "" }
+      ],
+      "subnet_reference_list": [
+        {
+          "kind": "subnet",
+          "name": "",
+          "uuid": ""
+        }
+      ],
+      "vpc_reference_list": [],
+      "external_network_list": [],
+      "default_environment_reference": {
+        "kind": "environment",
+        "uuid": ""
+      }
+    }
+  },
+  "api_version": "3.1",
+  "metadata": {
+    "last_update_time": "2023-11-24T11:48:20Z",
+    "kind": "project",
+    "uuid": "",
+    "project_reference": {
+      "kind": "project",
+      "name": "test_dsl_decompile",
+      "uuid": ""
+    },
+    "creation_time": "2023-11-03T11:00:05Z",
+    "spec_version": 14,
+    "categories_mapping": {},
+    "owner_reference": {
+      "kind": "user",
+      "uuid": "",
+      "name": "admin"
+    },
+    "categories": {}
+  }
+}

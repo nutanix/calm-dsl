@@ -1,4 +1,5 @@
 import copy
+import sys
 
 from calm.dsl.log import get_logging_handle
 
@@ -122,6 +123,37 @@ def strip_secrets(
                     not_stripped_secrets.append(
                         (path_list + [field_name, var_idx], variable["value"])
                     )
+            # For dynamic variables having http task with auth
+            opts = variable.get("options", None)
+            auth = None
+            if opts:
+                attrs = opts.get("attrs", None)
+                if attrs:
+                    auth = attrs.get("authentication", None)
+            if auth and auth.get("auth_type") == "basic":
+                basic_auth = auth.get("basic_auth")
+                username = basic_auth.get("username")
+                password = basic_auth.pop("password")
+                secret_variables.append(
+                    (
+                        path_list
+                        + [
+                            field_name,
+                            var_idx,
+                            "options",
+                            "attrs",
+                            "authentication",
+                            "basic_auth",
+                            "password",
+                        ],
+                        password.get("value", None),
+                        username,
+                    )
+                )
+                basic_auth["password"] = {
+                    "value": None,
+                    "attrs": {"is_secret_modified": False},
+                }
 
     def strip_action_secret_variables(path_list, obj):
 
@@ -259,8 +291,10 @@ def strip_secrets(
             elif task.get("type", None) != "HTTP":
                 continue
             auth = (task.get("attrs", {}) or {}).get("authentication", {}) or {}
+            if auth.get("auth_type", None) == "basic":
+                path_list = path_list + ["runbook"]
+
             path_list = path_list + [
-                "runbook",
                 "task_definition_list",
                 task_idx,
                 "attrs",
@@ -271,15 +305,14 @@ def strip_secrets(
                 path_list, task.get("attrs", {}) or {}, context=var_task_context
             )
 
-            if auth.get("auth_type", None) == "basic":
-                if not (task.get("attrs", {}) or {}).get("headers", []) or []:
-                    continue
-                strip_entity_secret_variables(
-                    path_list,
-                    task["attrs"],
-                    field_name="headers",
-                    context=var_task_context + ".headers",
-                )
+            if not (task.get("attrs", {}) or {}).get("headers", []) or []:
+                continue
+            strip_entity_secret_variables(
+                path_list,
+                task["attrs"],
+                field_name="headers",
+                context=var_task_context + ".headers",
+            )
 
     def strip_authentication_secret_variables(path_list, obj, context=""):
 
@@ -344,31 +377,34 @@ def strip_vmware_secrets(
     obj = obj["create_spec"]["resources"]["guest_customization"]
     vmware_secrets_context = "create_spec.resources.guest_customization.windows_data"
 
-    if "windows_data" in obj:
+    if obj.get("windows_data", {}):
         path_list.append("windows_data")
         obj = obj["windows_data"]
+        if not obj:
+            return
+
         vmware_secrets_admin_context = (
             vmware_secrets_context
-            + obj["windows_data"]
+            + "windows_data"
             + ".password."
-            + obj["password"]["name"]
+            + obj["password"].get("name", "")
         )
         filtered_decompiled_vmware_secrets = get_secrets_from_context(
             decompiled_secrets, vmware_secrets_admin_context
         )
 
         # Check for admin_password
-        if "password" in obj:
+        if obj.get("password", {}):
             if is_secret_modified(
                 filtered_decompiled_vmware_secrets,
-                obj["password"]["name"],
-                obj["password"]["value"],
+                obj["password"].get("name", ""),
+                obj["password"].get("value", None),
             ):
                 secret_variables.append(
                     (
                         path_list + ["password"],
                         obj["password"].pop("value", ""),
-                        obj["password"]["name"],
+                        obj["password"].get("name", ""),
                     )
                 )
                 obj["password"]["attrs"] = {
@@ -377,26 +413,26 @@ def strip_vmware_secrets(
                 }
             else:
                 not_stripped_secrets.append(
-                    (path_list + ["password"], obj["password"]["value"])
+                    (path_list + ["password"], obj["password"].get("value", ""))
                 )
-
-        vmware_secrets_domain_context = (
-            vmware_secrets_context
-            + obj["windows_data"]
-            + ".domain_password."
-            + obj["domain_password"]
-        )
-        filtered_decompiled_vmware_secrets = get_secrets_from_context(
-            decompiled_secrets, vmware_secrets_domain_context
-        )
 
         # Now check for domain password
         if obj.get("is_domain", False):
-            if "domain_password" in obj:
+            if obj.get("domain_password", {}):
+                vmware_secrets_domain_context = (
+                    vmware_secrets_context
+                    + "windows_data"
+                    + ".domain_password."
+                    + obj["domain_password"].get("name", "")
+                )
+
+                filtered_decompiled_vmware_secrets = get_secrets_from_context(
+                    decompiled_secrets, vmware_secrets_domain_context
+                )
                 if is_secret_modified(
                     filtered_decompiled_vmware_secrets,
-                    obj["domain_password"]["name"],
-                    obj["domain_password"]["value"],
+                    obj["domain_password"].get("name", ""),
+                    obj["domain_password"].get("value", None),
                 ):
                     secret_variables.append(
                         (
@@ -466,3 +502,369 @@ def patch_secrets(resources, secret_map, secret_variables, existing_secrets=[]):
                 variable["value"] = secret
 
     return resources
+
+
+def _create_task_name_substrate_map(bp_payload, entity_type, **kwargs):
+    vm_power_action_uuid_substrate_map = kwargs.get(
+        "vm_power_action_uuid_substrate_map", {}
+    )
+    task_name_substrate_map = kwargs.get("task_name_substrate_map", {})
+
+    entity_list = bp_payload["spec"]["resources"][entity_type]
+    for entity in entity_list:
+        entity_name = entity.get("name")
+        for action in entity.get("action_list", []):
+            action_name = action.get("name")
+            runbook = action.get("runbook", {})
+            if not runbook:
+                continue
+            for task in runbook.get("task_definition_list", []):
+                task_name = task.get("name")
+                if task.get("type", "") == "CALL_RUNBOOK" and task.get("attrs", {}):
+                    uuid = task["attrs"]["runbook_reference"].get("uuid", "")
+                    if not uuid:
+                        continue
+                    task_name_substrate_map[
+                        "{}_{}_{}".format(entity_name, action_name, task_name)
+                    ] = vm_power_action_uuid_substrate_map.get(uuid, "")
+
+        for config in entity.get("patch_list", []):
+            config_name = config.get("name")
+            runbook = config.get("runbook", {})
+            if not runbook:
+                continue
+            for task in runbook.get("task_definition_list", []):
+                task_name = task.get("name")
+                if task.get("type", "") == "CALL_RUNBOOK" and task.get("attrs", {}):
+                    uuid = task["attrs"]["runbook_reference"].get("uuid", "")
+                    if not uuid:
+                        continue
+                    task_name_substrate_map[
+                        "{}_{}_{}".format(entity_name, config_name, task_name)
+                    ] = vm_power_action_uuid_substrate_map.get(uuid, "")
+
+
+def _create_reference_runbook_substrate_map(exported_bp_payload, entity_type, **kwargs):
+    reference_runbook_to_substrate_map = kwargs.get(
+        "reference_runbook_to_substrate_map", {}
+    )
+    task_name_substrate_map = kwargs.get("task_name_substrate_map", {})
+
+    entity_list = exported_bp_payload["spec"]["resources"][entity_type]
+    for entity in entity_list:
+        entity_name = entity.get("name")
+        for action in entity.get("action_list", []):
+            action_name = action.get("name")
+            runbook = action.get("runbook", {})
+            if not runbook:
+                continue
+            for task in runbook.get("task_definition_list", []):
+                task_name = task.get("name")
+                if task.get("type", "") == "CALL_RUNBOOK" and task.get("attrs", {}):
+                    rb_name = task["attrs"]["runbook_reference"].get("name", "")
+                    task_ref = "{}_{}_{}".format(entity_name, action_name, task_name)
+                    if (
+                        task_ref in task_name_substrate_map
+                        and task_name_substrate_map[task_ref]
+                    ):
+                        reference_runbook_to_substrate_map[
+                            rb_name
+                        ] = task_name_substrate_map[task_ref]
+
+        for config in entity.get("patch_list", []):
+            config_name = config.get("name")
+            runbook = config.get("runbook", {})
+            if not runbook:
+                continue
+            for task in runbook.get("task_definition_list", []):
+                task_name = task.get("name")
+                if task.get("type", "") == "CALL_RUNBOOK" and task.get("attrs", {}):
+                    rb_name = task["attrs"]["runbook_reference"].get("name", "")
+                    if not rb_name:
+                        continue
+                    task_ref = "{}_{}_{}".format(entity_name, config_name, task_name)
+                    if (
+                        task_ref in task_name_substrate_map
+                        and task_name_substrate_map[task_ref]
+                    ):
+                        reference_runbook_to_substrate_map[
+                            rb_name
+                        ] = task_name_substrate_map[task_ref]
+
+
+def vm_power_action_target_map(bp_payload, exported_bp_payload):
+    """
+    Args:
+        bp_payload (dict): bp payload response from client.blueprint.read call
+        exported_bp_payload (dict): bp payload response from client.blueprint.export_file call
+
+        exported_bp_payload contains actual runbook name as reference which is called for any vm power action.
+        This payload only contains spec but power action reside in 'status' of res payload.
+        So, substrate of actual runbook name can't be found directly.
+
+        bp_payload contains 'status' of res so substrate can be fetched from it. In this payload,
+        runbook name is alias to actual runbook used as reference for vm power action. So,
+        runbook uuid will be consumed to establish link between runbook reference and it's substrate.
+
+    Algo:
+        Step 1: Create a map of power action runbook uuid and it's parent substrate
+        Step 2: Create map of task name calling above rb and substrate name by consuming rb uuid
+                rb uuid links task name -> rb uuid -> substrate name
+        Step 3: Create map of actual rb name calling above rb in exported bp_payload to substrate name
+                task name will be consumed in this process.
+                rb name -> task name -> substrate name
+
+    Returns:
+        reference_runbook_to_substrate_map (dict): runbook name to substrate name map for vm
+        power action runbook used as reference inside a task, e.g.
+         reference_runbook_to_substrate_map = {
+            "rb_name1": substrate_name
+            "rb_name2": substrate2_name
+        }
+    """
+
+    # holds vm power action uuid to it's parent substrate name mapping
+    vm_power_action_uuid_substrate_map = {}
+    """
+        vm_power_action_uuid_substrate_map = {
+            "<power_action_uuid>": substrate_name
+        }
+    """
+
+    # holds target substrate for referenced power action runbook of a task
+    task_name_substrate_map = {}
+    """
+        task_name_substrate_map = {
+            "<profile_name>_<action_name>_<task_name>": substrate_name
+        }
+        "<profile_name>_<action_name>_<task_name>" key is used to uniquely identify a task even if they are of same name
+    """
+
+    # task name to substrate map holds target substrate for referenced power action runbook of a task
+    reference_runbook_to_substrate_map = {}
+    """
+        reference_runbook_to_substrate_map = {
+            "rb_name1": substrate_name,
+            "rb_name2": substrate2_name
+        }
+    """
+
+    substrate_def_list = bp_payload["status"]["resources"]["substrate_definition_list"]
+    for substrate in substrate_def_list:
+        substrate_name = substrate.get("name")
+        for action in substrate.get("action_list", []):
+            runbook_id = action.get("runbook", {}).get("uuid", "")
+            vm_power_action_uuid_substrate_map[runbook_id] = substrate_name
+
+    kwargs = {
+        "vm_power_action_uuid_substrate_map": vm_power_action_uuid_substrate_map,
+        "task_name_substrate_map": task_name_substrate_map,
+        "reference_runbook_to_substrate_map": reference_runbook_to_substrate_map,
+    }
+    entity_type_list = [
+        "substrate_definition_list",
+        "service_definition_list",
+        "app_profile_list",
+        "package_definition_list",
+    ]
+    for entity_type in entity_type_list:
+        _create_task_name_substrate_map(bp_payload, entity_type, **kwargs)
+
+    for entity_type in entity_type_list:
+        _create_reference_runbook_substrate_map(
+            exported_bp_payload, entity_type, **kwargs
+        )
+
+    return reference_runbook_to_substrate_map
+
+
+def strip_patch_config_tasks(resources):
+    """
+    Strips out patch config tasks from patch list
+    Args:
+        resources (dict): resources dict of blueprint
+    Returns:
+        profile_patch_config_tasks (dict): dictionary of dictionary containing
+        user defined tasks at patch config level for each profile.
+
+        e.g. if Profile1 contains patch_config1, patch_config2 having 3 and 2 user defined tasks respectively like:
+            Profile1 -> patch_config1 -> Task1, Task2, Task3
+                        patch_config2 -> Task4, Task5
+
+        then return value of this function is:
+            profile_patch_config_tasks = {
+                "Profile1": {
+                    “patch_config1” : [Task1, Task2, Task3],
+                    "patch_config2" : [Task4, Task5]
+                }
+            }
+    """
+
+    # contains list of dictionary of patch list for multiple profile
+    profile_patch_config_tasks = {}
+
+    for profile in resources.get("app_profile_list", []):
+        # dictionary to hold muliple patch config to it's tasks mapping
+        patch_config_task_list_map = {}
+
+        for patch_config in profile.get("patch_list", []):
+            tasks = patch_config.get("runbook", {}).pop("task_definition_list", [])
+            patch_config_task_list_map[patch_config.get("name")] = tasks
+
+            # Strips out runbook holding patch config tasks in patch list
+            patch_config.pop("runbook", "")
+
+        profile_patch_config_tasks[profile.get("name")] = patch_config_task_list_map
+
+    return profile_patch_config_tasks
+
+
+def add_patch_config_tasks(
+    resources,
+    app_profile_list,
+    profile_patch_config_tasks,
+    service_name_uuid_map,
+):
+    """
+    Adds patch config tasks to patch list payload for each profile in bp.
+
+    Args:
+        resources (dict): resources fetch from "spec" of bp payload
+        app_profile_list (list): profile list fetched from "status" of bp payload
+        (because system defined patch config tasks are present in status)
+        profile_patch_config_tasks (list): returned from strip_patch_config_tasks function call.
+        Contains user defined patch config tasks from patch list for all profile.
+        service_name_uuid_map (dict): service name to its uuid map
+
+    Step1: Reads patch config runbook from app_profile_list containing system defined
+    patch config tasks.
+    Step2: Update this runbook with user defined tasks
+    Step3: Attach this runbook to patch config runbook of resources fetched from spec
+    """
+
+    for profile in app_profile_list:
+
+        # profile level map holding task name uuid map for each config
+        cur_profile_task_name_uuid_map = {}
+        """
+            cur_profile_task_name_uuid_map = {
+                "patch_config1": {
+                    "task1": "<uuid>",
+                    "task2": "<uuid>",
+                    "task3": "<uuid>"
+                },
+                "patch_config2": {
+                    "task4": "<uuid>",
+                    "task5": "<uuid>",
+                }
+            }
+        """
+
+        # holds patch config tasks for current profile
+        patch_config_task_list_map = profile_patch_config_tasks.get(profile["name"], {})
+
+        # iterate over all tasks in patch list and create task_name_uuid_map_list
+        for config_name, task_list in patch_config_task_list_map.items():
+            task_name_uuid_map = {}
+            # cur_profile_patch_config_tasks[config_name] = task_list
+            for _task in task_list:
+                task_name_uuid_map[_task["name"]] = _task["uuid"]
+
+            cur_profile_task_name_uuid_map[config_name] = task_name_uuid_map
+
+        # append patch config tasks to system defined tasks in patch config
+        for patch_config in profile.get("patch_list", []):
+            patch_config_runbook = patch_config.get("runbook", {})
+            if not patch_config_runbook:
+                continue
+
+            # removing additional attributes of patch runbook
+            patch_config_runbook.pop("state", "")
+            patch_config_runbook.pop("message_list", "")
+
+            system_tasks = patch_config_runbook.get("task_definition_list", [])
+            system_dag_task = system_tasks[0]
+            config_name = patch_config.get("name")
+
+            for custom_task in patch_config_task_list_map[config_name]:
+                if "target_any_local_reference" in custom_task:
+                    service_name = custom_task["target_any_local_reference"]["name"]
+                    service_uuid = service_name_uuid_map.get(service_name, None)
+                    if not service_uuid:
+                        LOG.error(
+                            "Service {} not added properly in blueprint.".format(
+                                service_name
+                            )
+                        )
+                        sys.exit(-1)
+                    custom_task["target_any_local_reference"]["uuid"] = service_uuid
+
+                # add all patch config tasks to task definition list
+                if custom_task["type"] != "DAG":
+                    system_tasks.append(custom_task)
+                    system_dag_task["child_tasks_local_reference_list"].append(
+                        {
+                            "kind": "app_task",
+                            "name": custom_task["name"],
+                            "uuid": custom_task["uuid"],
+                        }
+                    )
+
+                # create edge from patch config dag to tasks
+                elif custom_task["type"] == "DAG":
+
+                    user_first_task_name = custom_task[
+                        "child_tasks_local_reference_list"
+                    ][0]["name"]
+
+                    # edge from patch config dag to first task
+                    first_edge = {
+                        "from_task_reference": {
+                            "kind": "app_task",
+                            "uuid": system_dag_task["child_tasks_local_reference_list"][
+                                0
+                            ]["uuid"],
+                        },
+                        "to_task_reference": {
+                            "kind": "app_task",
+                            "name": user_first_task_name,
+                            "uuid": cur_profile_task_name_uuid_map[config_name][
+                                user_first_task_name
+                            ],
+                        },
+                    }
+
+                    # remaining edges from first task to rest of tasks
+                    user_task_edges = custom_task["attrs"]["edges"]
+                    for edge in user_task_edges:
+                        task_name = edge["from_task_reference"]["name"]
+                        edge["from_task_reference"][
+                            "uuid"
+                        ] = cur_profile_task_name_uuid_map[config_name][task_name]
+                        task_name = edge["to_task_reference"]["name"]
+                        edge["to_task_reference"][
+                            "uuid"
+                        ] = cur_profile_task_name_uuid_map[config_name][task_name]
+                    system_dag_task["attrs"]["edges"] = [first_edge]
+                    system_dag_task["attrs"]["edges"].extend(user_task_edges)
+
+            for task in system_tasks:
+                # removing additional attributes
+                task.pop("state", "")
+                task.pop("message_list", "")
+
+    # profile level counter
+    profile_idx = 0
+
+    # attaching updated patch runbook to patch runbook in spec
+    for profile in resources.get("app_profile_list", []):
+        # patch list counter
+        idx = 0
+
+        for patch_config in profile.get("patch_list", []):
+            patch_config["runbook"] = app_profile_list[profile_idx]["patch_list"][idx][
+                "runbook"
+            ]
+            idx += 1
+
+        profile_idx += 1

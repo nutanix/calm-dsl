@@ -9,7 +9,7 @@ import json     #no_qa
 import os       #no_qa
 
 from calm.dsl.builtins import *  #no_qa
-
+from calm.dsl.runbooks import CalmEndpoint as Endpoint
 
 # Secret Variables
 {% if obj.contains_encrypted_secrets %} # Note: Don't modify file data, as it is the encoded secrets fetched from the server
@@ -22,6 +22,13 @@ from calm.dsl.builtins import *  #no_qa
 {%- for cred in obj.credentials %}
 {{cred}}
 {%- endfor %}
+
+{%- if obj.endpoints %}
+# Endpoints
+{%- for endpoint in obj.endpoints %}
+{{endpoint}}
+{%- endfor %}
+{% endif %}
 
 {% for vm_image in obj.vm_images %}
 {{vm_image}}

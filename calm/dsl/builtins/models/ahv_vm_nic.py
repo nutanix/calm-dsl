@@ -136,7 +136,10 @@ class AhvNicType(EntityType):
                     env_accounts = environment_cache_data.get("accounts_data", {}).get(
                         "nutanix_pc", []
                     )
-                    if subnet_uuid not in env_accounts.get(account_uuid, []):
+                    env_accounts = {_acc["uuid"]: _acc for _acc in env_accounts}
+                    if subnet_uuid not in env_accounts.get(account_uuid, {}).get(
+                        "subnet_uuids", []
+                    ):
                         LOG.error(
                             "Subnet {} is not whitelisted in environment {}".format(
                                 subnet_name, str(pfl_env)

@@ -19,7 +19,13 @@ sys.setrecursionlimit(100000)
 LOG = get_logging_handle(__name__)
 
 SIMPLE_BP_FILE_PATH = "tests/simple_blueprint/test_simple_blueprint.py"
+SIMPLE_BP_FILE_PATH2 = (
+    "tests/simple_blueprint/test_simple_bp_with_downloadable_image.py"
+)
 SIMPLE_BP_OUT_PATH = "tests/simple_blueprint/test_simple_blueprint.json"
+SIMPLE_BP_OUT_PATH2 = (
+    "tests/simple_blueprint/test_simple_bp_with_downloadable_image.json"
+)
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
@@ -43,7 +49,11 @@ class TestSimpleBlueprint:
 
         self.created_bp_list = []
 
-    def test_create_bp(self):
+    @pytest.mark.parametrize(
+        "bp_file_path",
+        [SIMPLE_BP_FILE_PATH, SIMPLE_BP_FILE_PATH2],
+    )
+    def test_create_bp(self, bp_file_path):
 
         runner = CliRunner()
         created_dsl_bp_name = "Test_Simple_DSL_BP_{}".format(int(time.time()))
@@ -53,7 +63,7 @@ class TestSimpleBlueprint:
             [
                 "create",
                 "bp",
-                "--file={}".format(SIMPLE_BP_FILE_PATH),
+                "--file={}".format(bp_file_path),
                 "--name={}".format(created_dsl_bp_name),
                 "--description='Test DSL Blueprint; to delete'",
             ],
@@ -78,12 +88,19 @@ class TestSimpleBlueprint:
 
         LOG.info("Success")
 
-    def test_compile(self):
+    @pytest.mark.parametrize(
+        "bp_file_path, json_file_path",
+        [
+            (SIMPLE_BP_FILE_PATH, SIMPLE_BP_OUT_PATH),
+            (SIMPLE_BP_FILE_PATH2, SIMPLE_BP_OUT_PATH2),
+        ],
+    )
+    def test_compile(self, bp_file_path, json_file_path):
 
         runner = CliRunner()
-        LOG.info("Compiling bp at {}".format(SIMPLE_BP_FILE_PATH))
+        LOG.info("Compiling bp at {}".format(bp_file_path))
         result = runner.invoke(
-            cli, ["-vv", "compile", "bp", "--file={}".format(SIMPLE_BP_FILE_PATH)]
+            cli, ["-vv", "compile", "bp", "--file={}".format(bp_file_path)]
         )
         if result.exit_code:
             cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
@@ -109,7 +126,7 @@ class TestSimpleBlueprint:
         generated_json["spec"]["resources"]["app_profile_list"][0].pop(
             "patch_list", None
         )
-        known_json = json.loads(open(SIMPLE_BP_OUT_PATH).read())
+        known_json = json.loads(open(json_file_path).read())
 
         # Change dynamic values in known json and remove account_uuid from generated_json
         for _sd in known_json["spec"]["resources"]["substrate_definition_list"]:

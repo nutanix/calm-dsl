@@ -46,9 +46,9 @@ fi
 
 escript = """url = "@@{endpoint.base_url}@@"
 if not "runbook" in url:
-    print "Failing"
+    print("Failing")
     exit(1)
-print "Passing"
+print("Passing")
 exit(0)"""
 
 linux_ip_pass_script = shell_script.replace("target_ip", linux_ip)
@@ -83,7 +83,7 @@ def DecisionWithMultipleIpTarget(
                         name="FAILURE1_D2", script="date", inherit_target=True
                     )
 
-    with Task.Decision.escript(script=escript, target=endpoints[1]) as d3:
+    with Task.Decision.escript.py3(script=escript, target=endpoints[1]) as d3:
         if d3.ok:
             Task.HTTP.post(
                 name="HTTPTask1",

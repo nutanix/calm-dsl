@@ -2,6 +2,7 @@ from ruamel import yaml
 import click
 import json
 import copy
+import os
 
 import click_completion
 import click_completion.core
@@ -10,15 +11,19 @@ from prettytable import PrettyTable
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
-from calm.dsl.api import get_api_client, get_resource_api
+from calm.dsl.api import get_api_client, get_resource_api, reset_api_client_handle
 from calm.dsl.log import get_logging_handle
-from calm.dsl.config import get_context
+from calm.dsl.config import get_context, get_default_config_file
+from calm.dsl.config.env_config import EnvConfig
 from calm.dsl.store import Cache
 from calm.dsl.constants import DSL_CONFIG
+from calm.dsl.builtins.models.utils import set_compile_secrets_flag
 
 from .version_validator import validate_version
 from .click_options import simple_verbosity_option, show_trace_option
 from .utils import FeatureFlagGroup, highlight_text
+from calm.dsl.store import Version
+from calm.dsl.config.init_config import get_init_config_handle
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -69,13 +74,42 @@ def main(ctx, config_file, sync):
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = True
     try:
-        validate_version()
+        ContextObj = get_context()
+        old_pc_ip = Version.get_version_data("PC").get("pc_ip", "")
+        if config_file:
+            if not os.path.exists(config_file):
+                raise ValueError("file not found {}".format(config_file))
+
+            if ctx.invoked_subcommand == "init":
+                raise ValueError("config file passing is not supported in init command")
+
+            ContextObj.update_config_file_context(config_file=config_file)
+
+        if ctx.invoked_subcommand != "init":
+            server_config = ContextObj.get_server_config()
+
+            if old_pc_ip != server_config.get("pc_ip", ""):
+                LOG.warning("Host IP changed.")
+
+                if not sync:
+                    LOG.warning(
+                        "Cache is outdated. Please pass `-s/--sync` if command fails."
+                    )
+
+                # reset api client handle, so current context will be used while syncing version cache.
+                reset_api_client_handle()
+                Version.sync()  # sync version cache so that correct version validation happens.
+
+            # While initializing DSL version may not be present in cache, even if we validate version in this case then
+            # it will be version of previous context. Therefore, skipping version validation while initializing.
+            validate_version()
+
     except Exception:
         LOG.debug("Could not validate version")
         pass
-    if config_file:
-        ContextObj = get_context()
-        ContextObj.update_config_file_context(config_file=config_file)
+
+    # This is added to ensure non compile commands has secrets in the dictionary.
+    set_compile_secrets_flag(True)
 
     ContextObj = get_context()
     project_config = ContextObj.get_project_config()
@@ -108,7 +142,7 @@ def validate():
     "-t",
     "provider_type",
     type=click.Choice(get_provider_types()),
-    default="AHV_VM",
+    default=None,
     help="Provider type",
 )
 def validate_provider_spec(spec_file, provider_type):
@@ -116,6 +150,33 @@ def validate_provider_spec(spec_file, provider_type):
 
     with open(spec_file) as f:
         spec = yaml.safe_load(f.read())
+
+    if provider_type == None:
+        spec_type = spec.get("type", None)
+        recommended_type = "AHV_VM"
+
+        if spec_type == "PROVISION_AWS_VM":
+            recommended_type = "AWS_VM"
+        elif spec_type == "PROVISION_AZURE_VM":
+            recommended_type = "AZURE_VM"
+        elif spec_type == "PROVISION_GCP_VM":
+            recommended_type = "GCP_VM"
+        elif spec_type == "PROVISION_VMWARE_VM":
+            recommended_type = "VMWARE_VM"
+
+        if spec_type == None:
+            LOG.warning(
+                "You haven't chosen a provider type, so we'll proceed with '{}'.".format(
+                    recommended_type
+                )
+            )
+        else:
+            LOG.warning(
+                "You haven't chosen a provider type, and it should be '{}' according to your spec file, so we'll proceed with that.".format(
+                    recommended_type
+                )
+            )
+        provider_type = recommended_type
 
     try:
         Provider = get_provider(provider_type)
@@ -302,7 +363,9 @@ def format():
 @main.group(cls=FeatureFlagGroup)
 def compile():
     """Compile blueprint to json / yaml"""
-    pass
+
+    # Setting this to make sure during compile secrets are not printed
+    set_compile_secrets_flag(EnvConfig.is_compile_secret())
 
 
 @main.group(cls=FeatureFlagGroup)

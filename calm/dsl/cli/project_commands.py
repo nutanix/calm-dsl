@@ -9,8 +9,9 @@ from .projects import (
     delete_project,
     update_project_from_dsl,
     update_project_using_cli_switches,
+    decompile_project_command,
 )
-from .main import create, get, update, delete, describe, compile
+from .main import create, get, update, delete, describe, compile, decompile
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -64,6 +65,27 @@ def _compile_project_command(project_file, out):
     compile_project_command(project_file, out)
 
 
+@decompile.command("project", experimental=True)
+@click.argument("name", required=False)
+@click.option(
+    "--file",
+    "-f",
+    "project_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to Project file",
+)
+@click.option(
+    "--dir",
+    "-d",
+    "project_dir",
+    default=None,
+    help="Project directory location used for placing decompiled entities",
+)
+def _decompile_project_command(name, project_file, project_dir):
+    """Decompiles project present on server or json file"""
+    decompile_project_command(name, project_file, project_dir)
+
+
 @create.command("project")
 @click.option(
     "--file",
@@ -86,12 +108,19 @@ def _compile_project_command(project_file, out):
     default=False,
     help="if true, cache is not updated for project",
 )
-def _create_project(project_file, project_name, description, no_cache_update):
+@click.option(
+    "--force",
+    "-fc",
+    is_flag=True,
+    default=False,
+    help="Deletes existing project with the same name before create, if entities are not associated with it.",
+)
+def _create_project(project_file, project_name, description, no_cache_update, force):
     """Creates a project"""
 
     if project_file.endswith(".py"):
         create_project_from_dsl(
-            project_file, project_name, description, no_cache_update
+            project_file, project_name, description, no_cache_update, force
         )
     else:
         LOG.error("Unknown file format")

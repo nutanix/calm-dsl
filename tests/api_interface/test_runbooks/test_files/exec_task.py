@@ -114,28 +114,30 @@ multiple_windows_endpoint = Endpoint.Windows.ip(
 
 @runbook
 def EscriptTask():
-    Task.Exec.escript(name="ExecTask", script='''print "Task is Successful"''')
+    Task.Exec.escript.py3(name="ExecTask", script="""print("Task is Successful")""")
 
 
 @runbook
 def EscriptMacroTask():
-    Task.Exec.escript(name="EscriptMacroTask", filename="macro_escript.py")
+    Task.Exec.escript.py3(name="EscriptMacroTask", filename="macro_escript.py")
 
 
 @runbook
 def SetVariableOnEscript():
-    Task.SetVariable.escript(
+    Task.SetVariable.escript.py3(
         name="SetVariableTask",
-        script='''print "task_state=Successful"''',
+        script="""print("task_state=Successful")""",
         variables=["task_state"],
     )
-    Task.Exec.escript(name="ExecTask", script='''print "Task is @@{task_state}@@"''')
+    Task.Exec.escript.py3(
+        name="ExecTask", script="""print("Task is @@{task_state}@@")"""
+    )
 
 
 @runbook
 def EscriptOnEndpoint(endpoints=[multiple_linux_endpoint]):
-    Task.Exec.escript(
-        name="ExecTask", script='''print "Task is Successful"''', target=endpoints[0]
+    Task.Exec.escript.py3(
+        name="ExecTask", script="""print("Task is Successful")""", target=endpoints[0]
     )
 
 
@@ -337,9 +339,9 @@ def MacroOnPowershell(endpoints=[windows_endpoint]):
 
 @runbook
 def MacroOnEscript():
-    Task.Exec.escript(
+    Task.Exec.escript.py3(
         name="ExecTask",
-        script='''print "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''',
+        script="""print("@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@")""",
     )
 
 
@@ -362,28 +364,28 @@ def EndpointMacroOnPowershell(endpoints=[windows_endpoint]):
 
 @runbook
 def WindowsEndpointMacroOnEscript(endpoints=[windows_endpoint], default=False):
-    Task.Exec.escript(
+    Task.Exec.escript.py3(
         name="ExecTask",
         target=endpoints[0],
-        script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@,\
-        @@{endpoint.connection_protocol}@@, @@{endpoint.credential.username}@@"''',
+        script="""print("@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@,\
+        @@{endpoint.connection_protocol}@@, @@{endpoint.credential.username}@@")""",
     )
 
 
 @runbook
 def LinuxEndpointMacroOnEscript(endpoints=[linux_endpoint], default=False):
-    Task.Exec.escript(
+    Task.Exec.escript.py3(
         name="ExecTask",
         target=endpoints[0],
-        script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@, @@{endpoint.credential.username}@@"''',
+        script="""print("@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@, @@{endpoint.credential.username}@@")""",
     )
 
 
 @runbook
 def HttpEndpointMacroOnEscript(endpoints=[http_endpoint], default=False):
-    Task.Exec.escript(
+    Task.Exec.escript.py3(
         name="ExecTask",
         target=endpoints[0],
-        script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.base_url}@@, @@{endpoint.retry_count}@@, \
-        @@{endpoint.retry_interval}@@, @@{endpoint.tls_verify}@@, @@{endpoint.connection_timeout}@@"''',
+        script="""print("@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.base_url}@@, @@{endpoint.retry_count}@@, \
+        @@{endpoint.retry_interval}@@, @@{endpoint.tls_verify}@@, @@{endpoint.connection_timeout}@@")""",
     )

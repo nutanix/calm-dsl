@@ -1,3 +1,5 @@
+{% import "calm_ref.yaml.jinja2" as calm_ref %}
+
 {% macro ConfigSpec() -%}
 title: ConfigSpec
 type: object
@@ -29,6 +31,10 @@ properties:
         type: object
         additionalProperties: true
         x-calm-dsl-type: dict
+  policy_reference:
+    x-calm-dsl-display-name: policy
+    {{ calm_ref.CalmRef() | indent(4) }}
+
 {%- endmacro %}
 
 

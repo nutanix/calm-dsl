@@ -1,0 +1,77 @@
+clone_is_template: false
+cluster: ''
+compute_drs_mode: false
+datastore: ds:///vmfs/volumes/210932e4-ce99bf5c/
+drs_mode: false
+folder: null
+host: 00000000-0000-0000-0000-0cc47ac3fcb0
+library: null
+name: vm-@@{calm_array_index}@@-@@{calm_time}@@
+resources:
+  account_uuid: 0b323c83-a649-7265-0176-14e3ae109f15
+  controller_list: []
+  cpu_hot_add: false
+  disk_list: []
+  guest_customization:
+    cloud_init: ''
+    customization_name: ''
+    customization_type: GUEST_OS_LINUX
+    type: ''
+  memory_hot_plug: false
+  memory_size_mib: 2048
+  nic_list: []
+  num_sockets: 2
+  num_vcpus_per_socket: 1
+  power_state: poweron
+  tag_list: []
+  template_controller_list:
+  - bus_sharing: noSharing
+    controller_type: VirtualLsiLogicSASController
+    is_deleted: false
+    key: 1000
+    type: ''
+  template_disk_list:
+  - adapter_type: IDE
+    controller_key: 200
+    device_slot: 0
+    disk_mode: persistent
+    disk_size_mb: -1
+    disk_type: cdrom
+    is_deleted: false
+    iso_path: ''
+    key: 3000
+    location: ''
+    type: ''
+  - adapter_type: IDE
+    controller_key: 200
+    device_slot: 1
+    disk_mode: persistent
+    disk_size_mb: -1
+    disk_type: cdrom
+    is_deleted: false
+    iso_path: ''
+    key: 3001
+    location: ''
+    type: ''
+  - adapter_type: SCSI
+    controller_key: 1000
+    device_slot: 0
+    disk_mode: persistent
+    disk_size_mb: 40960
+    disk_type: disk
+    is_deleted: false
+    iso_path: ''
+    key: 2000
+    location: ds:///vmfs/volumes/99c8246a-966b6b35/
+    type: ''
+  template_nic_list:
+  - is_deleted: false
+    key: 4000
+    net_name: key-vim.host.PortGroup-Backplane Network
+    nic_type: e1000
+    type: ''
+  type: ''
+storage_drs_mode: false
+storage_pod: ''
+template: 503dbadd-2c28-deaf-201d-f1882d69a2fb
+type: PROVISION_VMWARE_VM

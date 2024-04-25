@@ -1,0 +1,7 @@
+{%- macro patch_field_ahv_disk(obj) %}
+{% if obj.disk_operation == "delete" %}PatchField.Ahv.Disks.{{obj.disk_operation}}(index={{obj.index}}){% endif %}
+{% if obj.disk_operation == "modify" %}PatchField.Ahv.Disks.{{obj.disk_operation}}(index={{obj.index}}, editable={{obj.editable}}{% if obj.operation %}, operation="{{obj.operation}}"{% endif %}{% if obj.value %}, value='{{obj.value}}'{% endif %}{% if obj.max_val %}, max_val={{obj.max_val}}{% endif %}{% if obj.min_val %}, min_val={{obj.min_val}}{% endif %}){% endif %}
+{% if obj.disk_operation == "add" %}PatchField.Ahv.Disks.{{obj.disk_operation}}({{obj.disk_data}}){% endif %}
+{%- endmacro %}
+
+{{ patch_field_ahv_disk(obj) }}

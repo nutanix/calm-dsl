@@ -173,6 +173,9 @@ class SimpleBlueprintType(EntityType):
 
             app_profile["deployment_create_list"].append(ddict)
 
+        for pkg in cdict["package_definition_list"]:
+            package_definition_list.append(pkg)
+
         for pdep in pod_deployments:
             pod_dict = pdep.extract_deployment()
             for sd in pod_dict["service_definition_list"]:

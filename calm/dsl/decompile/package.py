@@ -9,7 +9,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_package_template(cls, secrets_dict=[]):
+def render_package_template(cls, secrets_dict=[], endpoints=[], ep_list=[]):
 
     LOG.debug("Rendering {} package template".format(cls.__name__))
     if not isinstance(cls, PackageType):
@@ -53,6 +53,8 @@ def render_package_template(cls, secrets_dict=[]):
                 entity_context,
                 secrets_dict=secrets_dict,
                 context=context,
+                endpoints=endpoints,
+                ep_list=ep_list,
             )
         )
 
@@ -65,6 +67,8 @@ def render_package_template(cls, secrets_dict=[]):
                 entity_context,
                 secrets_dict=secrets_dict,
                 context=context,
+                endpoints=endpoints,
+                ep_list=ep_list,
             )
         )
 

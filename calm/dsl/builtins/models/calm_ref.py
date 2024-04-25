@@ -666,6 +666,11 @@ class Ref:
             """return decompile class"""
 
             if cdict.get("uuid"):
+                if cdict["uuid"].startswith("@@{") and cdict["uuid"].endswith("}@@"):
+                    return cls.__new__(
+                        cls,
+                        name=cdict["uuid"],
+                    )
                 cache_data = Cache.get_entity_data_using_uuid(
                     entity_type=CACHE.ENTITY.AHV_CLUSTER, uuid=cdict["uuid"]
                 )
@@ -1355,3 +1360,41 @@ class Ref:
                         "value": kwargs.get("value", ""),
                     }
                     return tag_dict
+
+    class ProtectionPolicy:
+        def __new__(cls, name, **kwargs):
+            kwargs["__ref_cls__"] = cls
+            kwargs["policy_name"] = name
+            return _calm_ref(**kwargs)
+
+        def compile(cls, **kwargs):
+            rule_name = kwargs.get("rule_name", None)
+            rule_uuid = kwargs.get("rule_uuid", None)
+            name = kwargs.get("policy_name", None)
+            project_name = kwargs.get("project_name", None)
+
+            if not project_name:
+                LOG.error("Unable to find project associated to blueprint")
+                sys.exit("Unable to find project associated to blueprint")
+
+            protection_policy_cache_data = Cache.get_entity_data(
+                entity_type="app_protection_policy",
+                name=name,
+                rule_name=rule_name,
+                rule_uuid=rule_uuid,
+                project_name=project_name,
+            )
+
+            if not protection_policy_cache_data:
+                LOG.error(
+                    "Protection Policy {} not found. Please run: calm update cache".format(
+                        name
+                    )
+                )
+                sys.exit("Protection policy {} does not exist".format(name))
+            return {
+                "kind": "app_protection_policy",
+                "name": protection_policy_cache_data["name"],
+                "uuid": protection_policy_cache_data["uuid"],
+                "rule_uuid": protection_policy_cache_data["rule_uuid"],
+            }

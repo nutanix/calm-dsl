@@ -1,5 +1,9 @@
 {%- macro restore_config(obj) %}
-AppProtection.RestoreConfig(name='{{obj.name}}', target=ref({{obj.target}}), delete_vm_post_restore={{obj.delete_vm_post_restore}})
+{% if obj.provider == "Ahv" %}
+AppProtection.RestoreConfig{% if obj.provider %}.{{obj.provider}}{% endif %}(name='{{obj.name}}', target=ref({{obj.target}}), delete_vm_post_restore={{obj.delete_vm_post_restore}}{% if obj.description %}, description="{{obj.description}}"{% endif %})
+{% else %}
+AppProtection.RestoreConfig{% if obj.provider %}.{{obj.provider}}{% endif %}(name='{{obj.name}}', target=ref({{obj.target}}){% if obj.description %}, description="{{obj.description}}"{% endif %})
+{% endif %}
 {%- endmacro %}
 
 {{ restore_config(obj) }}

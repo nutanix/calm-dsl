@@ -4,16 +4,25 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.task import render_task_template
 from calm.dsl.decompile.parallel_task import render_parallel_task_template
 from calm.dsl.decompile.task_tree import render_task_tree_template
+from calm.dsl.decompile.endpoint import render_endpoint
 from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.builtins import action, ActionType
+from calm.dsl.constants import SUBSTRATE
 from calm.dsl.log import get_logging_handle
+from calm.dsl.decompile.ref_dependency import get_power_action_substrate_map
 
 LOG = get_logging_handle(__name__)
 RUNBOOK_ACTION_MAP = {}
 
 
 def render_action_template(
-    cls, entity_context="", CONFIG_SPEC_MAP={}, context="", secrets_dict=[]
+    cls,
+    entity_context="",
+    CONFIG_SPEC_MAP={},
+    context="",
+    secrets_dict=[],
+    endpoints=[],
+    ep_list=[],
 ):
 
     global RUNBOOK_ACTION_MAP
@@ -64,14 +73,52 @@ def render_action_template(
             )
         )
 
-    if not (variables or tasks):
+    # not returning vm power actions, even if they don't have tasks, to include in
+    # substrate class after decompilation this is required to give valid reference
+    # to custom actions which use them in profile/service level
+    if not (variables or tasks) and (
+        cls.name not in list(SUBSTRATE.VM_POWER_ACTIONS.keys())
+    ):
         return ""
 
+    """
+    Brief:
+    1. yields following in substrate class if any custom action uses power actions:
+        def __vm_power_on__():
+            pass
+    2. yields "" if no custom action uses power actions.
+
+    Detail:
+    Only vm power actions skip previous check to include empty definition power actions
+    in substrate class. e.g.
+    def __vm_power_on__():
+        pass
+    This is necessary to give valid reference to custom actions using these power 
+    actions in profile/service level. But if there are no custom actions using 
+    power actions in any level then we don't need to include empty definition power actions.
+    Therefore, returning without making power actions definition in this case by using
+    get_power_action_substrate_map() which returns empty dict if there are no custom actions using
+    power actions.
+    """
+    if cls.name in list(SUBSTRATE.VM_POWER_ACTIONS.keys()) and (
+        not get_power_action_substrate_map()
+    ):
+        return ""
+
+    # get rendered endpoints to be rendered by blueprint
+    for ind, task in enumerate(runbook.tasks):
+        ep = task.exec_target_reference
+        if ep:
+            if ep.name in ep_list:
+                continue
+            endpoints.append(render_endpoint(ep))
+            ep_list.append(ep.name)
     user_attrs = {
         "name": cls.__name__,
         "description": cls.__doc__ or "",
         "tasks": tasks,
         "variables": variables,
+        "endpoints": endpoints,
     }
 
     gui_display_name = getattr(cls, "name", "") or cls.__name__

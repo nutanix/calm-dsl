@@ -15,6 +15,9 @@ from calm.dsl.log import get_logging_handle
 
 from .constants import AHV as AhvConstants
 
+from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
+
 LOG = get_logging_handle(__name__)
 Provider = get_provider_interface()
 
@@ -1261,6 +1264,7 @@ def create_spec(client):
 
     # As account_uuid is required for versions>2.9.0
     account_uuid = ""
+    accounts = []
     is_host_pc = True
     payload = {"length": 250, "filter": "type==nutanix_pc"}
     res, err = client.account.list(payload)
@@ -1271,8 +1275,29 @@ def create_spec(client):
     for entity in res["entities"]:
         entity_id = entity["metadata"]["uuid"]
         if entity_id in reg_accounts:
-            account_uuid = entity_id
-            break
+            accounts.append(
+                {"name": entity["metadata"]["name"], "uuid": entity["metadata"]["uuid"]}
+            )
+
+    if len(accounts) > 1:
+        click.echo("Choose from given accounts:")
+        for ind, account in enumerate(accounts):
+            click.echo(
+                "\t {}. {}".format(str(ind + 1), highlight_text(account["name"]))
+            )
+
+        while True:
+            ind = click.prompt("\nEnter the index of account", default=1)
+            if (ind > len(accounts)) or (ind <= 0):
+                click.echo("Invalid index !!! ")
+            else:
+                account_uuid = accounts[ind - 1]["uuid"]
+                click.echo(
+                    "{} selected".format(highlight_text(accounts[ind - 1]["name"]))
+                )
+                break
+    elif len(accounts) == 1:
+        account_uuid = accounts[0]["uuid"]
 
     # TODO Host PC dependency for categories call due to bug https://jira.nutanix.com/browse/CALM-17213
     if account_uuid:
@@ -1513,6 +1538,8 @@ def create_spec(client):
             boot_type = AhvConstants.BOOT_TYPES[boot_types[res - 1]]
             if boot_type == AhvConstants.BOOT_TYPES["UEFI"]:
                 spec["resources"]["boot_config"]["boot_type"] = boot_type
+            elif boot_type == AhvConstants.BOOT_TYPES["UEFI SECURE BOOT"]:
+                spec["resources"]["boot_config"]["boot_type"] = boot_type
             click.echo("{} selected".format(highlight_text(boot_type)))
             break
 
@@ -1615,13 +1642,29 @@ def create_spec(client):
             nics = nics["entities"]
             click.echo("\nChoose from given subnets:")
             for ind, nic in enumerate(nics):
-                click.echo(
-                    "\t {}. {} ({})".format(
-                        str(ind + 1),
-                        highlight_text(nic["status"]["name"]),
-                        highlight_text(nic["status"]["cluster_reference"]["name"]),
+                name = Cache.get_entity_data_using_uuid
+                if nic["status"]["resources"]["subnet_type"] == "VLAN":
+                    click.echo(
+                        "\t {}. {} ({})".format(
+                            str(ind + 1),
+                            highlight_text(nic["status"]["name"]),
+                            highlight_text(nic["status"]["cluster_reference"]["name"]),
+                        )
                     )
-                )
+                else:
+                    uuid_for_vpc_name = nic["status"]["resources"]["vpc_reference"][
+                        "uuid"
+                    ]
+                    vpc_name_for_overlay = Cache.get_entity_data_using_uuid(
+                        entity_type=CACHE.ENTITY.AHV_VPC, uuid=uuid_for_vpc_name
+                    )
+                    click.echo(
+                        "\t {}. {} ({})".format(
+                            str(ind + 1),
+                            highlight_text(nic["status"]["name"]),
+                            highlight_text(vpc_name_for_overlay["name"]),
+                        )
+                    )
 
             spec["resources"]["nic_list"] = []
             while True:

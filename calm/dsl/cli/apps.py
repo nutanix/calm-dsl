@@ -5,6 +5,7 @@ import json
 import re
 import uuid
 from json import JSONEncoder
+from datetime import datetime
 
 import arrow
 import click
@@ -25,6 +26,7 @@ from .bps import (
     parse_launch_params_attribute,
     _decompile_bp,
 )
+from calm.dsl.constants import CONFIG_TYPE
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -39,6 +41,9 @@ def get_apps(name, filter_by, limit, offset, quiet, all_items, out):
         filter_query = get_name_query([name])
     if filter_by:
         filter_query = filter_query + ";(" + filter_by + ")"
+    # deleted state filter works without paranthesis, using this as workaround until CALM-43342 is resolved
+    if filter_by == "_state==deleted":
+        filter_query = filter_query + ";" + filter_by
     if all_items:
         filter_query += get_states_filter(APPLICATION.STATES, state_key="_state")
     if filter_query.startswith(";"):
@@ -212,12 +217,205 @@ def describe_app(app_name, out):
 
     deployment_list = app["status"]["resources"]["deployment_list"]
     click.echo("Deployments [{}]:".format(highlight_text((len(deployment_list)))))
+
     for deployment in deployment_list:
-        click.echo(
-            "\t {} {}".format(
-                highlight_text(deployment["name"]), highlight_text(deployment["state"])
-            )
+
+        num_services = len(
+            deployment.get("substrate_configuration", {}).get("element_list", {})
         )
+        for i in range(num_services):
+            exta_suffix = ""
+            if num_services > 1:
+                exta_suffix = "[" + str(i) + "]"
+
+            temp_var = "[" + str(deployment["state"][i]) + "]"
+            click.echo(
+                "\t Service : {}{} {}".format(
+                    highlight_text(deployment["service_list"][0]["name"]),
+                    highlight_text(exta_suffix),
+                    highlight_text(temp_var),
+                )
+            )
+            click.echo("\t \t VM Details")
+            click.echo("\t \t \t Configuration")
+            click.echo(
+                "\t \t \t \t {:<15} : {}".format(
+                    "Name",
+                    highlight_text(deployment["substrate_configuration"]["name"]),
+                )
+            )
+            click.echo(
+                "\t \t \t \t {:<15} : {}".format(
+                    "IP Address",
+                    highlight_text(
+                        deployment["substrate_configuration"]["element_list"][i][
+                            "address"
+                        ]
+                    ),
+                )
+            )
+            click.echo(
+                "\t \t \t \t {:<15} : {}".format(
+                    "vCPUs",
+                    highlight_text(
+                        deployment["substrate_configuration"]["element_list"][i][
+                            "create_spec"
+                        ]["resources"]["num_vcpus_per_socket"]
+                    ),
+                )
+            )
+            click.echo(
+                "\t \t \t \t {:<15} : {}".format(
+                    "Cores",
+                    highlight_text(
+                        deployment["substrate_configuration"]["element_list"][i][
+                            "create_spec"
+                        ]["resources"]["num_sockets"]
+                    ),
+                )
+            )
+            click.echo(
+                "\t \t \t \t {:<15} : {} {}".format(
+                    "Memory",
+                    highlight_text(
+                        deployment["substrate_configuration"]["element_list"][i][
+                            "create_spec"
+                        ]["resources"]["memory_size_mib"]
+                        / 1024.0
+                    ),
+                    highlight_text("GB"),
+                )
+            )
+            click.echo(
+                "\t \t \t \t {:<15} : {}".format(
+                    "VM UUID",
+                    highlight_text(
+                        deployment["substrate_configuration"]["element_list"][i][
+                            "instance_id"
+                        ]
+                    ),
+                )
+            )
+            click.echo(
+                "\t \t \t \t {:<15} : {}".format(
+                    "Image",
+                    highlight_text(
+                        deployment["substrate_configuration"]["create_spec"][
+                            "resources"
+                        ]["disk_list"][0]["data_source_reference"]["uuid"]
+                    ),
+                )
+            )
+
+            click.echo("\t \t \t Network Adapters (NICs)")
+            if (
+                len(
+                    deployment["substrate_configuration"]["element_list"][i][
+                        "create_spec"
+                    ]["resources"]["nic_list"]
+                )
+                > 0
+            ):
+                for nic in deployment["substrate_configuration"]["element_list"][i][
+                    "create_spec"
+                ]["resources"]["nic_list"]:
+                    click.echo(
+                        "\t \t \t \t {:<15} : {}".format(
+                            "Type", highlight_text(nic["nic_type"])
+                        )
+                    )
+                for variable in deployment["substrate_configuration"]["element_list"][
+                    i
+                ]["variable_list"]:
+                    if variable["name"] == "mac_address":
+                        click.echo(
+                            "\t \t \t \t {:<15} : {}".format(
+                                "MAC Address", highlight_text(variable["value"])
+                            )
+                        )
+                for nic in deployment["substrate_configuration"]["element_list"][i][
+                    "create_spec"
+                ]["resources"]["nic_list"]:
+                    click.echo(
+                        "\t \t \t \t {:<15} : {}".format(
+                            "Subnet", highlight_text(nic["subnet_reference"]["name"])
+                        )
+                    )
+            else:
+                click.echo("\t \t \t \t {:<15} : ".format("Type"))
+                click.echo("\t \t \t \t {:<15} : ".format("MAC Address"))
+                click.echo("\t \t \t \t {:<15} : ".format("Subnet"))
+
+            if (
+                deployment["substrate_configuration"]["element_list"][i]["create_spec"][
+                    "cluster_reference"
+                ]
+                != None
+            ):
+                click.echo("\t \t \t Cluster Information")
+                click.echo(
+                    "\t \t \t \t {:<15} : {}".format(
+                        "Cluster UUID",
+                        highlight_text(
+                            deployment["substrate_configuration"]["element_list"][i][
+                                "create_spec"
+                            ]["cluster_reference"]["uuid"]
+                        ),
+                    )
+                )
+                click.echo(
+                    "\t \t \t \t {:<15} : {}".format(
+                        "Cluster Name",
+                        highlight_text(
+                            deployment["substrate_configuration"]["element_list"][i][
+                                "create_spec"
+                            ]["cluster_reference"]["name"]
+                        ),
+                    )
+                )
+            else:
+                click.echo("\t \t \t Cluster Information")
+                click.echo("\t \t \t \t {:<15} : ".format("Cluster UUID"))
+                click.echo("\t \t \t \t {:<15} : ".format("Cluster Name"))
+
+            categories = deployment["substrate_configuration"]["element_list"][i][
+                "create_spec"
+            ]["categories"]
+            if len(categories) > 0:
+                click.echo("\t \t \t Categories")
+                for key, value in categories.items():
+                    click.echo(
+                        "\t \t \t \t {:<15} : {}".format(key, highlight_text(value))
+                    )
+
+            if (
+                len(deployment["service_list"]) > 0
+                and len(
+                    deployment["service_list"][0]["element_list"][i]["variable_list"]
+                )
+                > 0
+            ):
+                click.echo("\t \t Variables")
+                for variable in deployment["service_list"][0]["element_list"][i][
+                    "variable_list"
+                ]:
+                    if (
+                        variable["type"] == "LOCAL" or variable["type"] == "HTTP_LOCAL"
+                    ) and variable["value"] != "":
+                        click.echo(
+                            "\t \t \t \t {:<15} : {}".format(
+                                variable["name"], highlight_text(variable["value"])
+                            )
+                        )
+                    elif variable["type"] == "SECRET":
+                        click.echo(
+                            "\t \t \t \t {:<15} : {}".format(
+                                variable["name"], highlight_text("********")
+                            )
+                        )
+                    else:
+                        click.echo("\t \t \t \t {:<15}".format(variable["name"]))
+            click.echo(" ")
 
     action_list = app["status"]["resources"]["action_list"]
     click.echo("App Actions [{}]:".format(highlight_text(len(action_list))))
@@ -269,9 +467,9 @@ def create_app(
     profile_name=None,
     patch_editables=True,
     launch_params=None,
+    watch=False,
 ):
     client = get_api_client()
-
     # Compile blueprint
     bp_payload = compile_blueprint(
         bp_file, brownfield_deployment_file=brownfield_deployment_file
@@ -318,7 +516,8 @@ def create_app(
 
     # Creating an app
     LOG.info("Creating app {}".format(app_name))
-    launch_blueprint_simple(
+    # if app_launch_state=1 implies blueprint launch is successful, app_launch_state=0 implies blueprint launch has failed
+    app_launch_state = launch_blueprint_simple(
         blueprint_name=bp_name,
         app_name=app_name,
         profile_name=profile_name,
@@ -333,6 +532,16 @@ def create_app(
         res, err = client.blueprint.delete(bp_uuid)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    # if app_launch_state=True that is if blueprint launch is successful then only we will enter in watch mode
+    if app_launch_state and watch:
+
+        def display_action(screen):
+            watch_app(app_name=app_name, screen=screen, poll_interval=10)
+            screen.wait_for_input(10.0)
+
+        Display.wrapper(display_action, watch=True)
+        LOG.info("Application with name: {} got created successfully".format(app_name))
 
 
 class RunlogNode(NodeMixin):
@@ -1343,33 +1552,94 @@ def get_snapshot_name_arg(config, config_task_id):
         default=default_value,
         show_default=False,
     )
-    return {"name": "snapshot_name", "value": val, "task_uuid": config_task_id}
+    action_args = [{"name": "snapshot_name", "value": val, "task_uuid": config_task_id}]
+    if config["type"] == CONFIG_TYPE.SNAPSHOT.VMWARE:
+        choices = {
+            1: "1. Crash Consistent",
+            2: "2. Snapshot VM Memory",
+            3: "3. Enable Snapshot Quiesce",
+        }
+        default_idx = 1
+        click.echo("Choose from given snapshot type: ")
+        for choice in choices.values():
+            click.echo("\t{}".format(highlight_text(repr(choice))))
+        selected_val = click.prompt(
+            "Selected Snapshot Type [{}]".format(highlight_text(repr(default_idx))),
+            default=default_idx,
+            show_default=False,
+        )
+        if selected_val not in choices:
+            LOG.error(
+                "Invalid value {}, not present in choices: {}".format(
+                    selected_val, choices.keys()
+                )
+            )
+            sys.exit("Use valid choices from {}".format(choices.keys()))
+
+        action_args_choices_map = {
+            2: {
+                "name": "vm_memory_snapshot_enabled",
+                "value": "true",
+                "task_uuid": config_task_id,
+            },
+            3: {
+                "name": "snapshot_quiesce_enabled",
+                "value": "true",
+                "task_uuid": config_task_id,
+            },
+        }
+
+        # check action args of crash consistent
+        if selected_val != 1:
+            action_args.append(action_args_choices_map[selected_val])
+
+    return action_args
 
 
-def get_recovery_point_group_arg(config, config_task_id, recovery_groups):
+def get_recovery_point_group_arg(config, config_task_id, recovery_groups, config_type):
     choices = {}
     for i, rg in enumerate(recovery_groups):
-        choices[i + 1] = {
-            "label": "{}. {} [Created On: {} Expires On: {}]".format(
-                i + 1,
-                rg["status"]["name"],
-                time.strftime(
-                    "%Y-%m-%d %H:%M:%S",
-                    time.gmtime(
-                        rg["status"]["recovery_point_info_list"][0]["creation_time"]
-                        // 1000000
+        if config_type == CONFIG_TYPE.RESTORE.AHV:
+            choices[i + 1] = {
+                "label": "{}. {} [Created On: {} Expires On: {}]".format(
+                    i + 1,
+                    rg["status"]["name"],
+                    time.strftime(
+                        "%Y-%m-%d %H:%M:%S",
+                        time.gmtime(
+                            rg["status"]["recovery_point_info_list"][0]["creation_time"]
+                            // 1000000
+                        ),
+                    ),
+                    time.strftime(
+                        "%Y-%m-%d %H:%M:%S",
+                        time.gmtime(
+                            rg["status"]["recovery_point_info_list"][0][
+                                "expiration_time"
+                            ]
+                            // 1000000
+                        ),
                     ),
                 ),
-                time.strftime(
-                    "%Y-%m-%d %H:%M:%S",
-                    time.gmtime(
-                        rg["status"]["recovery_point_info_list"][0]["expiration_time"]
-                        // 1000000
-                    ),
+                "uuid": rg["status"]["uuid"],
+            }
+        elif config_type == CONFIG_TYPE.RESTORE.VMWARE:
+            # Defining it separately for vmware because snapshots taken don't have any expiry
+            created_time = rg["status"]["recovery_point_info_list"][0][
+                "snapshot_create_time"
+            ]
+            created_time = datetime.strptime(
+                created_time, "%Y-%m-%dT%H:%M:%S.%fZ"
+            ).replace(microsecond=0)
+            created_time.strftime("%Y-%m-%d %H:%M:%S")
+            choices[i + 1] = {
+                "label": "{}. {} [Created On: {}]".format(
+                    i + 1,
+                    rg["status"]["name"],
+                    created_time,
                 ),
-            ),
-            "uuid": rg["status"]["uuid"],
-        }
+                "uuid": rg["status"]["uuid"],
+            }
     if not choices:
         LOG.error(
             "No recovery group found. Please take a snapshot before running restore action"
@@ -1455,9 +1725,9 @@ def run_actions(
                 for config in config_list
                 if config["uuid"] == task["attrs"]["config_spec_reference"]["uuid"]
             )
-            if config["type"] == "AHV_SNAPSHOT":
-                action_args.append(get_snapshot_name_arg(config, task["uuid"]))
-            elif config["type"] == "AHV_RESTORE":
+            if config["type"] in CONFIG_TYPE.SNAPSHOT.TYPE:
+                action_args.extend(get_snapshot_name_arg(config, task["uuid"]))
+            elif config["type"] in CONFIG_TYPE.RESTORE.TYPE:
                 substrate_id = next(
                     (
                         dep["substrate_configuration"]["uuid"]
@@ -1475,7 +1745,7 @@ def run_actions(
                     raise Exception("[{}] - {}".format(err["code"], err["error"]))
                 action_args.append(
                     get_recovery_point_group_arg(
-                        config, task["uuid"], res.json()["entities"]
+                        config, task["uuid"], res.json()["entities"], config["type"]
                     )
                 )
 
@@ -1759,7 +2029,10 @@ def remove_non_escript_actions_variables(bp_payload):
             if "variable_list" in _e:
                 _e["variable_list"] = get_escript_vars_in_entity(_e)
 
-            if _el == "package_definition_list" and _e.get("type", "") == "DEB":
+            if _el == "package_definition_list" and _e.get("type", "") in (
+                "DEB",
+                "CUSTOM",
+            ):
                 for pkg_runbook_name in ["install_runbook", "uninstall_runbook"]:
                     (
                         _e["options"][pkg_runbook_name],
@@ -1767,6 +2040,8 @@ def remove_non_escript_actions_variables(bp_payload):
                     ) = get_runbook_payload_having_escript_task_vars_only(
                         _e["options"].get(pkg_runbook_name, {})
                     )
+            if "patch_list" in _e:
+                _e["patch_list"] = get_actions_having_escript_entities(_e["patch_list"])
 
 
 def get_escript_tasks_in_runbook(runbook_payload):
@@ -1862,6 +2137,19 @@ def describe_app_actions_to_update(app_name):
                     elif get_escript_vars_in_entity(_action["runbook"]):
                         runbook_containing_migratable_entities.append(runbook_uuid)
 
+                for _action in _entity.get("patch_list", []):
+                    runbook_uuid = _action["runbook"]["uuid"]
+                    runbook_uuid_context[runbook_uuid] = "{}.{}.Action.{}".format(
+                        DISPLAY_MAP[_key], _entity["name"], _action["name"]
+                    )
+                    dependencies[runbook_uuid] = get_runbook_dependencies(
+                        _action["runbook"]
+                    )
+                    if get_escript_tasks_in_runbook(_action["runbook"]):
+                        runbook_containing_migratable_entities.append(runbook_uuid)
+                    elif get_escript_vars_in_entity(_action["runbook"]):
+                        runbook_containing_migratable_entities.append(runbook_uuid)
+
     for _key in resources.keys():
         if _key in [
             "service_definition_list",
@@ -1876,6 +2164,65 @@ def describe_app_actions_to_update(app_name):
 
                 any_action_to_be_modified = False
                 for _action in _entity.get("action_list", []):
+
+                    runbook_uuid = _action["runbook"]["uuid"]
+                    has_migratable_entities = (
+                        runbook_uuid in runbook_containing_migratable_entities
+                    )
+
+                    dependable_migratable_actions = []
+                    for _run_uuid in dependencies.get(runbook_uuid, []):
+                        if _run_uuid in runbook_containing_migratable_entities:
+                            dependable_migratable_actions.append(
+                                runbook_uuid_context[_run_uuid]
+                            )
+
+                    if has_migratable_entities or dependable_migratable_actions:
+                        any_action_to_be_modified = True
+                        print("\t\t-> {}".format(highlight_text(_action["name"])))
+                        if has_migratable_entities:
+                            print("\t\t   Tasks:")
+                            task_list = get_escript_tasks_in_runbook(_action["runbook"])
+                            migratable_task_names = [
+                                _task["name"] for _task in task_list
+                            ]
+
+                            if migratable_task_names:
+                                for _ind, _tname in enumerate(migratable_task_names):
+                                    print(
+                                        "\t\t\t{}. {}".format(
+                                            _ind, highlight_text(_tname)
+                                        )
+                                    )
+                            else:
+                                print("\t\t\t    No Tasks to be migrated")
+
+                            print("\t\t   Variables:")
+                            var_list = get_escript_vars_in_entity(_action["runbook"])
+                            migratable_var_names = [_var["name"] for _var in var_list]
+                            if migratable_var_names:
+                                for _ind, _tname in enumerate(migratable_var_names):
+                                    print(
+                                        "\t\t\t{}. {}".format(
+                                            _ind, highlight_text(_tname)
+                                        )
+                                    )
+                            else:
+                                print("\t\t\t    No Variables to be migrated")
+
+                        if dependable_migratable_actions:
+                            print("\t\t   Dependable actions to be migrated:")
+                            for _ind, _act_ctx in enumerate(
+                                dependable_migratable_actions
+                            ):
+                                print(
+                                    "\t\t\t{}. {}".format(
+                                        _ind, highlight_text(_act_ctx)
+                                    )
+                                )
+
+                # Printing migratable tasks, variables, actions in patch config
+                for _action in _entity.get("patch_list", []):
 
                     runbook_uuid = _action["runbook"]["uuid"]
                     has_migratable_entities = (

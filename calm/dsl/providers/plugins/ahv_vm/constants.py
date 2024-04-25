@@ -10,7 +10,11 @@ class AHV:
     GUEST_CUSTOMIZATION_SCRIPT_TYPES = ["cloud_init", "sysprep"]
 
     SYS_PREP_INSTALL_TYPES = ["FRESH", "PREPARED"]
-    BOOT_TYPES = {"Legacy BIOS": "LEGACY", "UEFI": "UEFI"}
+    BOOT_TYPES = {
+        "Legacy BIOS": "LEGACY",
+        "UEFI": "UEFI",
+        "UEFI SECURE BOOT": "SECURE_BOOT",
+    }
     OPERATION_TYPES = {
         "DISK": ["CLONE_FROM_IMAGE", "ALLOCATE_STORAGE_CONTAINER"],
         "CDROM": ["CLONE_FROM_IMAGE", "EMPTY_CDROM"],

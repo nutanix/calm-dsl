@@ -1,11 +1,12 @@
 from calm.dsl.decompile.render import render_template
-from calm.dsl.builtins import ProfileType
+from calm.dsl.builtins import ProfileType, get_valid_identifier
 from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.decompile.ref_dependency import update_profile_name
 from calm.dsl.decompile.config_spec import (
     render_snapshot_config_template,
     render_restore_config_template,
+    render_update_config_template,
 )
 from calm.dsl.log import get_logging_handle
 
@@ -14,7 +15,9 @@ LOG = get_logging_handle(__name__)
 CONFIG_SPEC_MAP = {}
 
 
-def render_profile_template(cls, secrets_dict=[]):
+def render_profile_template(
+    cls, update_config_patch_attr_map, secrets_dict=[], endpoints=[], ep_list=[]
+):
 
     LOG.debug("Rendering {} profile template".format(cls.__name__))
     if not isinstance(cls, ProfileType):
@@ -56,12 +59,20 @@ def render_profile_template(cls, secrets_dict=[]):
             render_snapshot_config_template(entity, entity_context, CONFIG_SPEC_MAP)
         )
     update_config_list = []
-    for idx, entity in enumerate(user_attrs.get("update_configs", [])):
+    for idx, entity in enumerate(user_attrs.get("patch_list", [])):
         CONFIG_SPEC_MAP[entity.name] = {
             "global_name": "{}.update_configs[{}]".format(cls.__name__, idx),
             "local_name": "update_configs[{}]".format(idx),
         }
-        update_config_list.append(render_update_config_template(entity, entity_context))
+
+        entity_name = get_valid_identifier(entity.name)
+        patch_attr_name = update_config_patch_attr_map[entity_name]
+        patch_attr_name = get_valid_identifier(
+            entity_name + "_Update" + patch_attr_name
+        )
+        update_config_list.append(
+            render_update_config_template(entity, patch_attr_name)
+        )
 
     action_list = []
     for action in user_attrs.get("actions", []):
@@ -72,6 +83,8 @@ def render_profile_template(cls, secrets_dict=[]):
                 CONFIG_SPEC_MAP,
                 secrets_dict=secrets_dict,
                 context=context,
+                endpoints=endpoints,
+                ep_list=ep_list,
             )
         )
 
@@ -90,6 +103,7 @@ def render_profile_template(cls, secrets_dict=[]):
     user_attrs["variables"] = variable_list
     user_attrs["deployments"] = ", ".join(deployment_list)
     user_attrs["actions"] = action_list
+    user_attrs["patch_list"] = ", ".join(update_config_list)
     user_attrs["restore_configs"] = ", ".join(restore_config_list)
     user_attrs["snapshot_configs"] = ", ".join(snapshot_config_list)
 

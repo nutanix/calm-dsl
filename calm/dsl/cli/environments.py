@@ -2,6 +2,7 @@ import sys
 import uuid
 import click
 import json
+import os
 import time
 import arrow
 from prettytable import PrettyTable
@@ -9,12 +10,22 @@ from ruamel import yaml
 
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
-from calm.dsl.builtins import create_environment_payload, Environment
+from calm.dsl.builtins import (
+    create_environment_payload,
+    Environment,
+    get_valid_identifier,
+    MetadataType,
+    CredentialType,
+)
 from calm.dsl.builtins.models.helper.common import get_project
+from calm.dsl.decompile.main import init_decompile_context
+from calm.dsl.decompile.decompile_render import create_environment_dir
+from calm.dsl.decompile.file_handler import get_environment_dir
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
+from calm.dsl.builtins.models.environment import EnvironmentType
 
 from .utils import (
     get_name_query,
@@ -31,6 +42,21 @@ def create_environment(env_payload):
     env_payload.pop("status", None)
 
     env_name = env_payload["spec"]["name"]
+
+    # Adding uuid to creds
+    cred_name_uuid_map = {}
+    for cred in env_payload["spec"]["resources"].get("credential_definition_list", []):
+        cred["uuid"] = str(uuid.uuid4())
+        cred_name_uuid_map[cred["name"]] = cred["uuid"]
+
+    # Adding uuid readiness-probe
+    for sub in env_payload["spec"]["resources"].get("substrate_definition_list", []):
+        try:
+            cred_ref_obj = sub["readiness_probe"]["login_credential_local_reference"]
+            cred_ref_obj["uuid"] = cred_name_uuid_map[cred_ref_obj["name"]]
+        except Exception:
+            pass
+
     LOG.info("Creating environment '{}'".format(env_name))
     res, err = client.environment.create(env_payload)
     if err:
@@ -206,7 +232,7 @@ def get_env_class_from_module(user_env_module):
 
 
 def create_environment_from_dsl_file(
-    env_file, env_name, project_name, no_cache_update=False
+    env_file, env_name, project_name, no_cache_update=False, force=False
 ):
     """
     Helper creates an environment from dsl file (for calm_version >= 3.2)
@@ -217,6 +243,31 @@ def create_environment_from_dsl_file(
     Returns:
         response (object): Response object containing environment object details
     """
+    if force:
+        env_exist, res = is_environment_exist(env_name, project_name)
+        if env_exist:
+            entities = get_environments_usage(res["metadata"]["uuid"], project_name)
+            if entities:
+                click.echo(highlight_text("\n-------- Environments usage --------\n"))
+                for entity in entities:
+                    click.echo(
+                        highlight_text(list(entity.keys())[0])
+                        + ": "
+                        + highlight_text(list(entity.values())[0])
+                    )
+                LOG.error(
+                    f"\nEnvironment with name {env_name} has entities associated with it, environment creation with same name cannot be forced.\n"
+                )
+                sys.exit(-1)
+            else:
+                LOG.info(
+                    f"Forcing the environment create with name {env_name} by deleting the existing environment with same name"
+                )
+                delete_environment(env_name, project_name)
+        else:
+            LOG.info(
+                f"Environment with same name {env_name} does not exist in system, no need of forcing the environment create"
+            )
 
     # Update project on context
     ContextObj = get_context()
@@ -509,3 +560,143 @@ def delete_environment(environment_name, project_name, no_cache_update=False):
         LOG.info("Updating environments cache ...")
         Cache.delete_one(entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=environment_id)
         LOG.info("[Done]")
+
+
+def decompile_environment_command(
+    name, environment_file, project, environment_dir=None
+):
+    """helper to decompile environment"""
+    if name and environment_file:
+        LOG.error(
+            "Please provide either environment file location or server environment name"
+        )
+        sys.exit("Both environment name and file location provided.")
+    init_decompile_context()
+
+    if name:
+        decompile_environment_from_server(
+            name=name, environment_dir=environment_dir, project=project
+        )
+
+    elif environment_file:
+        decompile_environment_from_file(
+            filename=environment_file, environment_dir=environment_dir
+        )
+    else:
+        LOG.error(
+            "Please provide either environment file location or server environment name"
+        )
+        sys.exit("Environment name or file location not provided.")
+
+
+def decompile_environment_from_server(name, environment_dir, project):
+    """decompiles the environment by fetching it from server"""
+
+    client = get_api_client()
+    environment = get_environment(name, project)
+    environment_uuid = environment["status"]["uuid"]
+    res, err = client.environment.read(environment_uuid)
+    if err:
+        LOG.error(err)
+        sys.exit("Not able to decompile environment from server.")
+
+    environment = res.json()
+    _decompile_environment(
+        environment_payload=environment, environment_dir=environment_dir
+    )
+
+
+def decompile_environment_from_file(filename, environment_dir):
+    """decompile environment from local environment file"""
+
+    environment_payload = json.loads(open(filename).read())
+    _decompile_environment(
+        environment_payload=environment_payload, environment_dir=environment_dir
+    )
+
+
+def _decompile_environment(environment_payload, environment_dir):
+    """decompiles the environment from payload"""
+
+    environment_name = environment_payload["status"].get("name", "DslEnvironment")
+    environment_description = environment_payload["status"].get("description", "")
+
+    environment_metadata = environment_payload["metadata"]
+    # POP unnecessary keys
+    environment_metadata.pop("creation_time", None)
+    environment_metadata.pop("last_update_time", None)
+
+    metadata_obj = MetadataType.decompile(environment_metadata)
+
+    LOG.info("Decompiling environment {}".format(environment_name))
+    environment_cls = EnvironmentType.decompile(
+        environment_payload["status"]["resources"]
+    )
+
+    credentials = environment_cls.credentials
+
+    environment_cls.__name__ = get_valid_identifier(environment_name)
+    environment_cls.__doc__ = environment_description
+
+    create_environment_dir(
+        environment_cls=environment_cls,
+        environment_dir=environment_dir,
+        metadata_obj=metadata_obj,
+        credentials=credentials,
+    )
+    click.echo(
+        "\nSuccessfully decompiled. Directory location: {}. Environment location: {}".format(
+            highlight_text(get_environment_dir()),
+            highlight_text(os.path.join(get_environment_dir(), "environment.py")),
+        )
+    )
+
+
+def is_environment_exist(env_name, project_name):
+    client = get_api_client()
+    payload = {
+        "length": 250,
+        "offset": 0,
+        "filter": "name=={}".format(env_name),
+    }
+
+    if project_name:
+        project = get_project(project_name)
+        project_id = project["metadata"]["uuid"]
+        payload["filter"] += ";project_reference=={}".format(project_id)
+
+    res, err = client.environment.list(payload)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    if res["metadata"]["total_matches"] == 0:
+        return False, None
+
+    return True, res["entities"][0]
+
+
+def get_environments_usage(env_uuid, project_name):
+    filter = {"filter": {"environment_reference_list": [env_uuid]}}
+    client = get_api_client()
+    project_name_uuid_map = client.project.get_name_uuid_map()
+    project_id = project_name_uuid_map.get(project_name)
+    res, err = client.project.usage(project_id, filter)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    entities = []
+
+    def collect_entities(usage):
+        for entity_name, count in usage.items():
+            if entity_name not in ["environment", "marketplace_item"]:
+                if isinstance(count, dict):
+                    collect_entities(count)
+                    continue
+                if count > 0:
+                    entities.append({entity_name: count})
+
+    res = res.json()
+    collect_entities(res["status"]["usage"])
+    return entities

@@ -4,7 +4,7 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .task_input import _task_input
 from .helper import common as common_helper
-
+from .utils import is_compile_secrets
 
 # Variable
 
@@ -38,6 +38,9 @@ class VariableType(EntityType):
             del cdict["regex"]
         if not cdict.get("editables", {}):
             del cdict["editables"]
+
+        if cdict["type"] == "SECRET" and not is_compile_secrets():
+            cdict["value"] = ""
 
         if cdict.get("options", None):
             options = cdict["options"]

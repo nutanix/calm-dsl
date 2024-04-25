@@ -204,6 +204,8 @@ class MARKETPLACE_ITEM:
         GLOBAL = "GLOBAL_STORE"
         LOCAL = "LOCAL"
 
+    WARN_MSG = "Projects associated with MPI should have accounts attached in blueprint for deployment"
+
 
 class TASKS:
     class TASK_TYPES:

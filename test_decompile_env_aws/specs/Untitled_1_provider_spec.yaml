@@ -1,0 +1,34 @@
+availability_zone_reference: null
+backup_policy: null
+cluster_reference: null
+name: vm-@@{calm_array_index}@@-@@{calm_time}@@
+resources:
+  account_uuid: e8c72001-e53b-f749-7254-e84f4abba73f
+  associate_public_ip_address: true
+  availability_zone: us-east-1a
+  block_device_map:
+    data_disk_list: []
+    root_disk:
+      delete_on_termination: true
+      device_name: /dev/sda1
+      iops: 100
+      size_gb: 8
+      snapshot_id: ''
+      type: ''
+      volume_type: GP2
+    type: ''
+  image_id: ami-021d9d94f93a07a43
+  instance_initiated_shutdown_behavior: ''
+  instance_profile_name: aws-controltower-AdministratorExecutionRole
+  instance_type: t3a.small
+  key_name: piu
+  private_ip_address: ''
+  region: us-east-1
+  security_group_list: []
+  state: RUNNING
+  subnet_id: subnet-9a9ea2b0
+  tag_list: []
+  type: ''
+  user_data: ''
+  vpc_id: vpc-dcd149bb
+type: PROVISION_AWS_VM

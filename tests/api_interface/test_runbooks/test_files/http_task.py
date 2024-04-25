@@ -87,7 +87,7 @@ def get_http_task_runbook(endpoint_file="http_endpoint_payload.json", config_fil
             target=endpoints[0],
         )
 
-        Task.Exec.escript(name="ExecTask", script='''print "@@{ep_type}@@"''')
+        Task.Exec.escript.py3(name="ExecTask", script="""print("@@{ep_type}@@")""")
 
     return HTTPTask
 

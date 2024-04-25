@@ -1,0 +1,5 @@
+{%- macro patch_field_category(obj) %}
+{%if obj.operation != "modify" %}PatchField.Ahv.Category.{{obj.operation}}({{obj.value}}){% endif %}
+{%- endmacro %}
+
+{{ patch_field_category(obj) }}

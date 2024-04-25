@@ -125,7 +125,14 @@ def _describe_marketplace_runbook(name, out, version, source, app_state):
     "-p",
     "projects",
     multiple=True,
-    help="Projects for marketplace runbook",
+    help="Add projects to marketplace runbook",
+)
+@click.option(
+    "--remove-project",
+    "-rp",
+    "remove_projects",
+    multiple=True,
+    help="Remove projects from marketplace runbook",
 )
 @click.option(
     "--all_projects",
@@ -134,7 +141,9 @@ def _describe_marketplace_runbook(name, out, version, source, app_state):
     default=False,
     help="Approve runbook to all runbook",
 )
-def approve_runbook(name, version, category, all_projects, projects=[]):
+def approve_runbook(
+    name, version, category, all_projects, projects=[], remove_projects=[]
+):
     """Approves a marketplace manager runbook"""
 
     approve_marketplace_item(
@@ -144,6 +153,7 @@ def approve_runbook(name, version, category, all_projects, projects=[]):
         category=category,
         all_projects=all_projects,
         type=MARKETPLACE_ITEM.TYPES.RUNBOOK,
+        remove_projects=remove_projects,
     )
 
 
@@ -209,7 +219,16 @@ def _publish_marketplace_runbook(
     type=click.Choice(APP_SOURCES),
     help="App Source for marketplace runbook",
 )
-def _update_marketplace_runbook(name, version, category, projects, description, source):
+@click.option(
+    "--all_projects",
+    "-ap",
+    is_flag=True,
+    default=False,
+    help="Update marketplace runbook with all projects",
+)
+def _update_marketplace_runbook(
+    name, version, category, projects, description, source, all_projects
+):
     """Update a marketplace manager runbook"""
 
     update_marketplace_item(
@@ -219,6 +238,7 @@ def _update_marketplace_runbook(name, version, category, projects, description, 
         projects=projects,
         description=description,
         app_source=source,
+        all_projects=all_projects,
         type=MARKETPLACE_ITEM.TYPES.RUNBOOK,
     )
 
@@ -289,7 +309,7 @@ def _reject_marketplace_runbook(name, version):
     help="Preserve endpoints publishing runbooks to marketplace",
 )
 @click.option(
-    "--existing_markeplace_runbook",
+    "--existing_marketplace_runbook",
     "-e",
     is_flag=True,
     default=False,
@@ -333,6 +353,13 @@ def _reject_marketplace_runbook(name, version):
 @click.option(
     "--icon_name", "-i", default=None, help="App icon name for marketplace runbook"
 )
+@click.option(
+    "--all_projects",
+    "-ap",
+    is_flag=True,
+    default=False,
+    help="Publishes runbook to all projects",
+)
 def publish_runbook(
     runbook_name,
     name,
@@ -340,13 +367,14 @@ def publish_runbook(
     description,
     with_secrets,
     with_endpoints,
-    existing_markeplace_runbook,
+    existing_marketplace_runbook,
     publish_to_marketplace,
     projects=[],
     category=None,
     auto_approve=False,
     icon_name=False,
     icon_file=None,
+    all_projects=False,
 ):
     """Publish a runbook to marketplace manager"""
 
@@ -354,19 +382,21 @@ def publish_runbook(
         # Using runbook name as the marketplace runbook name if no name provided
         name = runbook_name
 
-    if not existing_markeplace_runbook:
+    if not existing_marketplace_runbook:
         publish_runbook_as_new_marketplace_item(
             runbook_name=runbook_name,
             marketplace_item_name=name,
             version=version,
             description=description,
             with_secrets=with_secrets,
+            with_endpoints=with_endpoints,
             publish_to_marketplace=publish_to_marketplace,
             projects=projects,
             category=category,
             auto_approve=auto_approve,
             icon_name=icon_name,
             icon_file=icon_file,
+            all_projects=all_projects,
         )
 
     else:
@@ -376,12 +406,14 @@ def publish_runbook(
             version=version,
             description=description,
             with_secrets=with_secrets,
+            with_endpoints=with_endpoints,
             publish_to_marketplace=publish_to_marketplace,
             projects=projects,
             category=category,
             auto_approve=auto_approve,
             icon_name=icon_name,
             icon_file=icon_file,
+            all_projects=all_projects,
         )
 
 

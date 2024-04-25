@@ -3,8 +3,20 @@ from distutils.version import LooseVersion as LV
 from calm.dsl.providers.base import get_provider
 
 from .entity import EntityType
+
+from calm.dsl.api import get_api_client
+
 from calm.dsl.log import get_logging_handle
-from calm.dsl.store import Version
+from calm.dsl.store import Version, Cache
+
+from calm.dsl.builtins.models.providers import Provider
+from calm.dsl.builtins.models.calm_ref import Ref
+
+from calm.dsl.constants import CACHE, ACCOUNT
+
+from calm.dsl.providers import get_provider
+
+from calm.dsl.builtins.models.helper.quotas import _get_quota
 
 LOG = get_logging_handle(__name__)
 
@@ -17,6 +29,7 @@ class ProjectType(EntityType):
     __openapi_type__ = "project"
 
     def compile(cls):
+
         cdict = super().compile()
 
         cdict["account_reference_list"] = []
@@ -168,6 +181,115 @@ class ProjectType(EntityType):
 
         if not cdict.get("default_subnet_reference"):
             cdict.pop("default_subnet_reference", None)
+        return cdict
+
+    @classmethod
+    def pre_decompile(mcls, cdict, context, prefix=""):
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
+
+        project_uuid = cdict["metadata"]["uuid"]
+        cdict = cdict["status"]["resources"]
+
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
+        accs = cdict["account_reference_list"]
+
+        subnet_cache_data = [
+            Cache.get_entity_data_using_uuid(CACHE.ENTITY.AHV_SUBNET, sub["uuid"])
+            for sub in cdict["subnet_reference_list"]
+        ]
+
+        cluster_cache_data = [
+            Cache.get_entity_data_using_uuid(CACHE.ENTITY.AHV_CLUSTER, cluster["uuid"])
+            for cluster in cdict["cluster_reference_list"]
+        ]
+
+        vpcs_cache_data = [
+            Cache.get_entity_data_using_uuid(CACHE.ENTITY.AHV_VPC, vpc["uuid"])
+            for vpc in cdict["vpc_reference_list"]
+        ]
+
+        quota_vcpus = 0
+        quota_disk = 0
+        quota_memory = 0
+
+        _quotas = None
+
+        providers_list = []
+        for _acc in accs:
+            _provider_data = {}
+            account_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type=CACHE.ENTITY.ACCOUNT, uuid=_acc["uuid"]
+            )
+
+            _provider_data["account_reference"] = {
+                "kind": "account",
+                "uuid": account_cache_data["uuid"],
+            }
+
+            _provider_data["type"] = account_cache_data["provider_type"]
+
+            subnets = []
+            cluster_uuids = []
+            cluster_names = []
+            for subnet in subnet_cache_data:
+                if subnet["account_uuid"] == account_cache_data["uuid"]:
+                    _subnet = {"kind": "subnet", "uuid": subnet["uuid"]}
+                    subnets.append(_subnet)
+                    cluster_uuids.append(subnet.get("cluster_uuid", ""))
+
+            _provider_data["subnet_references"] = subnets
+
+            if (
+                account_cache_data["provider_type"] == ACCOUNT.TYPE.VMWARE
+                or account_cache_data["provider_type"] == ACCOUNT.TYPE.AHV
+            ):
+
+                if account_cache_data["provider_type"] == ACCOUNT.TYPE.VMWARE:
+                    vmware_provider = get_provider("VMWARE_VM")
+                    vmware_provider_obj = vmware_provider.get_api_obj()
+                    cluster_names = vmware_provider_obj.clusters(_acc["uuid"])
+                    clusters = cluster_names
+
+                if account_cache_data["provider_type"] == ACCOUNT.TYPE.AHV:
+                    clusters = cluster_uuids
+
+                for cluster in clusters:
+                    quota_entities = {
+                        "project": project_uuid,
+                        "account": _acc["uuid"],
+                        "cluster": cluster,
+                    }
+
+                    client = get_api_client()
+                    quota = _get_quota(client, quota_entities)
+
+                    if len(quota) != 0 and len(quota[0]["entities"]) != 0:
+                        quota_vcpus += quota[0]["entities"][0]["status"]["resources"][
+                            "data"
+                        ]["vcpu"]
+                        quota_disk_ = quota[0]["entities"][0]["status"]["resources"][
+                            "data"
+                        ]["disk"]
+                        quota_disk += int(quota_disk_ / 1073741824)
+                        quota_memory_ = quota[0]["entities"][0]["status"]["resources"][
+                            "data"
+                        ]["memory"]
+                        quota_memory += int(quota_memory_ / 1073741824)
+
+            providers_list.append(_provider_data)
+
+        cdict["provider_list"] = providers_list
+
+        if quota_disk != 0 and quota_memory != 0 and quota_vcpus != 0:
+            _quotas = {
+                "VCPUS": quota_vcpus,
+                "STORAGE": quota_disk,
+                "MEMORY": quota_memory,
+            }
+            cdict["quotas"] = _quotas
+
         return cdict
 
 

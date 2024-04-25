@@ -1,0 +1,21 @@
+{%- macro update_config_attr(obj) %}
+class {{obj.name}}(AhvUpdateConfigAttrs):
+    {% if obj.description %}"""{{obj.description}}"""{% endif %}
+
+    {% if obj.memory and obj.memory.operation %}memory = PatchField.Ahv.memory(value="{{obj.memory.value}}", operation="{{obj.memory.operation}}"{% if obj.memory.max_value %}, max_val={{obj.memory.max_value}}{% endif %}{% if obj.memory.min_value %}, min_val={{obj.memory.min_value}}{% endif %}, editable={{obj.memory.editable}}){% endif %}
+    {% if obj.vcpu and obj.vcpu.operation %}vcpu = PatchField.Ahv.vcpu(value="{{obj.vcpu.value}}", operation="{{obj.vcpu.operation}}"{% if obj.vcpu.max_value %}, max_val={{obj.vcpu.max_value}}{% endif %}{% if obj.vcpu.min_value %}, min_val={{obj.vcpu.min_value}}{% endif %}, editable={{obj.vcpu.editable}}){% endif %}
+    {% if obj.numsocket and obj.numsocket.operation %}numsocket = PatchField.Ahv.numsocket(value="{{obj.numsocket.value}}", operation="{{obj.numsocket.operation}}"{% if obj.numsocket.max_value %}, max_val={{obj.numsocket.max_value}}{% endif %}{% if obj.numsocket.min_value%}, min_val={{obj.numsocket.min_value}}{% endif %}, editable={{obj.numsocket.editable}}){% endif %}
+    {% if obj.disk_delete %}disk_delete = {{obj.disk_delete}}{% endif %}
+    {% if obj.nic_delete %}nic_delete = {{obj.nic_delete}}{% endif %}
+    {% if obj.categories_delete %}categories_delete = {{obj.categories_delete}}{% endif %}
+    {% if obj.categories_add %}categories_add = {{obj.categories_add}}{% endif %}
+    {% if obj.nic_list %}nics = [{{obj.nic_list}}]{% endif %}
+    {% if obj.disk_list %}disks = [{{obj.disk_list}}]{% endif %}
+    {% if obj.category_list %}categories = [{{obj.category_list}}]{% endif %}
+
+{% for action in obj.actions %}
+{{action | indent( width=4, first=True)}}
+{%- endfor %}
+{%- endmacro %}
+
+{{ update_config_attr(obj) }}

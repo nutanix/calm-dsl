@@ -1,0 +1,292 @@
+{
+    "status": {
+        "description": "",
+        "message_list": [],
+        "name": "test_var_decompile",
+        "state": "ACTIVE",
+        "critical": false,
+        "attrs": {},
+        "resources": {
+            "endpoints_information": [],
+            "endpoint_definition_list": [],
+            "credential_definition_list": [
+                {
+                    "username": "admin",
+                    "description": "",
+                    "state": "ACTIVE",
+                    "message_list": [],
+                    "uuid": "4e0f475c-acf9-5e00-e073-d03e3b7770b6",
+                    "secret": {
+                        "attrs": {
+                            "is_secret_modified": false,
+                            "secret_reference": {}
+                        }
+                    },
+                    "editables": {},
+                    "cred_class": "static",
+                    "type": "PASSWORD",
+                    "name": "c111"
+                }
+            ],
+            "runbook": {
+                "task_definition_list": [
+                    {
+                        "retries": "0",
+                        "description": "",
+                        "type": "DAG",
+                        "uuid": "9c21fd89-d2c7-084a-a1b5-f40ee8fc275f",
+                        "child_tasks_local_reference_list": [
+                            {
+                                "kind": "app_task",
+                                "name": "Task 1",
+                                "uuid": "2f3d09c3-7100-a908-b4ac-66c2d76c4315"
+                            }
+                        ],
+                        "state": "ACTIVE",
+                        "attrs": {
+                            "edges": [],
+                            "type": ""
+                        },
+                        "timeout_secs": "0",
+                        "inherit_target": false,
+                        "message_list": [],
+                        "variable_list": [],
+                        "name": "a8d5a418_dag"
+                    },
+                    {
+                        "target_any_local_reference": {
+                            "kind": "app_endpoint",
+                            "name": "ep2",
+                            "uuid": "c1b409e3-3135-42d6-615c-2d4c0361f43b"
+                        },
+                        "retries": "0",
+                        "description": "",
+                        "type": "EXEC",
+                        "uuid": "2f3d09c3-7100-a908-b4ac-66c2d76c4315",
+                        "child_tasks_local_reference_list": [],
+                        "state": "ACTIVE",
+                        "attrs": {
+                            "script_type": "sh",
+                            "type": "",
+                            "command_line_args": "",
+                            "exit_status": [],
+                            "script": "echo \"hello\""
+                        },
+                        "timeout_secs": "0",
+                        "inherit_target": false,
+                        "message_list": [],
+                        "variable_list": [],
+                        "name": "Task 1"
+                    }
+                ],
+                "description": "",
+                "message_list": [],
+                "uuid": "ed37a255-f657-8a76-affc-672903587318",
+                "state": "ACTIVE",
+                "variable_list": [
+                    {
+                        "regex": {},
+                        "val_type": "STRING",
+                        "is_mandatory": false,
+                        "description": "",
+                        "data_type": "BASE",
+                        "message_list": [],
+                        "uuid": "4689ecc1-3a79-b4da-9616-0904187e19f8",
+                        "value": "",
+                        "label": "",
+                        "state": "ACTIVE",
+                        "attrs": {
+                            "type": ""
+                        },
+                        "editables": {
+                            "value": true
+                        },
+                        "is_hidden": false,
+                        "type": "HTTP_LOCAL",
+                        "options": {
+                            "type": "HTTP",
+                            "attrs": {
+                                "expected_response_params": [
+                                    {
+                                        "status": "SUCCESS",
+                                        "code": 200,
+                                        "type": ""
+                                    }
+                                ],
+                                "request_body": "",
+                                "retry_count": 1,
+                                "url": "/a/b/c",
+                                "response_paths": {
+                                    "http_dyn_var_get": "$.x.y"
+                                },
+                                "retry_interval": 1,
+                                "proxy_type": "",
+                                "headers": [],
+                                "authentication": {
+                                    "username": "admin",
+                                    "password": {
+                                        "attrs": {
+                                            "is_secret_modified": false,
+                                            "secret_reference": {}
+                                        }
+                                    },
+                                    "type": "basic"
+                                },
+                                "tls_verify": false,
+                                "content_type": "application/json",
+                                "connection_timeout": 120,
+                                "type": "HTTP",
+                                "method": "GET"
+                            }
+                        },
+                        "name": "http_dyn_var_get"
+                    }
+                ],
+                "main_task_local_reference": {
+                    "kind": "app_task",
+                    "name": "a8d5a418_dag",
+                    "uuid": "9c21fd89-d2c7-084a-a1b5-f40ee8fc275f"
+                },
+                "name": "3d01474d_runbook"
+            },
+            "type": "workflow",
+            "default_target_reference": {
+                "kind": "app_endpoint",
+                "name": "ep2",
+                "uuid": "c1b409e3-3135-42d6-615c-2d4c0361f43b"
+            }
+        }
+    },
+    "spec": {
+        "name": "test_var_decompile",
+        "resources": {
+            "runbook": {
+                "main_task_local_reference": {
+                    "kind": "app_task",
+                    "uuid": "9c21fd89-d2c7-084a-a1b5-f40ee8fc275f"
+                },
+                "task_definition_list": [
+                    {
+                        "attrs": {
+                            "edges": []
+                        },
+                        "type": "DAG",
+                        "name": "a8d5a418_dag",
+                        "child_tasks_local_reference_list": [
+                            {
+                                "kind": "app_task",
+                                "uuid": "2f3d09c3-7100-a908-b4ac-66c2d76c4315"
+                            }
+                        ],
+                        "uuid": "9c21fd89-d2c7-084a-a1b5-f40ee8fc275f"
+                    },
+                    {
+                        "target_any_local_reference": {
+                            "kind": "app_endpoint",
+                            "uuid": "c1b409e3-3135-42d6-615c-2d4c0361f43b",
+                            "name": "ep2"
+                        },
+                        "uuid": "2f3d09c3-7100-a908-b4ac-66c2d76c4315",
+                        "inherit_target": false,
+                        "child_tasks_local_reference_list": [],
+                        "attrs": {
+                            "script_type": "sh",
+                            "script": "echo \"hello\""
+                        },
+                        "type": "EXEC",
+                        "variable_list": [],
+                        "name": "Task 1"
+                    }
+                ],
+                "name": "3d01474d_runbook",
+                "variable_list": [
+                    {
+                        "val_type": "STRING",
+                        "name": "http_dyn_var_get",
+                        "data_type": "BASE",
+                        "uuid": "4689ecc1-3a79-b4da-9616-0904187e19f8",
+                        "label": "",
+                        "attrs": {},
+                        "editables": {
+                            "value": true
+                        },
+                        "is_hidden": false,
+                        "type": "HTTP_LOCAL",
+                        "options": {
+                            "type": "HTTP",
+                            "attrs": {
+                                "expected_response_params": [
+                                    {
+                                        "status": "SUCCESS",
+                                        "code": "200"
+                                    }
+                                ],
+                                "headers": [],
+                                "url": "/a/b/c",
+                                "response_paths": {
+                                    "http_dyn_var_get": "$.x.y"
+                                },
+                                "retry_interval": 1,
+                                "retry_count": 1,
+                                "authentication": {
+                                    "username": "admin",
+                                    "password": {
+                                        "attrs": {
+                                            "is_secret_modified": false
+                                        }
+                                    },
+                                    "type": "basic"
+                                },
+                                "content_type": "application/json",
+                                "connection_timeout": 120,
+                                "type": "HTTP",
+                                "method": "GET"
+                            }
+                        },
+                        "description": ""
+                    }
+                ],
+                "uuid": "ed37a255-f657-8a76-affc-672903587318"
+            },
+            "endpoint_definition_list": [],
+            "credential_definition_list": [
+                {
+                    "username": "admin",
+                    "uuid": "4e0f475c-acf9-5e00-e073-d03e3b7770b6",
+                    "secret": {
+                        "attrs": {
+                            "is_secret_modified": false
+                        }
+                    },
+                    "cred_class": "static",
+                    "type": "PASSWORD",
+                    "name": "c111"
+                }
+            ],
+            "default_target_reference": {
+                "kind": "app_endpoint",
+                "uuid": "c1b409e3-3135-42d6-615c-2d4c0361f43b",
+                "name": "ep2"
+            }
+        }
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "last_update_time": "1696930012521107",
+        "owner_reference": {
+            "kind": "user",
+            "uuid": "00000000-0000-0000-0000-000000000000",
+            "name": "admin"
+        },
+        "kind": "runbook",
+        "uuid": "16d5478a-ce86-5393-7f6f-b6c5abd94b25",
+        "project_reference": {
+            "kind": "project",
+            "name": "default",
+            "uuid": "7702830e-e0c0-430b-91ed-f8259c5d72fe"
+        },
+        "spec_version": 7,
+        "creation_time": "1695970830674979",
+        "name": "test_var_decompile"
+    }
+}

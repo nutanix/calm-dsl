@@ -1,4 +1,5 @@
 from inspect import getargs
+import os
 import time
 import click
 import arrow
@@ -19,14 +20,23 @@ from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 from calm.dsl.builtins.models.helper.common import get_project
-from calm.dsl.cli.quotas import (
+from calm.dsl.builtins import (
+    get_valid_identifier,
+    MetadataType,
+)
+from calm.dsl.decompile.main import init_decompile_context
+from calm.dsl.decompile.decompile_render import create_project_dir
+from calm.dsl.decompile.file_handler import get_project_dir
+from calm.dsl.builtins.models.helper.quotas import (
     _set_quota_state,
     get_quota_uuid_at_project,
     create_quota_at_project,
     set_quota_at_project,
+    read_quota_resources,
 )
 from calm.dsl.store import Cache, Version
 from calm.dsl.constants import CACHE, PROJECT_TASK, QUOTA
+from calm.dsl.builtins.models.project import ProjectType
 
 LOG = get_logging_handle(__name__)
 
@@ -391,7 +401,7 @@ def update_project(project_uuid, project_payload):
 
 
 def create_project_from_dsl(
-    project_file, project_name, description="", no_cache_update=False
+    project_file, project_name, description="", no_cache_update=False, force=False
 ):
     """Steps:
     1. Creation of project without env
@@ -400,6 +410,34 @@ def create_project_from_dsl(
     """
 
     client = get_api_client()
+    if force:
+        project_name_uuid_map = client.project.get_name_uuid_map()
+        project_id = project_name_uuid_map.get(project_name)
+        if project_id:
+            entities = get_projects_usage(project_name)
+            if entities:
+                click.echo(highlight_text("\n-------- Projects usage --------\n"))
+                for entity in entities:
+                    click.echo(
+                        highlight_text(list(entity.keys())[0])
+                        + ": "
+                        + highlight_text(list(entity.values())[0])
+                    )
+                click.echo(
+                    highlight_text(
+                        f"\nProject with name {project_name} has entities associated with it, project creation with same name cannot be forced.\n"
+                    )
+                )
+                sys.exit(-1)
+            else:
+                LOG.info(
+                    f"Forcing the project create with name {project_name} by deleting the existing project with same name"
+                )
+                delete_project([project_name])
+        else:
+            LOG.info(
+                f"Project with same name {project_name} does not exist in system, no need of forcing the project create"
+            )
 
     user_project_module = get_project_module_from_file(project_file)
     UserProject = get_project_class_from_module(user_project_module)
@@ -692,17 +730,30 @@ def describe_project(project_name, out):
     if not accounts:
         click.echo(highlight_text("No provider's account registered"))
 
-    quota_resources = project_resources.get("resource_domain", {}).get("resources", [])
+    project_uuid = project["metadata"]["uuid"]
+    quota_entities = {"project": project_uuid}
+
+    context_obj = get_context()
+    policy_config = context_obj.get_policy_config()
+
+    # Project level quota values are migrated to Quota API when policy engine is enabled
+    quota_resources = {}
+    if policy_config.get("policy_status", "False") == "False":
+        LOG.info("No Quota Values fetched as policy engine is disabled.")
+
+    # Reading project level quota from quota api if policy engine is enabled
+    else:
+        quota_resources = read_quota_resources(client, project_name, quota_entities)
+
     if quota_resources:
         click.echo("\nQuotas: \n-------")
-        for qr in quota_resources:
-            qk = qr["resource_type"]
-            qv = qr["limit"]
-            if qr["units"] == "BYTES":
+        for qk, qv in quota_resources.items():
+            qv = qv if qv != -1 else "NA"
+            if qv != "NA" and qk in QUOTA.RESOURCES_WITH_BYTES_UNIT:
                 qv = qv // 1073741824
                 qv = str(qv) + " (GiB)"
 
-            click.echo("\t{} : {}".format(qk, highlight_text(qv)))
+            click.echo("\t{} : {}".format(QUOTA.RESOURCES[qk], highlight_text(qv)))
 
 
 def delete_project(project_names, no_cache_update=False):
@@ -1503,3 +1554,90 @@ def get_project_usage_payload(project_payload, old_project_payload):
     }
 
     return project_usage_payload
+
+
+def decompile_project_command(name, project_file, project_dir=None):
+    """helper to decompile project"""
+    if name and project_file:
+        LOG.error("Please provide either project file location or server project name")
+        sys.exit("Both project name and file location provided.")
+    init_decompile_context()
+
+    if name:
+        decompile_project_from_server(name=name, project_dir=project_dir)
+
+    elif project_file:
+        decompile_project_from_file(filename=project_file, project_dir=project_dir)
+    else:
+        LOG.error("Please provide either project file location or server project name")
+        sys.exit("Project name or file location not provided.")
+
+
+def decompile_project_from_server(name, project_dir):
+    """decompiles the project by fetching it from server"""
+
+    client = get_api_client()
+
+    LOG.info("Fetching project '{}' details".format(name))
+    project = get_project(name)
+
+    _decompile_project(project_payload=project, project_dir=project_dir)
+
+
+def decompile_project_from_file(filename, project_dir):
+    """decompile project from local project file"""
+
+    project_payload = json.loads(open(filename).read())
+    _decompile_project(project_payload=project_payload, project_dir=project_dir)
+
+
+def _decompile_project(project_payload, project_dir):
+    """decompiles the project from payload"""
+
+    try:
+        project_name = project_payload["status"].get("name", "DslProject")
+    except:
+        LOG.debug("Failed to get default project name.")
+    project_description = project_payload["status"].get("description", "")
+
+    LOG.info("Decompiling project {}".format(project_name))
+    project_cls = ProjectType.decompile(project_payload)
+
+    project_cls.__name__ = get_valid_identifier(project_name)
+    project_cls.__doc__ = project_description
+
+    create_project_dir(
+        project_cls=project_cls,
+        project_dir=project_dir,
+    )
+    click.echo(
+        "\nSuccessfully decompiled. Directory location: {}. Project location: {}".format(
+            highlight_text(get_project_dir()),
+            highlight_text(os.path.join(get_project_dir(), "project.py")),
+        )
+    )
+
+
+def get_projects_usage(project_name, filter={"filter": {}}):
+    client = get_api_client()
+    project_name_uuid_map = client.project.get_name_uuid_map()
+    project_id = project_name_uuid_map.get(project_name)
+    res, err = client.project.usage(project_id, filter)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    entities = []
+
+    def collect_entities(usage):
+        for entity_name, count in usage.items():
+            if entity_name not in ["environment", "marketplace_item"]:
+                if isinstance(count, dict):
+                    collect_entities(count)
+                    continue
+                if count > 0:
+                    entities.append({entity_name: count})
+
+    res = res.json()
+    collect_entities(res["status"]["usage"])
+    return entities

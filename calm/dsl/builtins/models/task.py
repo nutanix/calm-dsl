@@ -11,6 +11,7 @@ from .calm_ref import Ref
 from .task_input import TaskInputType
 from .variable import CalmVariable
 from .helper import common as common_helper
+from .utils import is_compile_secrets
 
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
@@ -22,7 +23,7 @@ from calm.dsl.builtins.models.ndb import (
     Tag,
 )
 from calm.dsl.builtins.models.constants import NutanixDB as NutanixDBConst
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, SUBSTRATE, PROVIDER, TASKS
 
 LOG = get_logging_handle(__name__)
 
@@ -430,6 +431,92 @@ def meta(name=None, child_tasks=None, edges=None, target=None):
     }
     if target:
         kwargs["target_any_local_reference"] = target
+
+    return _task_create(**kwargs)
+
+
+def vm_power_action_task(name=None, action_name=None, provider=None, target=None):
+    """
+    Create a VM POWER ON/OFF/RESTART task
+    Args:
+        name (str): Name for the task
+        provider (str): Type of provider
+        action_name (str): Valid power action name
+        target (Ref): Target entity reference
+    Returns:
+        (Task): DAG task
+    """
+    if action_name not in list(SUBSTRATE.VM_POWER_ACTIONS_REV.keys()):
+        LOG.error(
+            "{} is not a valid vm power on action {}".format(
+                list(SUBSTRATE.VM_POWER_ACTIONS_REV.keys())
+            )
+        )
+        sys.exit(-1)
+
+    # name follows UI naming convention for runbooks
+    kwargs = {
+        "name": name
+        or "SYS_GEN__{}_Operation_{}_".format(
+            PROVIDER.NAME[provider], SUBSTRATE.POWER_ACTION_CAMEL_CASE[action_name]
+        )
+        + str(uuid.uuid4())[:8],
+        "type": TASKS.TASK_TYPES.VM_OPERATION[provider],
+        "attrs": {
+            "operation_type": action_name,
+            "type": TASKS.TASK_TYPES.GENERIC_OPERATION,
+        },
+    }
+
+    if target:
+        kwargs["target_any_local_reference"] = _get_target_ref(target)
+
+    return _task_create(**kwargs)
+
+
+def check_login(name=None, readiness_probe=None, target=None):
+    """
+    Create a VM CHECK LOGIN task.
+    Args:
+        name (str): Name for the task
+        readiness_probe (dict): Compiled readiness probe data
+        target (Ref): Target entity reference
+    Returns:
+        (Task): DAG task
+    """
+
+    if not target:
+        LOG.error("Target not supplied")
+    if not readiness_probe:
+        LOG.error("Readiness probe not supplied")
+
+    substrate_name = "Substrate"  # Default substrate name
+    if isinstance(target, EntityType):
+        substrate_name = target.name or target.__name__
+    elif isinstance(target, RefType):
+        substrate_name = target.__self__.name or target.__self__.__name__
+    else:
+        raise ValueError("Target is not of ref or entity type")
+
+    # This follows UI naming convention for runbooks
+    name = (
+        name
+        or "SYS_GEN__check_login_for_" + substrate_name + "_" + str(uuid.uuid4())[:8]
+    )
+    kwargs = {
+        "name": name,
+        "type": TASKS.TASK_TYPES.CHECK_LOGIN,
+        "attrs": {
+            "retries": readiness_probe["retries"],
+            "dial_timeout": "",
+            "timeout": readiness_probe["delay_secs"],
+            "address": readiness_probe["address"],
+            "type": TASKS.TASK_TYPES.CHECK_LOGIN,
+            "sleep_time": "",
+        },
+    }
+
+    kwargs["target_any_local_reference"] = _get_target_ref(target)
 
     return _task_create(**kwargs)
 
@@ -1371,6 +1458,7 @@ def http_task(
     """
     auth_obj = {"auth_type": "none"}
 
+    # Auth object for basic auth with credential.
     if cred is not None:
         cred_ref = _get_target_ref(cred)
         if getattr(cred_ref, "kind", None) != "app_credential":
@@ -1385,6 +1473,7 @@ def http_task(
             "credential_local_reference": cred_ref,
         }
 
+    # Auth object for basic auth
     elif credential is not None:
         if getattr(credential, "__kind__", None) != "app_credential":
             raise ValueError(
@@ -1393,16 +1482,14 @@ def http_task(
                 + " should be a Credential object of PASSWORD type"
             )
 
-        # TODO: Auth should be changed to basic auth with credential.
-        # This is dependent on https://jira.nutanix.com/browse/CALM-12149
-        # We could also possibly check calm server version to switch between
-        # the two auth mechanisms since basic auth will be deprecated.
         auth_obj = {
             "auth_type": "basic",
             "basic_auth": {
                 "username": credential.username,
                 "password": {
-                    "value": credential.secret.get("value"),
+                    "value": credential.secret.get("value")
+                    if is_compile_secrets()
+                    else "",
                     "attrs": {"is_secret_modified": True},
                 },
             },

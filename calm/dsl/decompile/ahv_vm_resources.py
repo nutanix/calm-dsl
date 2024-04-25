@@ -46,5 +46,9 @@ def render_ahv_vm_resources(cls, boot_config, vm_name_prefix=""):
             cls.guest_customization, vm_name_prefix=vm_name_prefix
         )
 
+    user_attrs["boot_type"] = "LEGACY"  # default boot type is legacy
+    if user_attrs.get("boot_config", {}):
+        user_attrs["boot_type"] = user_attrs["boot_config"].get("boot_type", None)
+
     text = render_template(schema_file="ahv_vm_resources.py.jinja2", obj=user_attrs)
     return text.strip()

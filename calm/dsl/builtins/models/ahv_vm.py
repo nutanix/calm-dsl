@@ -50,6 +50,8 @@ class AhvVmResourcesType(EntityType):
         boot_type = cdict.pop("boot_type", None)
         if boot_type == "UEFI":
             cdict["boot_config"]["boot_type"] = "UEFI"
+        elif boot_type == "SECURE_BOOT":
+            cdict["boot_config"]["boot_type"] = "SECURE_BOOT"
 
         if not cdict["boot_config"]:
             cdict.pop("boot_config", None)

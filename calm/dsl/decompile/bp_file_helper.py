@@ -1,4 +1,6 @@
 import click
+import sys
+import traceback
 import os
 from io import StringIO
 import json
@@ -18,11 +20,14 @@ from calm.dsl.decompile.credential import render_credential_template, get_cred_f
 from calm.dsl.decompile.blueprint import render_blueprint_template
 from calm.dsl.decompile.metadata import render_metadata_template
 from calm.dsl.decompile.variable import get_secret_variable_files
+from calm.dsl.decompile.ref_dependency import update_entity_gui_dsl_name
 from calm.dsl.decompile.file_handler import get_local_dir
 from calm.dsl.builtins import BlueprintType, ServiceType, PackageType
 from calm.dsl.builtins import DeploymentType, ProfileType, SubstrateType
 from calm.dsl.builtins import get_valid_identifier
 from calm.dsl.log import get_logging_handle
+from calm.dsl.builtins import ConfigAttrs
+from calm.dsl.decompile.config_spec import render_config_attr_template
 
 
 LOG = get_logging_handle(__name__)
@@ -44,7 +49,9 @@ def render_bp_file_template(
     user_attrs["description"] = cls.__doc__
 
     secrets_dict = []
-
+    # endpoints contains rendered endpoints, and ep_list contains the names in a list to avoid duplication
+    endpoints = []
+    ep_list = []
     # Find default cred
     default_cred = cls.default_cred
     default_cred_name = getattr(default_cred, "name", "") or getattr(
@@ -112,6 +119,10 @@ def render_bp_file_template(
         deployments.extend(profile.deployments)
         for dep in deployments:
             add_edges(entity_edges, dep.get_ref().name, profile.get_ref().name)
+        for patch_config_attr in profile.patch_list:
+            entity_name_text_map[
+                get_valid_identifier(patch_config_attr.patch_attrs[0].__name__)
+            ] = patch_config_attr.patch_attrs[0]
 
     for deployment in deployments:
         entity_name_text_map[deployment.get_ref().name] = deployment
@@ -142,10 +153,10 @@ def render_bp_file_template(
             if contains_encrypted_secrets:
                 try:
                     secret_val = cred_file_dict[file_name]
-                except Exception:
-                    import pdb
-
-                    pdb.set_trace()
+                except Exception as exp:
+                    LOG.debug("Got traceback\n{}".format(traceback.format_exc()))
+                    LOG.error("Secret value not found due to {}".format(exp))
+                    sys.exit(-1)
             else:
                 secret_val = click.prompt(
                     "\nValue for {}".format(file_name),
@@ -160,23 +171,70 @@ def render_bp_file_template(
     dependepent_entities = []
     dependepent_entities = get_ordered_entities(entity_name_text_map, entity_edges)
 
+    # Constructing map of patch attribute class name to update config name
+    patch_attr_update_config_map = {}
+    for k, v in enumerate(dependepent_entities):
+        if isinstance(v, ProfileType):
+            if not v.patch_list:
+                continue
+            for update_config in v.patch_list:
+                patch_attr_name = update_config.patch_attrs[0].__name__
+                update_config_name = get_valid_identifier(update_config.__name__)
+                patch_attr_update_config_map[patch_attr_name] = update_config_name
+
+    # Constructing reverse map of above
+    update_config_patch_attr_map = dict(
+        (v, k) for k, v in patch_attr_update_config_map.items()
+    )
+
+    # Setting dsl class and gui display name of entity in beginning.
+    # Case: when vm power actions are used in service level then dsl class name of substrate is needed.
+    # As service class is rendered before substrate we need to explicitly create substrate ui dsl map initially.
+    # This will help in targetting correct substrate to vm power actions
+    # TODO move all gui to dsl class mapping to entity.py
+    for k, v in enumerate(dependepent_entities):
+        update_entity_gui_dsl_name(v.get_gui_name(), v.__name__)
+
     # Rendering templates
     for k, v in enumerate(dependepent_entities):
         if isinstance(v, ServiceType):
-            dependepent_entities[k] = render_service_template(v, secrets_dict)
+            dependepent_entities[k] = render_service_template(
+                v, secrets_dict, endpoints=endpoints, ep_list=ep_list
+            )
+
+        elif isinstance(v, ConfigAttrs):
+            dependepent_entities[k] = render_config_attr_template(
+                v,
+                patch_attr_update_config_map,
+                secrets_dict,
+                endpoints=endpoints,
+                ep_list=ep_list,
+            )
 
         elif isinstance(v, PackageType):
-            dependepent_entities[k] = render_package_template(v, secrets_dict)
+            dependepent_entities[k] = render_package_template(
+                v, secrets_dict, endpoints=endpoints, ep_list=ep_list
+            )
 
         elif isinstance(v, ProfileType):
-            dependepent_entities[k] = render_profile_template(v, secrets_dict)
+            dependepent_entities[k] = render_profile_template(
+                v,
+                update_config_patch_attr_map,
+                secrets_dict,
+                endpoints=endpoints,
+                ep_list=ep_list,
+            )
 
         elif isinstance(v, DeploymentType):
             dependepent_entities[k] = render_deployment_template(v)
 
         elif isinstance(v, SubstrateType):
             dependepent_entities[k] = render_substrate_template(
-                v, vm_images=vm_images, secrets_dict=secrets_dict
+                v,
+                vm_images=vm_images,
+                secrets_dict=secrets_dict,
+                endpoints=endpoints,
+                ep_list=ep_list,
             )
 
     is_any_secret_value_available = False
@@ -191,7 +249,7 @@ def render_bp_file_template(
 
     blueprint = render_blueprint_template(cls)
 
-    # Rendere blueprint metadata
+    # Render blueprint metadata
     metadata_str = render_metadata_template(metadata_obj)
 
     user_attrs.update(
@@ -203,6 +261,7 @@ def render_bp_file_template(
             "blueprint": blueprint,
             "metadata": metadata_str,
             "contains_encrypted_secrets": contains_encrypted_secrets,
+            "endpoints": endpoints,
         }
     )
 

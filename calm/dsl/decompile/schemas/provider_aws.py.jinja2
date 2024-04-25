@@ -1,0 +1,6 @@
+{% macro aws_provider(obj) %}
+    Provider.Aws(
+        {% if obj.account_reference %}account=Ref.Account("{{obj.account_reference}}"),{% endif %}
+    ),
+{% endmacro %}
+{{ aws_provider(obj) }}

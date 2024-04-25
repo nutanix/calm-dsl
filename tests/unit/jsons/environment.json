@@ -1,0 +1,242 @@
+{
+  "status": {
+    "description": "",
+    "uuid": "",
+    "state": "ACTIVE",
+    "message_list": [],
+    "resources": {
+      "infra_inclusion_list": [
+        {
+          "subnet_references": [
+            { "uuid": "" }
+          ],
+          "type": "nutanix_pc",
+          "cluster_references": [
+            { "uuid": "" }
+          ],
+          "account_reference": {
+            "kind": "account",
+            "name": "",
+            "uuid": ""
+          },
+          "default_subnet_reference": {
+            "uuid": ""
+          }
+        }
+      ],
+      "substrate_definition_list": [
+        {
+          "description": "",
+          "action_list": [],
+          "message_list": [],
+          "uuid": "",
+          "state": "ACTIVE",
+          "readiness_probe": {
+            "connection_type": "SSH",
+            "retries": "5",
+            "connection_protocol": "",
+            "disable_readiness_probe": true,
+            "address": "",
+            "delay_secs": "0",
+            "connection_port": 22
+          },
+          "editables": {},
+          "os_type": "Linux",
+          "type": "AHV_VM",
+          "create_spec": {
+            "name": "vm-@@{calm_array_index}@@-@@{calm_time}@@",
+            "categories": {},
+            "availability_zone_reference": null,
+            "backup_policy": null,
+            "type": "",
+            "cluster_reference": {
+              "kind": "cluster",
+              "type": "",
+              "name": "",
+              "uuid": ""
+            },
+            "resources": {
+              "nic_list": [],
+              "parent_reference": null,
+              "guest_tools": null,
+              "num_vcpus_per_socket": 1,
+              "num_sockets": 1,
+              "serial_port_list": [],
+              "gpu_list": [],
+              "memory_size_mib": 1024,
+              "power_state": "ON",
+              "hardware_clock_timezone": "",
+              "guest_customization": null,
+              "type": "",
+              "account_uuid": "",
+              "boot_config": {
+                "boot_device": {
+                  "type": "",
+                  "disk_address": {
+                    "adapter_type": "SCSI",
+                    "device_index": 0,
+                    "type": ""
+                  }
+                },
+                "type": "",
+                "boot_type": "LEGACY",
+                "mac_address": ""
+              },
+              "disk_list": [
+                {
+                  "data_source_reference": {
+                    "kind": "image",
+                    "type": "",
+                    "name": "Centos7HadoopMaster",
+                    "uuid": ""
+                  },
+                  "type": "",
+                  "disk_size_mib": 0,
+                  "volume_group_reference": null,
+                  "device_properties": {
+                    "type": "",
+                    "device_type": "DISK",
+                    "disk_address": {
+                      "adapter_type": "SCSI",
+                      "device_index": 0,
+                      "type": ""
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "variable_list": [],
+          "name": "Untitled"
+        }
+      ],
+      "credential_definition_list": [
+        {
+          "username": "admin",
+          "description": "",
+          "state": "ACTIVE",
+          "message_list": [],
+          "uuid": "",
+          "secret": {
+            "attrs": { "is_secret_modified": false, "secret_reference": {} }
+          },
+          "editables": {},
+          "cred_class": "static",
+          "type": "PASSWORD",
+          "name": "test_creds"
+        }
+      ]
+    },
+    "name": "test_decompile_env"
+  },
+  "spec": {
+    "name": "test_decompile_env",
+    "resources": {
+      "infra_inclusion_list": [
+        {
+          "cluster_references": [
+            { "uuid": "" }
+          ],
+          "default_subnet_reference": {
+            "uuid": ""
+          },
+          "account_reference": {
+            "kind": "account",
+            "uuid": ""
+          },
+          "vpc_references": [],
+          "subnet_references": [
+            { "uuid": "" }
+          ],
+          "type": "nutanix_pc"
+        }
+      ],
+      "substrate_definition_list": [
+        {
+          "uuid": "",
+          "action_list": [],
+          "readiness_probe": {
+            "connection_type": "SSH",
+            "retries": "5",
+            "connection_protocol": "",
+            "connection_port": 22,
+            "disable_readiness_probe": true
+          },
+          "os_type": "Linux",
+          "type": "AHV_VM",
+          "create_spec": {
+            "resources": {
+              "nic_list": [],
+              "power_state": "ON",
+              "num_vcpus_per_socket": 1,
+              "num_sockets": 1,
+              "gpu_list": [],
+              "memory_size_mib": 1024,
+              "boot_config": {
+                "boot_device": {
+                  "disk_address": { "device_index": 0, "adapter_type": "SCSI" }
+                },
+                "boot_type": "LEGACY"
+              },
+              "account_uuid": "",
+              "disk_list": [
+                {
+                  "data_source_reference": {
+                    "kind": "image",
+                    "name": "Centos7HadoopMaster",
+                    "uuid": ""
+                  },
+                  "device_properties": {
+                    "disk_address": {
+                      "device_index": 0,
+                      "adapter_type": "SCSI"
+                    },
+                    "device_type": "DISK"
+                  }
+                }
+              ]
+            },
+            "name": "vm-@@{calm_array_index}@@-@@{calm_time}@@",
+            "categories": {},
+            "cluster_reference": {
+              "name": "",
+              "uuid": ""
+            }
+          },
+          "variable_list": [],
+          "name": "Untitled"
+        }
+      ],
+      "credential_definition_list": [
+        {
+          "username": "admin",
+          "uuid": "",
+          "secret": { "attrs": { "is_secret_modified": false } },
+          "cred_class": "static",
+          "type": "PASSWORD",
+          "name": "test_creds"
+        }
+      ]
+    },
+    "description": ""
+  },
+  "api_version": "3.0",
+  "metadata": {
+    "owner_reference": {
+      "kind": "user",
+      "uuid": "",
+      "name": "admin"
+    },
+    "kind": "environment",
+    "uuid": "",
+    "project_reference": {
+      "kind": "project",
+      "name": "test_dsl_decompile",
+      "uuid": ""
+    },
+    "spec_version": 2,
+    "name": "test_decompile_env",
+    "__name__": "test_decompile_env",
+    "__doc__": ""
+  }
+}

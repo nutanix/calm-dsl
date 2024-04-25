@@ -82,7 +82,7 @@ def _delete_task(task_names):
     "task_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     required=True,
-    help="Path of task file (.json, .sh, .escript, .escript.py2, .escript.py3, .ps1)",
+    help="Path of task file (.sh, .escript, .escript.py2, .escript.py3, .ps1)",
 )
 @click.option("--name", "-n", default=None, help="Task Library item name (Optional)")
 @click.option(
@@ -93,7 +93,7 @@ def _delete_task(task_names):
     "-v",
     "out_vars",
     default=None,
-    help="Set-variable output variables coma seperated (,) (Optional)",
+    help="Set-variable output variables comma seperated (,) (Optional)",
 )
 @click.option(
     "--force",

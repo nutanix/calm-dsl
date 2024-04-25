@@ -10,6 +10,7 @@ from calm.dsl.builtins import Ref
 from calm.dsl.api.handle import get_api_client
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Version
+from calm.dsl.builtins.models.utils import is_compile_secrets
 
 LOG = get_logging_handle(__name__)
 
@@ -56,7 +57,10 @@ def basic_cred(
     if filename:
         password = read_file(filename, depth=2)
 
-    secret = {"attrs": {"is_secret_modified": True}, "value": password}
+    secret = {
+        "attrs": {"is_secret_modified": True},
+        "value": password if is_compile_secrets() else "",
+    }
 
     kwargs = {}
     kwargs["type"] = type
@@ -80,7 +84,11 @@ def secret_cred(
 ):
 
     # This secret value will be replaced when user is creatring a blueprint
-    secret = {"attrs": {"is_secret_modified": True}, "value": "", "secret": secret}
+    secret = {
+        "attrs": {"is_secret_modified": True},
+        "value": "",
+        "secret": secret if is_compile_secrets() else "",
+    }
 
     kwargs = {}
     kwargs["type"] = type
@@ -123,16 +131,21 @@ def dynamic_cred(
         resource_type = Ref.Resource_Type(account.name)
 
     if variable_dict:
-        resource_type_uuid = resource_type.compile()["uuid"]
-        res, err = client.resource_types.read(id=resource_type_uuid)
+        account_uuid = account.compile()["uuid"]
+        res, err = client.account.resource_types_list(account_uuid)
         if err:
             LOG.error(err)
             sys.exit(-1)
 
-        resource_type_payload = res.json()
+        resource_type_list = res.json().get("entities", [])
 
+        if len(resource_type_list) == 0:
+            LOG.error("No resource types found in account")
+            sys.exit("No resource types found in account")
+
+        resource_type_payload = resource_type_list[0]
         cred_attr_list = (
-            resource_type_payload.get("spec", {})
+            resource_type_payload.get("status", {})
             .get("resources", {})
             .get("schema_list", {})
         )
@@ -149,6 +162,9 @@ def dynamic_cred(
                 cred_attr_copy["value"] = variable_dict.pop(var_name)
 
             cred_attr_copy.pop("uuid", None)
+            cred_attr_copy.pop("message_list", None)
+            cred_attr_copy.pop("state", None)
+            cred_attr_copy.get("attrs", None).pop("secret_reference", None)
             variable_list.append(cred_attr_copy)
 
         if variable_dict:

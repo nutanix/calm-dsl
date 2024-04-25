@@ -38,17 +38,17 @@ windows_endpoint = Endpoint.Windows.ip([windows_ip], cred=WindowsCred)
 
 
 escript_code = """
-print "@@{var1}@@"
+print("@@{var1}@@")
 if "@@{var1}@@" == "test":
-    print "yes"
+    print("yes")
 else:
-    print "no"
-print "@@{var2}@@"
+    print("no")
+print("@@{var2}@@")
 if "@@{var2}@@" == "test":
-    print "yes"
+    print("yes")
 else:
-    print "no"
-print "Hello @@{firstname}@@ @@{lastname}@@"
+    print("no")
+print("Hello @@{firstname}@@ @@{lastname}@@")
 """
 
 ssh_code = """
@@ -73,7 +73,7 @@ def DslRunbookForMPI(endpoints=[windows_endpoint, linux_endpoint, http_endpoint]
         target=endpoints[2],
     )
 
-    Task.Exec.escript(name="ES_Task", script=escript_code)
+    Task.Exec.escript.py3(name="ES_Task", script=escript_code)
 
     Task.Exec.ssh(name="SSH_Task", script=ssh_code, target=endpoints[1])
 
@@ -85,9 +85,9 @@ def DslRunbookDynamicVariable():
     """Runbook example with dynamic variables"""
 
     escript_var = Variable.WithOptions.FromTask.int(  # NOQA
-        Task.Exec.escript(script="print '123'")
+        Task.Exec.escript.py3(script="print('123')")
     )
-    Task.Exec.escript(name="ES_Task", script='print "Hello @@{escript_var}@@"')
+    Task.Exec.escript.py3(name="ES_Task", script='print("Hello @@{escript_var}@@")')
 
 
 @runbook
@@ -95,15 +95,15 @@ def DslWhileDecisionRunbookForMPI():
     "Runbook Service example"
     var = Variable.Simple("3")  # noqa
     with Task.Loop("@@{var}@@", name="WhileTask", loop_variable="iteration"):
-        Task.Exec.escript(name="Exec", script='''print "test"''')
+        Task.Exec.escript.py3(name="Exec", script="""print("test")""")
 
-    with Task.Decision.escript(script="exit(0)") as d:
+    with Task.Decision.escript.py3(script="exit(0)") as d:
 
         if d.ok:
-            Task.Exec.escript(name="SUCCESS", script="print 'SUCCESS'")
+            Task.Exec.escript.py3(name="SUCCESS", script="print('SUCCESS')")
 
         else:
-            Task.Exec.escript(name="FAILURE", script="print 'FAILURE'")
+            Task.Exec.escript.py3(name="FAILURE", script="print('FAILURE')")
 
 
 def create_project_endpoints(client, project_name=RBAC_PROJECT):
