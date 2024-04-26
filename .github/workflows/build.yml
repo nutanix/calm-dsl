@@ -8,14 +8,15 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.7
+      id: setup-python
       uses: actions/setup-python@v3
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.7
     - name: black
+      if: steps.setup-python.outputs.python-version != 3.7
       uses: psf/black@stable # Exclude list is not honored - https://github.com/psf/black/issues/1584
       with:
         version: "22.6.0"
@@ -38,8 +39,3 @@ jobs:
       with:
         image: ntnx/calm-dsl
         run: calm
-    - name: Publish docker image
-      if: ${{ github.event_name == 'push' && github.repository == 'nutanix/calm-dsl' && matrix.python-version == '3.9'}}
-      run: |
-        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-        docker push ntnx/calm-dsl
