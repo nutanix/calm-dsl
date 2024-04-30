@@ -245,6 +245,13 @@ class ERGON_TASK:
     FAILURE_STATES = [STATUS.FAILED, STATUS.ABORTED, STATUS.SUSPENDED]
 
 
+class ROLE:
+    PROJECT_ADMIN = "Project Admin"
+    DEVELOPER = "Developer"
+    CONSUMER = "Consumer"
+    OPERATOR = "Operator"
+
+
 class ACP:
     class ENTITY_FILTER_EXPRESSION_LIST:
         DEVELOPER = [
@@ -298,16 +305,6 @@ class ACP:
                 "left_hand_side": {"entity_type": "custom_provider"},
                 "right_hand_side": {"collection": "ALL"},
             },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "vm_recovery_point"},
-                "right_hand_side": {"collection": "ALL"},
-            },
         ]
 
         OPERATOR = [
@@ -329,16 +326,6 @@ class ACP:
             {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "custom_provider"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "vm_recovery_point"},
                 "right_hand_side": {"collection": "ALL"},
             },
         ]
@@ -387,16 +374,6 @@ class ACP:
             {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "custom_provider"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "vm_recovery_point"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
                 "right_hand_side": {"collection": "ALL"},
             },
         ]
@@ -466,21 +443,6 @@ class ACP:
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "custom_provider"},
                 "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "vm_recovery_point"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "report_config"},
-                "right_hand_side": {"collection": "SELF_OWNED"},
             },
         ]
 
@@ -581,57 +543,9 @@ class ACP:
                 "right_hand_side": {"collection": "ALL"},
             },
         },
-        {
-            "permissions": ["view_vm_recovery_point"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "vm_recovery_point"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-        },
-        {
-            "permissions": ["view_virtual_switch"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-        },
-        {
-            "permissions": ["view_report_config"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "report_config"},
-                "right_hand_side": {"collection": "SELF_OWNED"},
-            },
-        },
     ]
 
     CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER = [
-        {
-            "permissions": ["view_user"],
-            "filter": {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "user"},
-            },
-        },
-        {
-            "permissions": ["view_virtual_machine"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "vm"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-        },
-        {
-            "permissions": ["view_user_group"],
-            "filter": {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "user_group"},
-            },
-        },
         {
             "permissions": ["view_blueprint"],
             "filter": {
@@ -653,14 +567,6 @@ class ACP:
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "marketplace_item"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-        },
-        {
-            "permissions": ["view_runbook"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "runbook"},
                 "right_hand_side": {"collection": "ALL"},
             },
         },
@@ -708,13 +614,100 @@ class ACP:
                 "left_hand_side": {"entity_type": "marketplace_item"},
                 "right_hand_side": {"collection": "ALL"},
             },
+        ],
+    }
+
+
+class ACP_3_8_0:
+    class ENTITY_FILTER_EXPRESSION_LIST:
+        COMMON = [
             {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "vm_recovery_point"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        ]
+        PROJECT_ADMIN = [
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "report_config"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
+            }
+        ]
+
+    CUSTOM_ROLE_PERMISSIONS_FILTERS = [
+        {
+            "permissions": ["view_vm_recovery_point"],
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "vm_recovery_point"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permissions": ["view_virtual_switch"],
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permissions": ["view_report_config"],
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "report_config"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
+            },
+        },
+    ]
+    CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER = [
+        {
+            "permissions": ["view_user"],
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user"},
+            },
+        },
+        {
+            "permissions": ["view_virtual_machine"],
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "vm"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permissions": ["view_user_group"],
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user_group"},
+            },
+        },
+        {
+            "permissions": ["view_runbook"],
+            "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "runbook"},
                 "right_hand_side": {"collection": "ALL"},
             },
-        ],
-    }
+        },
+    ]
+
+    PROJECT_COLLAB_FILTER = [
+        {
+            "operator": "IN",
+            "left_hand_side": {"entity_type": "runbook"},
+            "right_hand_side": {"collection": "ALL"},
+        }
+    ]
 
     PROJECT_ADMIN_SPECIFIC_COLLAB_FILTER = [
         {
@@ -731,5 +724,40 @@ class ACP:
             "operator": "IN",
             "right_hand_side": {"collection": "ALL"},
             "left_hand_side": {"entity_type": "user_group"},
+        },
+    ]
+
+
+class ACP_BEFORE_3_8_0:
+    class ENTITY_FILTER_EXPRESSION_LIST:
+        PROJECT_ADMIN = [
+            {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user"},
+            },
+            {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user_group"},
+            },
+        ]
+
+    CUSTOM_ROLE_PERMISSIONS_FILTERS = [
+        {
+            "permissions": ["view_user"],
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user"},
+            },
+        },
+        {
+            "permissions": ["view_user_group"],
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user_group"},
+            },
         },
     ]

@@ -4,19 +4,22 @@ import sys
 import uuid
 from prettytable import PrettyTable
 
+from distutils.version import LooseVersion as LV
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
 from calm.dsl.builtins import Ref
+from calm.dsl.store import Version
 
-from .constants import ACP
+from .constants import ACP, ACP_3_8_0, ACP_BEFORE_3_8_0, ROLE
 from .task_commands import watch_task
 from .utils import get_name_query, highlight_text
 
 
 LOG = get_logging_handle(__name__)
+CALM_VERSION = Version.get_version("Calm")
 
 
 def get_acps_from_project(client, project_uuid, **kwargs):
@@ -288,6 +291,12 @@ def create_acp(role, project, acp_users, acp_groups, name):
         "uuid_list"
     ] = [project_uuid]
 
+    project_collab_context[
+        "entity_filter_expression_list"
+    ] = get_updated_acp_filter_list(
+        role, project_collab_context["entity_filter_expression_list"], "collab"
+    )
+
     # Setting project uuid in default context
     default_context["scope_filter_expression_list"][0]["right_hand_side"][
         "uuid_list"
@@ -295,39 +304,54 @@ def create_acp(role, project, acp_users, acp_groups, name):
 
     # Role specific filters
     entity_filter_expression_list = []
-    if role == "Project Admin":
+    if role == ROLE.PROJECT_ADMIN:
         entity_filter_expression_list = (
             ACP.ENTITY_FILTER_EXPRESSION_LIST.PROJECT_ADMIN
         )  # TODO remove index bases searching
         entity_filter_expression_list[4]["right_hand_side"]["uuid_list"] = [
             project_uuid
         ]
-
-        # Adding vm filter for collab context. This is applicable only for project admin
-        project_collab_context["entity_filter_expression_list"].extend(
-            ACP.PROJECT_ADMIN_SPECIFIC_COLLAB_FILTER
+        entity_filter_expression_list = get_updated_acp_filter_list(
+            role, entity_filter_expression_list, "global"
         )
 
-    elif role == "Developer":
+    elif role == ROLE.DEVELOPER:
         entity_filter_expression_list = ACP.ENTITY_FILTER_EXPRESSION_LIST.DEVELOPER
         entity_filter_expression_list[4]["right_hand_side"]["uuid_list"] = [
             project_uuid
         ]
 
-    elif role == "Consumer":
+        entity_filter_expression_list = get_updated_acp_filter_list(
+            role, entity_filter_expression_list, "global"
+        )
+
+    elif role == ROLE.CONSUMER:
         entity_filter_expression_list = ACP.ENTITY_FILTER_EXPRESSION_LIST.CONSUMER
 
-    elif role == "Operator" and cluster_uuids:
+        entity_filter_expression_list = get_updated_acp_filter_list(
+            role, entity_filter_expression_list, "global"
+        )
+
+    elif role == ROLE.OPERATOR and cluster_uuids:
         entity_filter_expression_list = ACP.ENTITY_FILTER_EXPRESSION_LIST.OPERATOR
+
+        entity_filter_expression_list = get_updated_acp_filter_list(
+            role, entity_filter_expression_list, "global"
+        )
 
     else:
         entity_filter_expression_list = get_filters_custom_role(
             role_uuid, client, project_uuid
         )
+
+        collab_entity_filter_expression_list = get_updated_acp_filter_list(
+            role, ACP.CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER, "collab"
+        )
+
         project_collab_context[
             "entity_filter_expression_list"
         ] = get_filters_custom_role(
-            role_uuid, client, None, ACP.CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER
+            role_uuid, client, None, collab_entity_filter_expression_list
         )
 
     if cluster_uuids:
@@ -400,7 +424,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
 
 
 def get_filters_custom_role(
-    role_uuid, client, project_id=None, custom_role_filter_dict=None
+    role_uuid, client, project_id=None, custom_role_filter_list=None
 ):
 
     role, err = client.role.read(id=role_uuid)
@@ -418,10 +442,12 @@ def get_filters_custom_role(
             if perm_name:
                 permission_names.add(perm_name.lower())
     entity_filter_expression_list = []
-    if not custom_role_filter_dict:
-        custom_role_filter_dict = ACP.CUSTOM_ROLE_PERMISSIONS_FILTERS
+    if not custom_role_filter_list:
+        custom_role_filter_list = get_updated_acp_filter_list(
+            role, ACP.CUSTOM_ROLE_PERMISSIONS_FILTERS, "global"
+        )
         if project_id:
-            custom_role_filter_dict.append(
+            custom_role_filter_list.append(
                 {
                     "permissions": ["view_project"],
                     "filter": {
@@ -431,7 +457,7 @@ def get_filters_custom_role(
                     },
                 }
             )
-    for perm_filter in custom_role_filter_dict:
+    for perm_filter in custom_role_filter_list:
         for permission in perm_filter.get("permissions"):
             if permission in permission_names:
                 entity_filter_expression_list.append(perm_filter.get("filter"))
@@ -729,3 +755,114 @@ def update_acp(
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
     LOG.info("Polling on acp updation task")
     watch_task(res["status"]["execution_context"]["task_uuid"])
+
+
+def get_updated_acp_filter_list(role, filter_list, scope):
+    """
+    Returns an updated access control policy (ACP) filter list based on the Calm version, role, filter list, and scope.
+
+    Args:
+        calm_version (str): The Calm version.
+        role (str): The role.
+        filter_list (list): The original ACP filter list.
+        scope (str): The scope.
+
+    Returns:
+        list: The updated ACP filter list.
+
+    Raises:
+        None
+
+    """
+    is_custom_role = True
+    if role in get_system_roles():
+        is_custom_role = False
+
+    if LV(CALM_VERSION) >= LV("3.8.0"):
+        if scope == "global":
+            return get_updated_acp_filter_list_for_3_8_0_global_scope(
+                role, filter_list, is_custom_role
+            )
+
+        return get_updated_acp_filter_list_for_3_8_0_collab_scope(
+            role, filter_list, is_custom_role
+        )
+
+    if scope == "global":
+        return get_updated_acp_filter_list_for_before_3_8_0_global_scope(
+            role, filter_list, is_custom_role
+        )
+
+    return filter_list
+
+
+def get_updated_acp_filter_list_for_3_8_0_global_scope(
+    role, filter_list, is_custom_role
+):
+    """
+    Returns an updated access control policy (ACP) filter list for the global scope.
+
+    Args:
+        role (str): The role of the user.
+        filter_list (list): The existing ACP filter list.
+        is_custom_role (bool): Indicates whether the role is a custom role.
+
+    Returns:
+        list: The updated ACP filter list.
+
+    """
+    if is_custom_role:
+        filter_list.extend(ACP_3_8_0.CUSTOM_ROLE_PERMISSIONS_FILTERS)
+    else:
+        filter_list.extend(ACP_3_8_0.ENTITY_FILTER_EXPRESSION_LIST.COMMON)
+        if role == ROLE.PROJECT_ADMIN:
+            filter_list.append(ACP_3_8_0.ENTITY_FILTER_EXPRESSION_LIST.PROJECT_ADMIN)
+
+    return filter_list
+
+
+def get_updated_acp_filter_list_for_3_8_0_collab_scope(
+    role, filter_list, is_custom_role
+):
+    """
+    Get the updated access control policy (ACP) filter list for collaboration scope.
+
+    Args:
+        role (str): The role of the user.
+        filter_list (list): The existing filter list.
+        is_custom_role (bool): Indicates whether the role is a custom role.
+
+    Returns:
+        list: The updated filter list.
+
+    """
+    if is_custom_role:
+        filter_list.extend(ACP_3_8_0.CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER)
+    else:
+        filter_list.append(ACP_3_8_0.PROJECT_COLLAB_FILTER)
+        if role == ROLE.PROJECT_ADMIN:
+            filter_list.extend(ACP_3_8_0.PROJECT_ADMIN_SPECIFIC_COLLAB_FILTER)
+
+    return filter_list
+
+
+def get_updated_acp_filter_list_for_before_3_8_0_global_scope(
+    role, filter_list, is_custom_role
+):
+    """
+    Get the updated access control policy (ACP) filter list for an existing global scope.
+
+    Args:
+        role (str): The role of the user.
+        filter_list (list): The current ACP filter list.
+        is_custom_role (bool): Indicates whether the role is a custom role.
+
+    Returns:
+        list: The updated ACP filter list.
+
+    """
+    if is_custom_role:
+        filter_list.extend(ACP_BEFORE_3_8_0.CUSTOM_ROLE_PERMISSIONS_FILTERS)
+    elif role == ROLE.PROJECT_ADMIN:
+        filter_list.extend(ACP_BEFORE_3_8_0.ENTITY_FILTER_EXPRESSION_LIST.PROJECT_ADMIN)
+    return filter_list
