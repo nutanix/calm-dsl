@@ -12,7 +12,7 @@ def test_action_with_endpoint_decompile():
     file_path = os.path.join(dir_path, "./jsons/action_with_endpoint.json")
     bp_dict = json.loads(open(file_path).read())
     cls = ActionType.decompile(bp_dict)
-    assert "target=ref(ep2)" in render_action_template(
+    assert "target_endpoint=ref(ep2)" in render_action_template(
         cls
     ), "expected endpoint ep2 to be decompiled in task"
     shutil.rmtree(scripts_dir)
