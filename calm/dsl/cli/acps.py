@@ -816,7 +816,7 @@ def get_updated_acp_filter_list_for_3_8_0_global_scope(
     else:
         filter_list.extend(ACP_3_8_0.ENTITY_FILTER_EXPRESSION_LIST.COMMON)
         if role == ROLE.PROJECT_ADMIN:
-            filter_list.append(ACP_3_8_0.ENTITY_FILTER_EXPRESSION_LIST.PROJECT_ADMIN)
+            filter_list.extend(ACP_3_8_0.ENTITY_FILTER_EXPRESSION_LIST.PROJECT_ADMIN)
 
     return filter_list
 
@@ -839,7 +839,7 @@ def get_updated_acp_filter_list_for_3_8_0_collab_scope(
     if is_custom_role:
         filter_list.extend(ACP_3_8_0.CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER)
     else:
-        filter_list.append(ACP_3_8_0.PROJECT_COLLAB_FILTER)
+        filter_list.extend(ACP_3_8_0.PROJECT_COLLAB_FILTER)
         if role == ROLE.PROJECT_ADMIN:
             filter_list.extend(ACP_3_8_0.PROJECT_ADMIN_SPECIFIC_COLLAB_FILTER)
 
