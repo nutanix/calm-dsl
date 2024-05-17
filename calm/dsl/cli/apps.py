@@ -6,6 +6,7 @@ import re
 import uuid
 from json import JSONEncoder
 from datetime import datetime
+from copy import deepcopy
 
 import arrow
 import click
@@ -1889,8 +1890,15 @@ def decompile_app_migratable_bp(app_name, bp_dir):
         sys.exit("[{}] - {}".format(err["code"], err["error"]))
 
     res = res.json()
+
+    app_res = _get_app(client, app_name)
+    launch_profile = app_res["spec"]["resources"]["app_profile_config_reference"].get(
+        "name", ""
+    )
+
     fix_missing_name_in_reference(res["spec"])
     remove_non_escript_actions_variables(res["spec"]["resources"])
+    filter_launch_profile(launch_profile, res["spec"]["resources"])
     _decompile_bp(bp_payload=res, with_secrets=False, bp_dir=bp_dir)
 
 
@@ -2282,3 +2290,60 @@ def describe_app_actions_to_update(app_name):
 
                 if not any_action_to_be_modified:
                     print("\t\t No actions found to be modified")
+
+
+def filter_launch_profile(launch_profile, resources):
+    """
+    Filters out other profiles and keeps only profile used for launching an application.
+    Subsequently also filters out profile dependent packages and substrates.
+
+    Args:
+        launch_profile (str): name of profile used for launching
+        resources (dict): blueprint spec resources
+
+    """
+    if not launch_profile:
+        return
+
+    # lists to hold names of entities to be removed
+    substrates_to_be_removed = []
+    packages_to_be_removed = []
+    profiles_to_be_removed = []
+
+    # loop to store entities name to be removed
+    for profile in resources.get("app_profile_list", []):
+        if profile["name"] == launch_profile:
+            continue
+
+        profiles_to_be_removed.append(profile["name"])
+
+        for deployment in profile.get("deployment_create_list", []):
+            packages = deployment.get("package_local_reference_list", [])
+            for pkg in packages:
+                packages_to_be_removed.append(pkg.get("name", ""))
+
+            substrate = deployment.get("substrate_local_reference", {})
+            substrates_to_be_removed.append(substrate.get("name", ""))
+
+    # remove substrates
+    substrates = deepcopy(resources.get("substrate_definition_list", []))
+    for substrate in resources.get("substrate_definition_list", []):
+        if substrate["name"] in substrates_to_be_removed:
+            substrates.remove(substrate)
+
+    # remove packages
+    packages = deepcopy(resources.get("package_definition_list", []))
+    for pkg in resources.get("package_definition_list", []):
+        if pkg["name"] in packages_to_be_removed:
+            packages.remove(pkg)
+
+    # remove profiles
+    profiles = deepcopy(resources.get("app_profile_list", []))
+    for profile in resources.get("app_profile_list", []):
+        if profile["name"] in profiles_to_be_removed:
+            profiles.remove(profile)
+
+    # re-assign substrates, packages for profile used for launching application
+    resources["substrate_definition_list"] = substrates
+    resources["package_definition_list"] = packages
+    resources["app_profile_list"] = profiles
