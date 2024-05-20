@@ -16,4 +16,4 @@ def DslSetVariableRunbook():
     Task.SetVariable.ssh(
         name="Task2", filename=os.path.join("scripts", "set_variable_task2_script.sh"), variables=["var2"], target=ref(Endpoint.use_existing("linux_bedag"))
     )
-    Task.Exec.escript(name="Task3", script="print '@@{var1}@@ @@{var2}@@'")
+    Task.Exec.escript(name="Task3", script="print ('@@{var1}@@ @@{var2}@@')")

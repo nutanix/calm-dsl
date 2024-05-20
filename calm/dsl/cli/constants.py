@@ -218,6 +218,7 @@ class TASKS:
         SHELL = "sh"
         ESCRIPT = "static"
         ESCRIPT_PY3 = "static_py3"
+        PYTHON = "python_remote"
 
     class STATES:
         ACTIVE = "ACTIVE"
@@ -244,6 +245,13 @@ class ERGON_TASK:
     FAILURE_STATES = [STATUS.FAILED, STATUS.ABORTED, STATUS.SUSPENDED]
 
 
+class ROLE:
+    PROJECT_ADMIN = "Project Admin"
+    DEVELOPER = "Developer"
+    CONSUMER = "Consumer"
+    OPERATOR = "Operator"
+
+
 class ACP:
     class ENTITY_FILTER_EXPRESSION_LIST:
         DEVELOPER = [
@@ -266,6 +274,11 @@ class ACP:
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
                 "left_hand_side": {"entity_type": "category"},
+            },
+            {
+                "operator": "IN",
+                "right_hand_side": {"uuid_list": []},
+                "left_hand_side": {"entity_type": "project"},
             },
             {
                 "operator": "IN",
@@ -393,16 +406,6 @@ class ACP:
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "user"},
-            },
-            {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "user_group"},
-            },
-            {
-                "operator": "IN",
                 "right_hand_side": {"collection": "SELF_OWNED"},
                 "left_hand_side": {"entity_type": "environment"},
             },
@@ -445,7 +448,7 @@ class ACP:
 
     CUSTOM_ROLE_PERMISSIONS_FILTERS = [
         {
-            "permission": "view_image",
+            "permissions": ["view_image"],
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "image"},
@@ -453,7 +456,7 @@ class ACP:
             },
         },
         {
-            "permission": "view_app_icon",
+            "permissions": ["view_app_icon"],
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -461,7 +464,7 @@ class ACP:
             },
         },
         {
-            "permission": "view_name_category",
+            "permissions": ["view_name_category", "create_or_update_name_category"],
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -469,15 +472,7 @@ class ACP:
             },
         },
         {
-            "permission": "create_or_update_name_category",
-            "filter": {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "category"},
-            },
-        },
-        {
-            "permission": "view_environment",
+            "permissions": ["view_environment"],
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "environment"},
@@ -485,7 +480,7 @@ class ACP:
             },
         },
         {
-            "permission": "view_marketplace_item",
+            "permissions": ["view_marketplace_item"],
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "marketplace_item"},
@@ -493,23 +488,7 @@ class ACP:
             },
         },
         {
-            "permission": "view_user",
-            "filter": {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "user"},
-            },
-        },
-        {
-            "permission": "view_user_group",
-            "filter": {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "user_group"},
-            },
-        },
-        {
-            "permission": "view_role",
+            "permissions": ["view_role"],
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -517,7 +496,7 @@ class ACP:
             },
         },
         {
-            "permission": "view_directory_service",
+            "permissions": ["view_directory_service", "search_directory_service"],
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -525,15 +504,7 @@ class ACP:
             },
         },
         {
-            "permission": "search_directory_service",
-            "filter": {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "directory_service"},
-            },
-        },
-        {
-            "permission": "view_identity_provider",
+            "permissions": ["view_identity_provider"],
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -541,7 +512,7 @@ class ACP:
             },
         },
         {
-            "permission": "view_app_task",
+            "permissions": ["view_app_task"],
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "app_task"},
@@ -549,7 +520,7 @@ class ACP:
             },
         },
         {
-            "permission": "view_app_variable",
+            "permissions": ["view_app_variable"],
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "app_variable"},
@@ -557,7 +528,7 @@ class ACP:
             },
         },
         {
-            "permission": "view_image",
+            "permissions": ["view_resource_type"],
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "resource_type"},
@@ -565,10 +536,37 @@ class ACP:
             },
         },
         {
-            "permission": "view_image",
+            "permissions": ["view_custom_provider"],
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "custom_provider"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+    ]
+
+    CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER = [
+        {
+            "permissions": ["view_blueprint"],
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "blueprint"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permissions": ["view_environment"],
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "environment"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permissions": ["view_marketplace_item"],
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "marketplace_item"},
                 "right_hand_side": {"collection": "ALL"},
             },
         },
@@ -590,3 +588,176 @@ class ACP:
             }
         ],
     }
+
+    # The entities in this collection are by default collab enabled
+    PROJECT_COLLAB_CONTEXT = {
+        "scope_filter_expression_list": [
+            {
+                "operator": "IN",
+                "left_hand_side": "PROJECT",
+                "right_hand_side": {"uuid_list": []},
+            }
+        ],
+        "entity_filter_expression_list": [
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "blueprint"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "environment"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "marketplace_item"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        ],
+    }
+
+
+class ACP_3_8_0:
+    class ENTITY_FILTER_EXPRESSION_LIST:
+        COMMON = [
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "vm_recovery_point"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        ]
+        PROJECT_ADMIN = [
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "report_config"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
+            }
+        ]
+
+    CUSTOM_ROLE_PERMISSIONS_FILTERS = [
+        {
+            "permissions": ["view_vm_recovery_point"],
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "vm_recovery_point"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permissions": ["view_virtual_switch"],
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permissions": ["view_report_config"],
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "report_config"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
+            },
+        },
+    ]
+    CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER = [
+        {
+            "permissions": ["view_user"],
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user"},
+            },
+        },
+        {
+            "permissions": ["view_virtual_machine"],
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "vm"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permissions": ["view_user_group"],
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user_group"},
+            },
+        },
+        {
+            "permissions": ["view_runbook"],
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "runbook"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+    ]
+
+    PROJECT_COLLAB_FILTER = [
+        {
+            "operator": "IN",
+            "left_hand_side": {"entity_type": "runbook"},
+            "right_hand_side": {"collection": "ALL"},
+        }
+    ]
+
+    PROJECT_ADMIN_SPECIFIC_COLLAB_FILTER = [
+        {
+            "operator": "IN",
+            "left_hand_side": {"entity_type": "vm"},
+            "right_hand_side": {"collection": "ALL"},
+        },
+        {
+            "operator": "IN",
+            "right_hand_side": {"collection": "ALL"},
+            "left_hand_side": {"entity_type": "user"},
+        },
+        {
+            "operator": "IN",
+            "right_hand_side": {"collection": "ALL"},
+            "left_hand_side": {"entity_type": "user_group"},
+        },
+    ]
+
+
+class ACP_BEFORE_3_8_0:
+    class ENTITY_FILTER_EXPRESSION_LIST:
+        PROJECT_ADMIN = [
+            {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user"},
+            },
+            {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user_group"},
+            },
+        ]
+
+    CUSTOM_ROLE_PERMISSIONS_FILTERS = [
+        {
+            "permissions": ["view_user"],
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user"},
+            },
+        },
+        {
+            "permissions": ["view_user_group"],
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user_group"},
+            },
+        },
+    ]

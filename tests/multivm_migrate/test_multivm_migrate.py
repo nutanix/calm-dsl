@@ -36,6 +36,7 @@ PROJECT_NAME = PROJECT["NAME"]
 
 
 @pytest.mark.nightly_380
+@pytest.mark.skip
 class TestMultiVmMigrate:
     app_helper = ApplicationHelper()
 

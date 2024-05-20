@@ -1,1 +1,1 @@
-print 'Pre Create task runs before VM is created'
+print ('Pre Create task runs before VM is created')

@@ -1,1 +1,1 @@
-print 'var1=test'
+print ('var1=test')

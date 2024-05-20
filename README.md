@@ -2,13 +2,18 @@
 
 ![Build](https://github.com/nutanix/calm-dsl/workflows/Setup%20&%20build%20calm-dsl/badge.svg)
 
-# calm-dsl
+`Latest release version: 3.8.0, Latest-release-tag: v3.8.0`
 
-## About Calm DSL
+`Latest Release Notes:` [read here](release-notes/3.8.0)
 
-Calm DSL describes a simpler Python3 based DSL for writing Calm blueprints. As Calm uses Services, Packages, Substrates, Deployments and Application Profiles as building blocks for a Blueprint, these entities can be defined as python classes. Their attributes can be specified as class attributes and actions on those entities (procedural runbooks) can be defined neatly as class methods. Calm blueprint DSL can also accept appropriate native data formats such as YAML and JSON, allowing the reuse and leveraging that work into the larger application lifecycle context of a Calm blueprint.
 
-### Why Python3 as DSL ?
+# Nutanix Cloud Manager (NCM) Self Service (formerly Calm) DSL
+
+## About NCM Self Service DSL
+
+NCM Self Service DSL describes a simpler Python3 based DSL for writing NCM Self Service blueprints. As NCM Self Service uses Services, Packages, Substrates, Deployments and Application Profiles as building blocks for a Blueprint, these entities can be defined as python classes. Their attributes can be specified as class attributes and actions on those entities (procedural runbooks) can be defined neatly as class methods. NCM Self Service blueprint DSL can also accept appropriate native data formats such as YAML and JSON, allowing the reuse and leveraging that work into the larger application lifecycle context of a NCM Self Service blueprint.
+
+### Why Python3 as NCM Self Service DSL?
 
 Language design is black art, and building upon a well-established language is design-wise a big win. The language has also solved many issues like scoping, modules, if-else, inheritance, etc. Well established languages have great tooling support: IDEs, syntax checkers, third-party modules, coding practices, better readability, editing, syntax highlighting, code completion, versioning, collaboration, etc. They see much more community improvements as well. Python specifically comes with a very good REPL (read–eval–print-loop). Having an interactive prompt to play around and slowly build objects is an order-of-magnitude improvement in developer productivity. Python is very easy language to learn and use; and most of the ITOps/DevOps community already use Python for scripting.
 
@@ -16,10 +21,10 @@ Language design is black art, and building upon a well-established language is d
 
 ### Initialization
  - Setup: `calm init dsl`. Please fill in the right Prism Central (PC) settings.
- - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
+ - Server status: `calm get server status`. Check if NCM Self Service is enabled on PC & it's version is >=2.9.7.
  - Config: `calm show config`. Please see `calm set config --help` to update configuration.
 
-### Calm DSL Context
+### NCM Self Service DSL Context
 Context info includes server, project and log configuration for dsl operations.
 - Flow: Context info is taken from config file passed inline with cli command or environment data or default config file stored mentioned in `~/.calm/init.ini`.
 - Environment variables for server configuration: `CALM_DSL_PC_IP`, `CALM_DSL_PC_PORT`, `CALM_DSL_PC_USERNAME`, `CALM_DSL_PC_PASSWORD`.
@@ -32,7 +37,7 @@ Context info includes server, project and log configuration for dsl operations.
 ### Blueprint
  - First blueprint: `calm init bp`. This will create a folder `HelloBlueprint` with all the necessary files. `HelloBlueprint/blueprint.py` is the main blueprint DSL file. Please read the comments in the beginning of the file for more details about the blueprint.
  - Compile blueprint: `calm compile bp --file HelloBlueprint/blueprint.py`. This command will print the compiled blueprint JSON.
- - Create blueprint on Calm Server: `calm create bp --file HelloBlueprint/blueprint.py --name <blueprint_name>`. Please use a unique name for `<blueprint_name>`.
+ - Create blueprint on NCM Self Service Server: `calm create bp --file HelloBlueprint/blueprint.py --name <blueprint_name>`. Please use a unique name for `<blueprint_name>`.
  - List blueprints: `calm get bps`. You can also pass in filters like `calm get bps --name <blueprint_name>` and so on. Please look at `calm get bps --help`.
  - Describe blueprint: `calm describe bp <blueprint_name>`. It will print a summary of the blueprint.
  - Launch blueprint to create Application: `calm launch bp <blueprint_name> --app_name <app_name> -i`
@@ -113,10 +118,10 @@ Decompilation is process to consume json data for any entity and convert it back
 
 ### Initialization
  - Setup: `calm init dsl`. Please fill in the right Prism Central (PC) settings.
- - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
+ - Server status: `calm get server status`. Check if NCM Self Service is enabled on PC & it's version is >=2.9.7.
  - Config: `calm show config`. Please see `calm set config --help` to update configuration.
 
-### Calm DSL Context
+### NCM Self Service DSL Context
 Context information includes server, project and log configuration for dsl operations.
 - Flow: Context info is taken from config file passed inline with cli command or environment data or default config file stored mentioned in `~/.calm/init.ini`.
 - Environment variables for server configuration: `CALM_DSL_PC_IP`, `CALM_DSL_PC_PORT`, `CALM_DSL_PC_USERNAME`, `CALM_DSL_PC_PASSWORD`.
@@ -127,7 +132,7 @@ Context information includes server, project and log configuration for dsl opera
 - Show config in context: `calm show config`.
 
 ### Roles
-Use `calm get roles` to list all roles in PC. The below roles are relevant for Calm:
+Use `calm get roles` to list all roles in PC. The below roles are relevant for NCM Self Service:
  - `Prism Admin`: Day-to-day admin of a Nutanix deployment. Manages the infrastructure and platform, but cannot entitle other users to be admins.
  - `Project Admin`: Team lead to whom cloud administration gets delegated in the context of a project. Manages end users within the project and has full access to their entities.
  - `Developer`: Application developer within a team. Authors blueprints, tests deployments, and publishes applications for other project members.
@@ -149,7 +154,7 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
 
 ### Projects
 - Compile project: `calm compile project --file <project_file_location>`. This command will print the compiled project JSON. Look at sample file [here](examples/Project/demo_project.py) and [here](examples/Project/project_with_env.py).
-- Create project on Calm Server: `calm create project --file <project_file_location> --name <project_name> --description <description>`.\
+- Create project on NCM Self Service Server: `calm create project --file <project_file_location> --name <project_name> --description <description>`.\
 **Options:**\
     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; `--no-cache-update`: flag to skip cache updations post operation.\
     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; `--force`:  flag to delete existing project with the same name before create, if entities are not associated with it.
@@ -237,23 +242,23 @@ Use:
 
 ## Documentation
 
- - [Calm Terminology](docs/01-Calm-Terminology/)
+ - [NCM Self Service Terminology](docs/01-Calm-Terminology/)
  - [DSL Blueprint Architecture](docs/02-DSL-Blueprint-Architecture/)
  - [DSL Lab](docs/03-Quickstart/)
 
 ## Video Links
  - [Workstation Setup](https://youtu.be/uIZmHQhioZg)
  - [Blueprint & App management](https://youtu.be/jb-ZllhaROs)
- - [Calm DSL Blueprint Architecture](https://youtu.be/Y-6eq91rtSw)
+ - [NCM Self Service DSL Blueprint Architecture](https://youtu.be/Y-6eq91rtSw)
 
 ## [Blogs](https://www.nutanix.dev/calm-dsl/)
- - [Introducing the Nutanix Calm DSL](https://www.nutanix.dev/2020/03/17/introducing-the-nutanix-calm-dsl/)
+ - [Introducing the NCM Self Service DSL](https://www.nutanix.dev/2020/03/17/introducing-the-nutanix-calm-dsl/)
  - [Creating Custom Blueprint](https://www.nutanix.dev/2020/03/30/nutanix-calm-dsl-creating-custom-blueprint/)
  - [Generating VM Specs](https://www.nutanix.dev/2020/04/06/nutanix-calm-dsl-generating-vm-specs/)
  - [Run Custom Actions](https://www.nutanix.dev/2020/04/17/nutanix-calm-dsl-run-custom-actions/)
  - [Remote Container Development (Part 1)](https://www.nutanix.dev/2020/04/24/nutanix-calm-dsl-remote-container-development-part-1/)
- - [From UI to Code – Calm DSL and Blueprint Decompile](https://www.nutanix.dev/2020/07/20/from-ui-to-code-calm-dsl-and-blueprint-decompile/)
+ - [From UI to Code – NCM Self Service DSL and Blueprint Decompile](https://www.nutanix.dev/2020/07/20/from-ui-to-code-calm-dsl-and-blueprint-decompile/)
 
 ## Demos
- - [Zero-touch CI/CD - VDI Template Creation with Nutanix Calm DSL](https://youtu.be/5k_K7idGxsI)
+ - [Zero-touch CI/CD - VDI Template Creation with NCM Self Service DSL](https://youtu.be/5k_K7idGxsI)
  - [Integrating with Azure DevOps CI/CD pipeline](https://youtu.be/496bvlIi4pk)

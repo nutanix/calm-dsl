@@ -70,38 +70,38 @@ class Package1(Package):
         with parallel() as p0:
 
             with branch(p0):
-                CalmTask.Exec.escript(
+                CalmTask.Exec.escript.py3(
                     name="Task1",
-                    script="print 'Task1'",
+                    script="print ('Task1')",
                     target=ref(Service1),
                 )
 
                 with parallel() as p1:
 
                     with branch(p1):
-                        CalmTask.Exec.escript(
+                        CalmTask.Exec.escript.py3(
                             name="Task1_1",
-                            script="print 'Task1_1'",
+                            script="print ('Task1_1')",
                             target=ref(Service1),
                         )
 
                     with branch(p1):
-                        CalmTask.Exec.escript(
+                        CalmTask.Exec.escript.py3(
                             name="Task1_2",
-                            script="print 'Task1_2'",
+                            script="print ('Task1_2')",
                             target=ref(Service1),
                         )
 
             with branch(p0):
-                CalmTask.Exec.escript(
+                CalmTask.Exec.escript.py3(
                     name="Task2",
-                    script="print 'Task2'",
+                    script="print ('Task2')",
                     target=ref(Service1),
                 )
 
-                CalmTask.Exec.escript(
+                CalmTask.Exec.escript.py3(
                     name="Task2_1",
-                    script="print 'Task2_1'",
+                    script="print ('Task2_1')",
                     target=ref(Service1),
                 )
 

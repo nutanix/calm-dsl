@@ -91,7 +91,7 @@ class ExistingVM(Substrate):
 
     @action
     def __pre_create__():
-        CalmTask.Exec.escript(name="Pre Create Task", script="print 'Hello!'")
+        CalmTask.Exec.escript.py3(name="Pre Create Task", script="print ('Hello!')")
 
 
 class LampDeployment(Deployment):
@@ -166,11 +166,11 @@ class DefaultProfile(Profile):
             name="Test HTTP Task",
             target=ref(MySQLService),
         )
-        CalmTask.Exec.escript(
-            "print 'Hello World!'", name="Test Escript", target=ref(MySQLService)
+        CalmTask.Exec.escript.py3(
+            "print ('Hello World!')", name="Test Escript", target=ref(MySQLService)
         )
-        CalmTask.SetVariable.escript(
-            script="print 'var1=test'",
+        CalmTask.SetVariable.escript.py3(
+            script="print ('var1=test')",
             name="Test Setvar Escript",
             variables=["var1"],
             target=ref(MySQLService),

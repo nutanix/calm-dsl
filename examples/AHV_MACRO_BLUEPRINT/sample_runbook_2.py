@@ -11,5 +11,5 @@ from calm.dsl.runbooks import CalmEndpoint as Endpoint
 def DslSetVariableRunbook():
     "Runbook example with Set Variable Tasks"
 
-    Task.SetVariable.escript(name="Task1", script="print 'var1=test'", variables=["var1"])
-    Task.Exec.escript(name="Task3", script="print '@@{var1}@@ @@{var2}@@'")
+    Task.SetVariable.escript(name="Task1", script="print ('var1=test')", variables=["var1"])
+    Task.Exec.escript(name="Task3", script="print ('@@{var1}@@ @@{var2}@@')")

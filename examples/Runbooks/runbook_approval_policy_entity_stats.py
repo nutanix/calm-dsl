@@ -18,11 +18,11 @@ POLICY_PROJECT = get_approval_project(DSL_CONFIG)
 PCEndpoint = Endpoint.HTTP("https://localhost:9440/api/nutanix/v3")
 
 script = """
-print "Calm Entity Stats are as follows -"
-print "Endpoint Count   - @@{endpoints_count}@@"
-print "Blueprint Count  - @@{blueprints_count}@@"
-print "Runbook Count    - @@{runbooks_count}@@"
-print "Apps Count       - @@{apps_count}@@"
+print ("Calm Entity Stats are as follows -")
+print ("Endpoint Count   - @@{endpoints_count}@@")
+print ("Blueprint Count  - @@{blueprints_count}@@")
+print ("Runbook Count    - @@{runbooks_count}@@")
+print ("Apps Count       - @@{apps_count}@@")
 """
 
 

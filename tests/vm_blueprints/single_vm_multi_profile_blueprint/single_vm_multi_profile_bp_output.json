@@ -506,8 +506,8 @@
                                     "name": "AhvVmSmallProfileSubstrate"
                                 },
                                 "attrs": {
-                                    "script_type": "static",
-                                    "script": "print 'Hello!'"
+                                    "script_type": "static_py3",
+                                    "script": "print ('Hello!')"
                                 },
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
@@ -643,8 +643,8 @@
                                     "name": "AhvVmLargeProfileSubstrate"
                                 },
                                 "attrs": {
-                                    "script_type": "static",
-                                    "script": "print 'Hello!'"
+                                    "script_type": "static_py3",
+                                    "script": "print ('Hello!')"
                                 },
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],

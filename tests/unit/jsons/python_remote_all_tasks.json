@@ -1,0 +1,146 @@
+{
+    "endpoint_definition_list": [],
+    "credential_definition_list": [],
+    "client_attrs": {},
+    "runbook": {
+        "name": "DslAllPythonRemoteTasks_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "DslAllPythonRemoteTasks_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "DslAllPythonRemoteTasks_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": []
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "python_decision"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "python_decision_success_meta_task",
+                "description": "",
+                "type": "META",
+                "attrs": {},
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "python_exec"
+                    },
+                    {
+                        "kind": "app_task",
+                        "name": "python_setvar"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "python_exec",
+                "description": "",
+                "type": "EXEC",
+                "target_any_local_reference": {
+                    "kind": "app_endpoint",
+                    "name": "IP_endpoint"
+                },
+                "attrs": {
+                    "script_type": "python_remote",
+                    "script": "print(\"just printing...\")\n"
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "python_setvar",
+                "description": "",
+                "type": "SET_VARIABLE",
+                "target_any_local_reference": {
+                    "kind": "app_endpoint",
+                    "name": "IP_endpoint"
+                },
+                "attrs": {
+                    "script_type": "python_remote",
+                    "script": "print(\"var1=abc\")\n",
+                    "eval_variables": [
+                        "var1"
+                    ]
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "python_decision_failure_meta_task",
+                "description": "",
+                "type": "META",
+                "attrs": {},
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "python_exec_print"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "python_exec_print",
+                "description": "",
+                "type": "EXEC",
+                "target_any_local_reference": {
+                    "kind": "app_endpoint",
+                    "name": "IP_endpoint"
+                },
+                "attrs": {
+                    "script_type": "python_remote",
+                    "script": "print \"Decision else part\""
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "python_decision",
+                "description": "",
+                "type": "DECISION",
+                "target_any_local_reference": {
+                    "kind": "app_endpoint",
+                    "name": "IP_endpoint"
+                },
+                "attrs": {
+                    "script_type": "python_remote",
+                    "script": "exit(0)\n",
+                    "success_child_reference": {
+                        "kind": "app_task",
+                        "name": "python_decision_success_meta_task"
+                    },
+                    "failure_child_reference": {
+                        "kind": "app_task",
+                        "name": "python_decision_failure_meta_task"
+                    }
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": []
+    }
+}

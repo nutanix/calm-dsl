@@ -72,13 +72,13 @@
                             "eval_variables": [
                                 "var1"
                             ],
-                            "script_type": "static",
+                            "script_type": "static_py3",
                             "tunnel_reference": {
                                 "kind": "tunnel",
                                 "uuid": "eff3b014-cd71-44c3-80d0-6ab6f0a222cc",
                                 "name": "NewNetworkGroupTunnel2"
                             },
-                            "script": "vmip = \"127.0.0.1\"\nvm_url=\"http://{0}:12345/health\".format(vmip)\ndef get_resource_list(url):\n    headers = {'Content-Type': 'text/html', 'Accept':'text/html'}\n    try:\n        r=urlreq(url, verb='GET', headers=headers, auth=\"NONE\")\n    except Exception as e:\n        print e\n    return r\n\nres=get_resource_list(vm_url)\nprint res\nprint \"var1=\" + vmip\n"
+                            "script": "vmip = \"127.0.0.1\"\nvm_url=\"http://{0}:12345/health\".format(vmip)\ndef get_resource_list(url):\n    headers = {'Content-Type': 'text/html', 'Accept':'text/html'}\n    try:\n        r=urlreq(url, verb='GET', headers=headers, auth=\"NONE\")\n    except Exception as e:\n        print (e)\n    return r\n\nres=get_resource_list(vm_url)\nprint (res)\nprint (\"var1=\" + vmip)\n"
                         },
                         "timeout_secs": "",
                         "type": "SET_VARIABLE",
@@ -91,13 +91,13 @@
                         "child_tasks_local_reference_list": [],
                         "name": "tunnel_exec",
                         "attrs": {
-                            "script_type": "static",
+                            "script_type": "static_py3",
                             "tunnel_reference": {
                                 "kind": "tunnel",
                                 "uuid": "eff3b014-cd71-44c3-80d0-6ab6f0a222cc",
                                 "name": "NewNetworkGroupTunnel2"
                             },
-                            "script": "vmip = \"127.0.0.1\"\nvm_url=\"http://{0}:12345/health\".format(vmip)\ndef get_resource_list(url):\n    headers = {'Content-Type': 'text/html', 'Accept':'text/html'}\n    try:\n        r=urlreq(url, verb='GET', headers=headers, auth=\"NONE\")\n    except Exception as e:\n        print e\n    return r\n\nres=get_resource_list(vm_url)\nprint res\nprint \"var1=\" + vmip\n"
+                            "script": "vmip = \"127.0.0.1\"\nvm_url=\"http://{0}:12345/health\".format(vmip)\ndef get_resource_list(url):\n    headers = {'Content-Type': 'text/html', 'Accept':'text/html'}\n    try:\n        r=urlreq(url, verb='GET', headers=headers, auth=\"NONE\")\n    except Exception as e:\n        print (e)\n    return r\n\nres=get_resource_list(vm_url)\nprint (res)\nprint (\"var1=\" + vmip)\n"
                         },
                         "timeout_secs": "",
                         "type": "EXEC",
@@ -110,8 +110,8 @@
                         "child_tasks_local_reference_list": [],
                         "name": "check set variable",
                         "attrs": {
-                            "script_type": "static",
-                            "script": "vmip=\"@@{var1}@@\"\nif vmip == \"127.0.0.1\":\n    print \"variable was set\"\n\n    \n"
+                            "script_type": "static_py3",
+                            "script": "vmip=\"@@{var1}@@\"\nif vmip == \"127.0.0.1\":\n    print (\"variable was set\")\n\n    \n"
                         },
                         "timeout_secs": "",
                         "type": "EXEC",

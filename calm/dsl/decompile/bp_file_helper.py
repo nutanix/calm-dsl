@@ -195,6 +195,9 @@ def render_bp_file_template(
     for k, v in enumerate(dependepent_entities):
         update_entity_gui_dsl_name(v.get_gui_name(), v.__name__)
 
+    # Stores config attr classes to be rendered
+    config_attr_classes = {}
+
     # Rendering templates
     for k, v in enumerate(dependepent_entities):
         if isinstance(v, ServiceType):
@@ -203,13 +206,7 @@ def render_bp_file_template(
             )
 
         elif isinstance(v, ConfigAttrs):
-            dependepent_entities[k] = render_config_attr_template(
-                v,
-                patch_attr_update_config_map,
-                secrets_dict,
-                endpoints=endpoints,
-                ep_list=ep_list,
-            )
+            config_attr_classes[k] = v
 
         elif isinstance(v, PackageType):
             dependepent_entities[k] = render_package_template(
@@ -236,6 +233,29 @@ def render_bp_file_template(
                 endpoints=endpoints,
                 ep_list=ep_list,
             )
+
+    """"
+    Render config attr class after all other classes are rendered because it may have dependency on other classes. For instance:
+
+    Case 1:
+      -> Multiple service classes present
+      -> Config attr contains tasks that have call runbook task for a service
+      -> Config attr class comes before a service class in dependepent_entities list
+    
+    In this case service class hasn't stored it's action map (RUNBOOK_ACTION_MAP) and config attr class gets rendered first,
+    then a look up for matching action in RUNBOOK_ACTION_MAP will fail and decompile fails.
+
+    Solution: Store all config attr classes encountered in dependepent_entities and render them later when all other classes are rendered.
+    """
+
+    for k, v in config_attr_classes.items():
+        dependepent_entities[k] = render_config_attr_template(
+            v,
+            patch_attr_update_config_map,
+            secrets_dict,
+            endpoints=endpoints,
+            ep_list=ep_list,
+        )
 
     is_any_secret_value_available = False
     for _e in secrets_dict:

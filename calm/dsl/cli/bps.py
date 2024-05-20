@@ -648,6 +648,10 @@ def decompile_bp_from_file(filename, with_secrets=False, prefix="", bp_dir=None)
     # ToDo - Fix this
     bp_payload = json.loads(open(filename).read())
     # bp_payload = read_spec(filename)
+
+    # Filter out system created tasks in patch config
+    filter_patch_config_tasks(bp_payload["spec"]["resources"])
+
     _decompile_bp(
         bp_payload=bp_payload, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
     )

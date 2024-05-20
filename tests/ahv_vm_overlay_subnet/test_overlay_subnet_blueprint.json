@@ -519,8 +519,8 @@
                                             "name": "HelloSubstrate"
                                         },
                                         "attrs": {
-                                            "script_type": "static",
-                                            "script": "print 'Pre Create task runs before VM is created'"
+                                            "script_type": "static_py3",
+                                            "script": "print ('Pre Create task runs before VM is created')"
                                         },
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
@@ -574,8 +574,8 @@
                                             "name": "HelloSubstrate"
                                         },
                                         "attrs": {
-                                            "script_type": "static",
-                                            "script": "print 'Post delete task runs after VM is deleted'"
+                                            "script_type": "static_py3",
+                                            "script": "print ('Post delete task runs after VM is deleted')"
                                         },
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],

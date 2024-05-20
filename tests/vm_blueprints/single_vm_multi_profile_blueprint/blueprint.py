@@ -79,7 +79,7 @@ class AhvVmSmallProfile(VmProfile):
 
     @action
     def __pre_create__():
-        Task.Exec.escript(name="Pre Create Task", script="print 'Hello!'")
+        Task.Exec.escript.py3(name="Pre Create Task", script="print ('Hello!')")
 
     @action
     def test_profile_action():

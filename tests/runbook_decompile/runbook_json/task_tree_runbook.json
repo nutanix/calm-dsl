@@ -309,7 +309,7 @@
                         "child_tasks_local_reference_list": [],
                         "state": "ACTIVE",
                         "attrs": {
-                            "script_type": "static",
+                            "script_type": "static_py3",
                             "type": "",
                             "command_line_args": "",
                             "exit_status": [],
@@ -438,7 +438,7 @@
                         "child_tasks_local_reference_list": [],
                         "state": "ACTIVE",
                         "attrs": {
-                            "script_type": "static",
+                            "script_type": "static_py3",
                             "type": "",
                             "command_line_args": "",
                             "exit_status": [],
@@ -834,7 +834,7 @@
                         "uuid": "d1a72636-0cbf-d68b-23c9-c5ca3c732cc7",
                         "child_tasks_local_reference_list": [],
                         "attrs": {
-                            "script_type": "static",
+                            "script_type": "static_py3",
                             "script": "print('hello')"
                         },
                         "type": "EXEC",
@@ -882,7 +882,7 @@
                         "uuid": "e65df912-8434-3187-4dab-4532b5579c6e",
                         "child_tasks_local_reference_list": [],
                         "attrs": {
-                            "script_type": "static",
+                            "script_type": "static_py3",
                             "script": "print('success')"
                         },
                         "type": "EXEC",

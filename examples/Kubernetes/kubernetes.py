@@ -51,9 +51,9 @@ class MasterPackage(Package):
 
     @action
     def __install__():
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="Set Kubernetes Version",
-            script="print 'VERSION=@@{KUBE_VERSION}@@'",
+            script="print ('VERSION=@@{KUBE_VERSION}@@')",
             variables=["VERSION"],
         )
         CalmTask.Exec.ssh(
@@ -76,9 +76,9 @@ class WorkerPackage(Package):
 
     @action
     def __install__():
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="Set Kubernetes Version",
-            script="print 'VERSION=@@{KUBE_VERSION}@@'",
+            script="print ('VERSION=@@{KUBE_VERSION}@@')",
             variables=["VERSION"],
         )
         CalmTask.Exec.ssh(name="Docker Kubelet Install", filename="scripts/Worker01.sh")
@@ -218,15 +218,15 @@ class Nutanix(Profile):
         )
 
         with parallel():
-            CalmTask.SetVariable.escript(
+            CalmTask.SetVariable.escript.py3(
                 name="Set Version Master",
-                script="print 'VERSION=@@{KUBE_VERSION_NEW}@@'",
+                script="print ('VERSION=@@{KUBE_VERSION_NEW}@@')",
                 variables=["VERSION"],
                 target=ref(Master),
             )
-            CalmTask.SetVariable.escript(
+            CalmTask.SetVariable.escript.py3(
                 name="Set Version Slave",
-                script="print 'VERSION=@@{KUBE_VERSION_NEW}@@'",
+                script="print ('VERSION=@@{KUBE_VERSION_NEW}@@')",
                 variables=["VERSION"],
                 target=ref(Worker),
             )

@@ -9,9 +9,9 @@ resp = urlreq(
     url, verb="DELETE", auth="BASIC", user=era_user, passwd=era_pass, headers=headers
 )
 if resp.ok:
-    print "DEREGISTER_OPERATION_ID={0}".format(json.loads(resp.content)["operationId"])
+    print ("DEREGISTER_OPERATION_ID={0}".format(json.loads(resp.content)["operationId"]))
 else:
-    print "Deregister DB Server Operation failed", json.dumps(
+    print ("Deregister DB Server Operation failed", json.dumps(
         json.loads(resp.content), indent=4
-    )
+    ))
     exit(1)
