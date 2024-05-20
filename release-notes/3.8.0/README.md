@@ -10,11 +10,11 @@
 
 # Bug Fixes/Improvements
 
-- Deprecates python 2 escripts and changes the default flow of escript from python 2 to python 3.
+- **`Python 2 escripts will be deprecated from DSL v3.8.0 onwards.`**
+- Default flow of escript is changed from python 2 to python 3 i.e. `CalmTask.Exec.escript, RunbookTask.Exec.escript, RunbookTask.Decision.escript, CalmTask.SetVariable.escript` will now point to python3 escripts.
 - Migration support to upgrade python2 patch/update config tasks to python3 using command - `calm update app-migratable-bp`
 - Delete orphan app of older tunnel post reset of tunnel VM using command - `calm reset network-group-tunnel-vm`
 - Add ACP for Self Owned Access of report_config for project admin and acp for distributed_virtual_switch, recovery_point for all users in project. 
 - Moved user and user group to project scope.
-- Other small bug fixes.
 
 
