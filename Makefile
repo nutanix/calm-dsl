@@ -39,6 +39,7 @@ clean:
 		docker ps -aq --no-trunc --filter "status=exited" | xargs -I {} docker rm {} && \
 		docker image prune -f
 	rm -rf venv/ && mkdir venv/ && touch venv/.empty
+	rm -rf ~/.calm/dsl.db
 
 test-verbose: dev
 	venv/bin/py.test -s -vv
