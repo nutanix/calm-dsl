@@ -41,7 +41,7 @@ resources:
       publisher: Canonical
       sku: 18.04-LTS
       use_custom_image: false
-      version: 18.04.201903121
+      version: 18.04.202401161
     is_managed: true
     os_disk_details:
       caching_type: None

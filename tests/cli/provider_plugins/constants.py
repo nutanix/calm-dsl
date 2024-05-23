@@ -24,7 +24,7 @@ class AZURE:
     PUBLISHERS = ["Canonical"]
     IMAGE_OFFERS = ["UbuntuServer"]
     IMAGE_SKUS = ["18.04-LTS"]
-    IMAGE_VERSIONS = ["18.04.201903121"]
+    IMAGE_VERSIONS = ["18.04.202401161"]
     SECURITY_GROUPS = ["DND-CENTOS-IMAGE-nsg"]
     VIRTUAL_NETWORKS = ["calm-virtual-network-eastus2"]
     SUBNETS = ["subnet1", "default"]
