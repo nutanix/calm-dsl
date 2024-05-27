@@ -1,0 +1,30 @@
+{% import "ref.yaml.jinja2" as ref %}
+
+{% macro ProviderEndpointSchema() -%}
+
+title: Provider Endpoint Schema
+description: Endpoint Schema of the provider
+x-calm-dsl-type: provider_endpoint_schema
+type: object
+properties:
+    type:
+        type: string
+        description: Type of endpoint schema
+        enum: [NUTANIX_PC, VMWARE, GCP, AWS, AZURE, CUSTOM, NONE]
+        default: CUSTOM
+    variable_list:
+        type: array
+        description: List of variables
+        items:
+            $ref: '#/components/schemas/Variable'
+        x-calm-dsl-display-name: variables
+
+{%- endmacro %}
+
+
+{% macro ProviderEndpointSchemaDefinition() -%}
+
+ProviderEndpointSchema:
+    {{ ProviderEndpointSchema()|indent(4) }}
+
+{%- endmacro %}

@@ -4,6 +4,7 @@ LOCAL_DIR = None
 SCRIPTS_DIR = None
 SPECS_DIR = None
 BP_DIR = None
+PROVIDER_DIR = None
 
 LOCAL_DIR_KEY = ".local"
 SCRIPTS_DIR_KEY = "scripts"
@@ -28,6 +29,22 @@ def make_bp_dirs(bp_dir):
         os.makedirs(scripts_dir)
 
     return (bp_dir, local_dir, spec_dir, scripts_dir)
+
+
+def make_provider_dirs(provider_dir):
+
+    if not os.path.isdir(provider_dir):
+        os.makedirs(provider_dir)
+
+    local_dir = os.path.join(provider_dir, LOCAL_DIR_KEY)
+    if not os.path.isdir(local_dir):
+        os.makedirs(local_dir)
+
+    scripts_dir = os.path.join(provider_dir, SCRIPTS_DIR_KEY)
+    if not os.path.isdir(scripts_dir):
+        os.makedirs(scripts_dir)
+
+    return (provider_dir, local_dir, scripts_dir)
 
 
 def make_runbook_dirs(runbook_dir):
@@ -94,6 +111,14 @@ def init_bp_dir(bp_dir):
     return (BP_DIR, LOCAL_DIR, SPECS_DIR, SCRIPTS_DIR)
 
 
+def init_provider_dir(provider_dir):
+
+    global LOCAL_DIR, SCRIPTS_DIR, PROVIDER_DIR
+    PROVIDER_DIR, LOCAL_DIR, SCRIPTS_DIR = make_provider_dirs(provider_dir)
+
+    return (PROVIDER_DIR, LOCAL_DIR, SCRIPTS_DIR)
+
+
 def init_runbook_dir(runbook_dir):
 
     global LOCAL_DIR, SCRIPTS_DIR, RUNBOOK_DIR
@@ -122,6 +147,10 @@ def init_environment_dir(environment_dir):
 
 def get_bp_dir():
     return BP_DIR
+
+
+def get_provider_dir():
+    return PROVIDER_DIR
 
 
 def get_runbook_dir():
@@ -165,8 +194,9 @@ def get_scripts_dir_key():
 
 
 def init_file_globals():
-    global LOCAL_DIR, SPECS_DIR, SCRIPTS_DIR, BP_DIR
+    global LOCAL_DIR, SPECS_DIR, SCRIPTS_DIR, BP_DIR, PROVIDER_DIR
     LOCAL_DIR = None
     SCRIPTS_DIR = None
     SPECS_DIR = None
     BP_DIR = None
+    PROVIDER_DIR = None

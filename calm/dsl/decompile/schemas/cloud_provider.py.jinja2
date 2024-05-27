@@ -1,0 +1,57 @@
+{% macro cloud_provider(obj) %}
+class {{obj.name}}(CloudProvider):
+    {% if obj.description -%}"""{{obj.description}}"""{% endif %}
+
+    infra_type = "{{obj.infra_type}}"
+
+    auth_schema_variables=[
+        {%- for variable in obj.auth_schema_variables %}
+            {{variable}},
+        {%- endfor %}
+    ]
+
+    variables=[
+        {%- for variable in obj.variables %}
+            {{variable}},
+        {%- endfor %}
+    ]
+
+    {% if obj.endpoint_schema %}
+    endpoint_schema = ProviderEndpointSchema(
+        type="{{obj.endpoint_schema.type}}",
+        variables=[
+            {%- for variable in obj.endpoint_schema_variables %}
+                {{variable}},
+            {%- endfor %}
+        ]
+    )
+    {% endif %}
+
+    {% if obj.test_account %}
+    test_account = ProviderTestAccount(
+        {% if obj.test_account.name -%}
+        name="{{obj.test_account.name}}",
+        {% endif %}
+        {% if obj.test_account.description -%}
+        description="{{obj.test_account.description}}",
+        {% endif %}
+        variables=[
+            {%- for variable in obj.test_account_variables %}
+                {{variable}},
+            {%- endfor %}
+        ]
+    )
+    {% endif %}
+
+    {% if obj.credentials %}credentials = [{{obj.credentials}}]{% endif %}
+
+    {% if obj.resource_types %}resource_types = [{{obj.resource_types}}]{% endif %}
+
+{% for action in obj.actions %}
+{{action | indent( width=4, first=True)}}
+{%- endfor %}
+
+{% endmacro %}
+
+{{ cloud_provider(obj) }}
+    

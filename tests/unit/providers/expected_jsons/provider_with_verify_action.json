@@ -1,0 +1,142 @@
+{
+    "spec": {
+        "name": "DslProviderWithVerifyAction",
+        "resources": {
+            "type": "CUSTOM",
+            "infra_type": "cloud",
+            "auth_schema_list": [
+                {
+                    "name": "username",
+                    "description": "",
+                    "type": "LOCAL",
+                    "label": "",
+                    "attrs": {},
+                    "val_type": "STRING",
+                    "value": "",
+                    "data_type": "BASE",
+                    "is_hidden": false,
+                    "is_mandatory": false
+                },
+                {
+                    "name": "password",
+                    "description": "",
+                    "type": "SECRET",
+                    "label": "",
+                    "attrs": {
+                        "is_secret_modified": true,
+                        "type": "SECRET"
+                    },
+                    "val_type": "STRING",
+                    "value": "",
+                    "data_type": "BASE",
+                    "is_hidden": false,
+                    "is_mandatory": false
+                }
+            ],
+            "endpoint_schema": {
+                "type": "CUSTOM",
+                "variable_list": [
+                    {
+                        "name": "server_ip",
+                        "description": "",
+                        "type": "LOCAL",
+                        "label": "",
+                        "attrs": {},
+                        "val_type": "STRING",
+                        "value": "",
+                        "data_type": "BASE",
+                        "is_hidden": false,
+                        "is_mandatory": false
+                    },
+                    {
+                        "name": "port_number",
+                        "description": "",
+                        "type": "LOCAL",
+                        "label": "",
+                        "attrs": {},
+                        "val_type": "INT",
+                        "value": "",
+                        "data_type": "BASE",
+                        "regex": {
+                            "value": "^[\\d]*$",
+                            "should_validate": false
+                        },
+                        "is_hidden": false,
+                        "is_mandatory": false
+                    }
+                ]
+            },
+            "variable_list": [
+                {
+                    "name": "provider_var",
+                    "description": "",
+                    "type": "LOCAL",
+                    "label": "",
+                    "attrs": {},
+                    "val_type": "STRING",
+                    "value": "",
+                    "data_type": "BASE",
+                    "is_hidden": false,
+                    "is_mandatory": false
+                }
+            ],
+            "resource_type_list": [],
+            "action_list": [
+                {
+                    "name": "Verify",
+                    "description": "Verify action for Provider",
+                    "type": "provider",
+                    "critical": false,
+                    "runbook": {
+                        "name": "DslProviderWithVerifyAction_Verify_runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "DslProviderWithVerifyAction_Verify_dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "DslProviderWithVerifyAction_Verify_dag",
+                                "description": "",
+                                "type": "DAG",
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [
+                                    {
+                                        "kind": "app_task",
+                                        "name": "VerifyCreds"
+                                    }
+                                ],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            },
+                            {
+                                "name": "VerifyCreds",
+                                "description": "",
+                                "type": "EXEC",
+                                "attrs": {
+                                    "script_type": "static_py3",
+                                    "script": "# Script to verify credentials of custom provider accounts\n\nprint (\"Account credentials being validated:\")\nprint (\"Username: @@{username}@@, Password: @@{password}@@\")\n\nprint (\"Making a dummy request to authenticate to the below provider endpoint\")\nprint (\"Server IP: @@{server_ip}@@, Port: @@{port_number}@@\")\n\nprint (\"Successfully Authenticated!!!\")\n"
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": [],
+                        "output_variables": []
+                    }
+                }
+            ],
+            "credential_definition_list": []
+        },
+        "description": "Sample provider with authentication schema, variables, endpoint schema & verify action configured"
+    },
+    "metadata": {
+        "kind": "provider",
+        "name": "DslProviderWithVerifyAction"
+    }
+}

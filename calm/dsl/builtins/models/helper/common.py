@@ -480,20 +480,7 @@ def get_provider_uuid(name):
         LOG.info("{} found ".format(name))
         provider = entities[0]
     else:
-        LOG.error("No provider found with name {} found".format(name))
-        sys.exit("No provider found with name {} found".format(name))
+        LOG.error("No provider found with name {}".format(name))
+        sys.exit("No provider found with name {}".format(name))
 
     return provider["metadata"]["uuid"]
-
-
-def get_provider(name):
-    """returns provider get call data"""
-
-    client = get_api_client()
-    provider_uuid = get_provider_uuid(name=name)
-    res, err = client.provider.read(provider_uuid)
-    if err:
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
-        sys.exit("[{}] - {}".format(err["code"], err["error"]))
-
-    return res.json()

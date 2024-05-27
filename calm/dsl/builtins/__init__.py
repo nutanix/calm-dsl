@@ -147,6 +147,19 @@ from .models.vmware_account import VmwareAccountData, vmware_account
 from .models.gcp_account import GcpAccountData, gcp_account
 from .models.account_resources import AccountResources
 from .models.account import Account
+from .models.provider_endpoint_schema import (
+    ProviderEndpointSchema,
+    NutanixEndpointSchema,
+    VmwareEndpointSchema,
+    GCPEndpointSchema,
+    AWSEndpointSchema,
+    AzureEndpointSchema,
+    NoneEndpointSchema,
+)
+from .models.provider_test_account import ProviderTestAccount
+from .models.cloud_provider_payload import CloudProviderPayload
+from .models.cloud_provider import CloudProvider
+from .models.resource_type import ResourceType
 
 __all__ = [
     "Ref",
@@ -297,6 +310,17 @@ __all__ = [
     "TimeMachine",
     "Tag",
     "PostgresDatabaseOutputVariables",
+    "ProviderEndpointSchema",
+    "NutanixEndpointSchema",
+    "VmwareEndpointSchema",
+    "GCPEndpointSchema",
+    "AWSEndpointSchema",
+    "AzureEndpointSchema",
+    "NoneEndpointSchema",
+    "CloudProvider",
+    "CloudProviderPayload",
+    "ProviderTestAccount",
+    "ResourceType",
     "AhvUpdateConfigAttrs",
     "PatchField",
     "AppEdit",

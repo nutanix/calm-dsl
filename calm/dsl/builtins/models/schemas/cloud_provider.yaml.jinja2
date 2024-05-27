@@ -1,0 +1,61 @@
+{% macro CloudProvider() -%}
+
+title: CloudProvider
+type: object
+x-calm-dsl-type: cloud_provider
+properties:
+    type:
+        type: string
+        description: Type of the provider
+        enum: [CUSTOM]
+        default: CUSTOM
+    infra_type:
+        type: string
+        description: Infra type of the provider i.e..,. onprem or cloud
+        enum: [on_prem, cloud]
+        default: cloud
+    auth_schema_list:
+        type: array
+        description: Auth Schema of the provider
+        items:
+            $ref: '#/components/schemas/Variable'
+        x-calm-dsl-display-name: auth_schema_variables
+    endpoint_schema:
+        $ref: '#/components/schemas/ProviderEndpointSchema'
+    variable_list:
+        type: array
+        description: Variables of the provider
+        items:
+            $ref: '#/components/schemas/Variable'
+        x-calm-dsl-display-name: variables
+    resource_type_list:
+        type: array
+        description: ResourceTypes of the provider
+        items:
+            $ref: '#/components/schemas/ResourceType'
+        x-calm-dsl-display-name: resource_types
+    test_account:
+        type: object
+        description: Spec of test account to be associated with this provider
+        $ref: '#/components/schemas/ProviderTestAccount'
+    action_list:
+        type: array
+        fixedSize: 1
+        description: Action list ([Verify]) of the provider
+        items:
+            $ref: '#/components/schemas/Action'
+        x-calm-dsl-display-name: actions
+    credential_definition_list:
+        description: Credential definitions for provider.
+        type: array
+        items:
+            $ref: '#/components/schemas/Credential'
+        x-calm-dsl-display-name: credentials
+
+{%- endmacro %}
+{% macro CloudProviderSchema() -%}
+
+CloudProvider:
+  {{ CloudProvider()|indent(2) }}
+
+{%- endmacro %}

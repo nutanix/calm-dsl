@@ -33,10 +33,11 @@ class Context:
         self.project_config = config_handle.get_project_config()
         self.log_config = config_handle.get_log_config()
         self.categories_config = config_handle.get_categories_config()
-        self.connection_config = config_handle.get_connection_config()
         self.policy_config = config_handle.get_policy_config()
         self.approval_policy_config = config_handle.get_approval_policy_config()
         self.stratos_config = config_handle.get_stratos_config()
+        self.cp_config = config_handle.get_cp_config()
+        self.connection_config = config_handle.get_connection_config()
         # Override with env data
         self.server_config.update(EnvConfig.get_server_config())
         self.project_config.update(EnvConfig.get_project_config())
@@ -143,6 +144,14 @@ class Context:
 
         return config
 
+    def get_cp_config(self):
+        """returns custom-provider configuration"""
+        config = self.cp_config
+        if not config.get(CONFIG.CLOUD_PROVIDERS.STATUS):
+            config[CONFIG.CLOUD_PROVIDERS.STATUS] = False
+
+        return config
+
     def get_log_config(self):
         """returns logging configuration"""
 
@@ -194,10 +203,11 @@ class Context:
         server_config = self.get_server_config()
         project_config = self.get_project_config()
         log_config = self.get_log_config()
-        connection_config = self.get_connection_config()
         policy_config = self.get_policy_config()
         approval_policy_config = self.get_approval_policy_config()
         stratos_status = self.get_stratos_config()
+        cp_status = self.get_cp_config()
+        connection_config = self.get_connection_config()
 
         ConfigHandle = get_config_handle()
         config_str = ConfigHandle._render_config_template(
@@ -218,6 +228,7 @@ class Context:
             retries_enabled=connection_config[CONFIG.CONNECTION.RETRIES_ENABLED],
             connection_timeout=connection_config[CONFIG.CONNECTION.CONNECTION_TIMEOUT],
             read_timeout=connection_config[CONFIG.CONNECTION.READ_TIMEOUT],
+            cp_status=cp_status[CONFIG.CLOUD_PROVIDERS.STATUS],
         )
 
         print(config_str)

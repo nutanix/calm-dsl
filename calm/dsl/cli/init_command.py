@@ -17,10 +17,10 @@ from calm.dsl.config import (
 from calm.dsl.db import init_db_handle
 from calm.dsl.api import get_resource_api, get_client_handle_obj
 from calm.dsl.store import Cache
-from calm.dsl.init import init_bp, init_runbook
+from calm.dsl.init import init_bp, init_runbook, init_provider
 from calm.dsl.providers import get_provider_types
 from calm.dsl.store import Version
-from calm.dsl.constants import POLICY, STRATOS, DSL_CONFIG
+from calm.dsl.constants import POLICY, STRATOS, DSL_CONFIG, CLOUD_PROVIDERS
 from calm.dsl.builtins import file_exists
 from calm.dsl.api.util import get_auth_info
 from .main import init, set
@@ -193,6 +193,22 @@ def initialize_engine(
     click.echo("\nKeep Calm and DSL On!\n")
 
 
+def _fetch_cp_feature_status(client):
+    """
+    Fetch custom provider feature status
+    """
+    Obj = get_resource_api(
+        "features/custom_provider/status", client.connection, calm_api=True
+    )
+    res, err = Obj.read()
+    if err:
+        click.echo("[Fail]")
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    result = json.loads(res.content)
+    return result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
+
+
 def set_server_details(
     ip,
     port,
@@ -316,6 +332,13 @@ def set_server_details(
         LOG.debug("Stratos is not supported")
         stratos_status = False
 
+    if LV(calm_version) >= LV(CLOUD_PROVIDERS.MIN_SUPPORTED_VERSION):
+        cp_status = _fetch_cp_feature_status(client)
+        LOG.info("CP enabled={}".format(cp_status))
+    else:
+        LOG.debug("Cloud Providers are not supported")
+        cp_status = False
+
     if project_name != DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME:
         LOG.info("Verifying the project details")
         project_name_uuid_map = client.project.get_name_uuid_map(
@@ -342,12 +365,13 @@ def set_server_details(
         config_file=config_file,
         db_location=db_file,
         local_dir=local_dir,
-        retries_enabled=retries_enabled,
-        connection_timeout=connection_timeout,
-        read_timeout=read_timeout,
         policy_status=policy_status,
         approval_policy_status=approval_policy_status,
         stratos_status=stratos_status,
+        retries_enabled=retries_enabled,
+        connection_timeout=connection_timeout,
+        read_timeout=read_timeout,
+        cp_status=cp_status,
     )
 
     # Updating context for using latest config data
@@ -411,6 +435,23 @@ def init_dsl_runbook(runbook_name, dir_name):
         sys.exit(-1)
 
     init_runbook(runbook_name, dir_name)
+
+
+@init.command("provider", feature_min_version="4.0.0", experimental=True)
+@click.option("--name", "-n", "provider_name", default="hello", help="Name of provider")
+@click.option(
+    "--dir_name", "-d", default=os.getcwd(), help="Directory path for the provider"
+)
+def init_dsl_provider(provider_name, dir_name):
+    """
+    Creates a starting file for provider
+    """
+
+    if not provider_name.isidentifier():
+        LOG.error("Provider name '{}' is not a valid identifier".format(provider_name))
+        sys.exit(-1)
+
+    init_provider(provider_name, dir_name)
 
 
 # @init.command("scheduler", feature_min_version="3.3.0", experimental=True)
@@ -637,6 +678,13 @@ def _set_config(
         LOG.debug("Stratos is not supported")
         stratos_status = False
 
+    if LV(calm_version) >= LV(CLOUD_PROVIDERS.MIN_SUPPORTED_VERSION):
+        cp_status = _fetch_cp_feature_status(client)
+        LOG.info("CP enabled={}".format(cp_status))
+    else:
+        LOG.debug("Cloud Providers are not supported")
+        cp_status = False
+
     if project_name != DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME:
         LOG.info("Verifying the project details")
         project_name_uuid_map = client.project.get_name_uuid_map(
@@ -681,12 +729,13 @@ def _set_config(
         log_level=log_level,
         local_dir=local_dir,
         config_file=config_file,
-        retries_enabled=retries_enabled,
-        connection_timeout=connection_timeout,
-        read_timeout=read_timeout,
         policy_status=policy_status,
         approval_policy_status=approval_policy_status,
         stratos_status=stratos_status,
+        retries_enabled=retries_enabled,
+        connection_timeout=connection_timeout,
+        read_timeout=read_timeout,
+        cp_status=cp_status,
     )
     LOG.info("Configuration changed successfully")
 

@@ -46,7 +46,9 @@ def render_action_template(
 
     # NOTE Not using main_task_local_reference for now,
     # bcz type of main task is "DAG"
-    root_node, task_child_map = get_task_order(runbook.tasks)
+    root_node, task_child_map, decision_tasks, while_loop_tasks = get_task_order(
+        runbook.tasks
+    )
 
     tasks = []
     if task_child_map:
@@ -59,6 +61,8 @@ def render_action_template(
                 CONFIG_SPEC_MAP,
                 context=runbook_context,
                 secrets_dict=secrets_dict,
+                decision_tasks=decision_tasks,
+                while_tasks=while_loop_tasks,
             )
         )
 
@@ -121,6 +125,12 @@ def render_action_template(
         "endpoints": endpoints,
     }
 
+    if runbook.outputs:
+        user_attrs["outputs"] = runbook.outputs
+
+    if cls.type != "user":
+        user_attrs["type"] = cls.type  # Only set if non-default
+
     gui_display_name = getattr(cls, "name", "") or cls.__name__
     if gui_display_name != cls.__name__:
         user_attrs["gui_display_name"] = gui_display_name
@@ -160,6 +170,80 @@ def get_task_order(task_list):
 
     # Edges between tasks
     edges = dag_task.attrs["edges"]
+
+    # for decision and while_loop tasks, their subtasks are not linked with the main task tree
+    # populate the decision tasks.
+    # populate the while_loop tasks
+    decision_tasks = {}
+    decision_child_tasks = []
+
+    def insert_decision_task_node(task):
+        failure_meta_task_name = task.attrs["failure_child_reference"]["name"]
+        success_meta_task_name = task.attrs["success_child_reference"]["name"]
+        failure_meta_task = list(
+            filter(lambda x: x.name == failure_meta_task_name, task_list)
+        )[0]
+        success_meta_task = list(
+            filter(lambda x: x.name == success_meta_task_name, task_list)
+        )[0]
+        parent = task
+        if parent.name not in decision_tasks:
+            decision_tasks[parent.name] = {"data": parent}
+        for child_task in failure_meta_task.child_tasks_local_reference_list:
+            if "failure_tasks" not in decision_tasks[parent.name]:
+                decision_tasks[parent.name]["failure_tasks"] = []
+            real_child_task = list(
+                filter(lambda x: x.name == child_task.name, task_list)
+            )[0]
+            decision_tasks[parent.name]["failure_tasks"].append(
+                {"name": child_task.name, "data": real_child_task}
+            )
+            decision_child_tasks.append(child_task.name)
+
+        for child_task in success_meta_task.child_tasks_local_reference_list:
+            if "success_tasks" not in decision_tasks[parent.name]:
+                decision_tasks[parent.name]["success_tasks"] = []
+            real_child_task = list(
+                filter(lambda x: x.name == child_task.name, task_list)
+            )[0]
+            decision_tasks[parent.name]["success_tasks"].append(
+                {"name": child_task.name, "data": real_child_task}
+            )
+            decision_child_tasks.append(child_task.name)
+
+    while_loop_tasks = {}
+    while_loop_child_tasks = []
+
+    def insert_while_loop_tasks(task):
+        while_loop_tasks[task.name] = {"data": task, "child_tasks": []}
+        child_meta_task_name = task.child_tasks_local_reference_list[0].name
+        child_meta_task = list(
+            filter(lambda x: x.name == child_meta_task_name, task_list)
+        )[0]
+        child_tasks = child_meta_task.child_tasks_local_reference_list
+        for child_task in child_tasks:
+            real_child_task = list(
+                filter(lambda x: x.name == child_task.name, task_list)
+            )[0]
+            while_loop_tasks[task.name]["child_tasks"].append(real_child_task)
+            while_loop_child_tasks.append(real_child_task.name)
+
+    for task in task_list:
+        if task.type == "DECISION":
+            insert_decision_task_node(task)
+        elif task.type == "WHILE_LOOP":
+            insert_while_loop_tasks(task)
+
+    # remove meta tasks as they are not rendered.
+    task_list = list(
+        filter(
+            lambda x: (
+                x.type != "META"
+                and (x.name not in (decision_child_tasks + while_loop_child_tasks))
+            ),
+            task_list,
+        )
+    )
 
     # Final resultant task list with level as index
     res_task_list = []
@@ -237,7 +321,7 @@ def get_task_order(task_list):
 
             n -= 1
 
-    return root_node, task_child_map
+    return root_node, task_child_map, decision_tasks, while_loop_tasks
 
 
 def init_action_globals():

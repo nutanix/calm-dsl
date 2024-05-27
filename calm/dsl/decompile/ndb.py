@@ -2,7 +2,7 @@ import sys
 import json
 import os
 
-from calm.dsl.db.table_config import ResourceTypeCache
+from calm.dsl.db.table_config import ResourceTypeCache, AccountCache
 from calm.dsl.builtins.models.ndb import (
     DatabaseServer,
     Database,
@@ -15,6 +15,7 @@ from calm.dsl.builtins.models.constants import (
     HIDDEN_SUFFIX,
 )
 from calm.dsl.builtins.models.helper import common as common_helper
+from calm.dsl.builtins.models.variable import VariableType
 from calm.dsl.constants import CACHE
 from calm.dsl.store import Cache
 from calm.dsl.tools import get_escaped_quotes_string
@@ -404,54 +405,122 @@ rt_action_class_map = {
 }
 
 
-def get_schema_file_and_user_attrs(task_name, attrs, account_name):
+def modify_var_format(variable):
+    """
+    Converts the variable definition from one format to other as below
 
-    resource_type_name = attrs.get("resource_type_reference", {}).get("name", "")
+    "input_var = CalmVariable.Simple('@@{runbook_var}@@', label='', is_mandatory=True, is_hidden=False, runtime=False, description='')"
+            <gets converted to>
+    "CalmVariable.Simple('@@{runbook_var}@@', label='', is_mandatory=True, is_hidden=False, runtime=False, description='', name=input_var)"
+    """
+    arr = variable.split("=")
+    ret = "=".join(arr[1:]).strip()
+    ret = ret[:-1] + ", name='{}')".format(arr[0].strip())
+    return ret
+
+
+def get_schema_file_and_user_attrs_for_rtop_task(
+    task_name,
+    resource_type_name,
+    account_name,
+    action_name,
+    provider_name,
+    inarg_list,
+    output_variable_map,
+):
+    input_variables = []
+    from .variable import render_variable_template
+
+    for variable in inarg_list:
+        var_cls = VariableType.decompile(variable)
+        var_template = render_variable_template(var_cls, "Task_" + task_name)
+        input_variables.append(modify_var_format(var_template))
+
+    user_attrs = {
+        "name": task_name,
+        "resource_type_name": resource_type_name,
+        "account_name": account_name,
+        "action_name": action_name,
+        "provider_name": provider_name,
+        "inarg_list": input_variables,
+        "output_variables": output_variable_map,
+    }
+    return "task_resource_type_action.py.jinja2", user_attrs
+
+
+def get_schema_file_and_user_attrs(task_name, attrs):
+    account_ref_dict = attrs.get("account_reference", {})
+    account_uuid = account_ref_dict.get("uuid", "")
+    account_name = account_ref_dict.get("name", "")
+    account_data = AccountCache.get_entity_data_using_uuid(account_uuid)
+
+    # NOTE: Commenting out the following condition as of today,
+    # decompile for runbooks not in "ACTIVE" state is also supported
+    # if not account_data:
+    #     msg = "Account with name: '{}', uuid: '{}' not found".format(
+    #         account_name, account_uuid
+    #     )
+    #     LOG.error(msg)
+    #     sys.exit(msg)
+
+    rt_ref_dict = attrs.get("resource_type_reference", {})
+    resource_type_uuid = rt_ref_dict.get("uuid", "")
+    resource_type_name = rt_ref_dict.get("name", "")
+    resource_type_cached_data = ResourceTypeCache.get_entity_data_using_uuid(
+        resource_type_uuid
+    )
+
+    # NOTE: Commenting out the following condition as of today,
+    # decompile for runbooks not in "ACTIVE" state is also supported
+    # if not resource_type_cached_data:
+    #     msg = "Resource Type with name: '{}', uuid: '{}' not found for account '{}'".format(
+    #         resource_type_name, resource_type_uuid, account_data['name']
+    #     )
+    #     LOG.error(msg)
+    #     sys.exit(msg)
+
+    provider_name = account_data.get("provider_type", "")
     action_name = attrs.get("action_reference", {}).get("name", "")
-    resource_type_cached_data = ResourceTypeCache.get_entity_data(
-        name=resource_type_name, provider_name="NDB"
-    )
-
-    if not resource_type_cached_data:
-        LOG.error("resource_type not found in NDB provider")
-        sys.exit(
-            "resource_type {} not found in NDB provider".format(resource_type_name)
-        )
-
-    for action in resource_type_cached_data["action_list"]:
+    for action in resource_type_cached_data.get("action_list", []):
         if action_name == action["name"]:
-            rt_task = action["runbook"]["task_definition_list"][1]["name"]
-            modified_rt_task = "-".join(rt_task.lower().split())
-            if (
-                resource_type_cached_data["name"],
-                action["name"],
-            ) not in rt_action_class_map.keys():
-                LOG.error(
-                    "decompile for resource type {} and action {} not in rt_action_class_map".format(
-                        resource_type_cached_data["name"], action["name"]
+            if provider_name == "NDB":
+                rt_task = action["runbook"]["task_definition_list"][1]["name"]
+                modified_rt_task = "-".join(rt_task.lower().split())
+                if (
+                    resource_type_cached_data["name"],
+                    action["name"],
+                ) not in rt_action_class_map.keys():
+                    LOG.error(
+                        "decompile for resource type {} and action {} not in rt_action_class_map".format(
+                            resource_type_cached_data["name"], action["name"]
+                        )
                     )
+                    sys.exit("Decompile failed for RT_Operation task")
+                return rt_action_class_map[
+                    (resource_type_cached_data["name"], action["name"])
+                ](
+                    task_name=task_name,
+                    account_name=account_name,
+                    rt_task=modified_rt_task,
+                    inarg_list=attrs["inarg_list"],
+                    output_vars=attrs["output_variables"],
                 )
-                sys.exit("Decompile failed for RT_Operation task")
-            return rt_action_class_map[
-                (resource_type_cached_data["name"], action["name"])
-            ](
-                task_name=task_name,
-                account_name=account_name,
-                rt_task=modified_rt_task,
-                inarg_list=attrs["inarg_list"],
-                output_vars=attrs["output_variables"],
-            )
+            else:
+                return get_schema_file_and_user_attrs_for_rtop_task(
+                    task_name,
+                    resource_type_name,
+                    account_name,
+                    action_name,
+                    provider_name,
+                    attrs.get("inarg_list", []),
+                    attrs.get("output_variables", None),
+                )
 
-    LOG.error(
-        "No action  {} found in resource type {}".format(
-            action_name, resource_type_cached_data["name"]
-        )
+    msg = "Action '{}' not found on resource type '{}'".format(
+        action_name, resource_type_cached_data["name"]
     )
-    sys.exit(
-        "No action {} found in resource type {}".format(
-            action_name, resource_type_cached_data["name"]
-        )
-    )
+    LOG.error(msg)
+    sys.exit(msg)
 
 
 def create_file_from_file_name(file_name):

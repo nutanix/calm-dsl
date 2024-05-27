@@ -1039,6 +1039,7 @@ def variable_string_with_options_from_task(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1053,6 +1054,7 @@ def variable_string_with_options_from_task(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1065,6 +1067,7 @@ def variable_int_with_options_from_task(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1079,6 +1082,7 @@ def variable_int_with_options_from_task(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1091,6 +1095,7 @@ def variable_date_with_options_from_task(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1105,6 +1110,7 @@ def variable_date_with_options_from_task(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1117,6 +1123,7 @@ def variable_time_with_options_from_task(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1131,6 +1138,7 @@ def variable_time_with_options_from_task(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1143,6 +1151,7 @@ def variable_datetime_with_options_from_task(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1157,6 +1166,7 @@ def variable_datetime_with_options_from_task(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1169,6 +1179,7 @@ def variable_multiline_with_options_from_task(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1183,6 +1194,7 @@ def variable_multiline_with_options_from_task(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1195,6 +1207,7 @@ def variable_string_with_options_from_task_array(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1209,6 +1222,7 @@ def variable_string_with_options_from_task_array(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1221,6 +1235,7 @@ def variable_int_with_options_from_task_array(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1235,6 +1250,7 @@ def variable_int_with_options_from_task_array(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1247,6 +1263,7 @@ def variable_date_with_options_from_task_array(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1261,6 +1278,7 @@ def variable_date_with_options_from_task_array(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1273,6 +1291,7 @@ def variable_time_with_options_from_task_array(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1287,6 +1306,7 @@ def variable_time_with_options_from_task_array(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1299,6 +1319,7 @@ def variable_datetime_with_options_from_task_array(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1313,6 +1334,7 @@ def variable_datetime_with_options_from_task_array(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1325,6 +1347,7 @@ def variable_multiline_with_options_from_task_array(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1339,6 +1362,7 @@ def variable_multiline_with_options_from_task_array(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1571,6 +1595,7 @@ class CalmVariable:
                     is_hidden=False,
                     is_mandatory=False,
                     description="",
+                    value="",
                 ):
                     return variable_string_with_options_from_task_array(
                         task,
@@ -1581,6 +1606,7 @@ class CalmVariable:
                         is_hidden=is_hidden,
                         is_mandatory=is_mandatory,
                         description=description,
+                        value=value,
                     )
 
                 string = variable_string_with_options_from_task_array

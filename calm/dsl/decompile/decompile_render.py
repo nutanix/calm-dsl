@@ -4,8 +4,12 @@ from black import format_str, FileMode
 from calm.dsl.log import get_logging_handle
 from calm.dsl.decompile.bp_file_helper import render_bp_file_template
 from calm.dsl.decompile.runbook import render_runbook_template
+from calm.dsl.decompile.cloud_provider_file_helper import (
+    render_cloud_provider_file_template,
+)
 from calm.dsl.decompile.file_handler import (
     init_bp_dir,
+    init_provider_dir,
     init_runbook_dir,
     init_environment_dir,
     init_project_dir,
@@ -21,6 +25,13 @@ def create_bp_file(dir_name, bp_data):
     bp_path = os.path.join(dir_name, "blueprint.py")
     with open(bp_path, "w") as fd:
         fd.write(bp_data)
+
+
+def create_provider_file(dir_name, provider_data):
+
+    provider_path = os.path.join(dir_name, "provider.py")
+    with open(provider_path, "w") as fd:
+        fd.write(provider_data)
 
 
 def create_runbook_file(dir_name, runbook_data):
@@ -68,6 +79,30 @@ def create_bp_dir(
     bp_data = format_str(bp_data, mode=FileMode())
     LOG.info("Creating blueprint file")
     create_bp_file(bp_dir, bp_data)
+
+
+def create_provider_dir(
+    provider_cls=None,
+    provider_dir=None,
+    with_secrets=False,
+    contains_encrypted_secrets=False,
+):
+
+    if not provider_dir:
+        provider_dir = os.path.join(os.getcwd(), provider_cls.__name__)
+
+    LOG.info("Creating provider directory")
+    _, _, _ = init_provider_dir(provider_dir)
+    LOG.info("Rendering provider file template")
+    provider_data = render_cloud_provider_file_template(
+        cls=provider_cls,
+        with_secrets=with_secrets,
+        contains_encrypted_secrets=contains_encrypted_secrets,
+    )
+    LOG.info("Formatting provider file using black")
+    provider_data = format_str(provider_data, mode=FileMode())
+    LOG.info("Creating provider file")
+    create_provider_file(provider_dir, provider_data)
 
 
 def create_runbook_dir(

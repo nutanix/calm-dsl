@@ -63,6 +63,11 @@
 {% import "k8s_karbon_account.yaml.jinja2" as k8s_karbon_account %}
 {% import "vmware_account.yaml.jinja2" as vmware_account %}
 {% import "gcp_account.yaml.jinja2" as gcp_account %}
+{% import "provider_endpoint_schema.yaml.jinja2" as provider_endpoint_schema %}
+{% import "provider_test_account.yaml.jinja2" as provider_test_account %}
+{% import "cloud_provider_payload.yaml.jinja2" as cloud_provider_payload %}
+{% import "cloud_provider.yaml.jinja2" as cloud_provider %}
+{% import "resource_type.yaml.jinja2" as resource_type %}
 {% macro Schemas() -%}
 
 {{ config_attrs.AhvDiskRulesetSchema() }}
@@ -135,6 +140,12 @@
 {{ k8s_karbon_account.K8sKarbonAccountSchema() }}
 {{ vmware_account.VmwareAccountSchema() }}
 {{ gcp_account.GcpAccountSchema() }}
+{{ provider_endpoint_schema.ProviderEndpointSchemaDefinition() }}
+{{ provider_test_account.ProviderTestAccountDefinition() }}
+{{ resource_type.ResourceTypeSchema() }}
+{{ cloud_provider_payload.CloudProviderPayloadSchema() }}
+{{ cloud_provider.CloudProviderSchema() }}
+
 {%- endmacro %}
 
 

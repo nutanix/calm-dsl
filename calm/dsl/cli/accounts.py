@@ -17,11 +17,13 @@ from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from .providers import (
-    update_custom_provider,
-    get_custom_provider,
-    create_custom_provider,
+    update_provider,
+    get_provider as get_custom_provider,
+    create_provider,
+    watch_action_execution,
 )
 from calm.dsl.providers import get_provider
+from .providers import get_provider_from_cache
 from .resource_types import update_resource_types, create_resource_type
 
 from .utils import (
@@ -31,7 +33,7 @@ from .utils import (
     insert_uuid,
     _get_nested_messages,
 )
-from calm.dsl.constants import PROVIDER, ACCOUNT
+from calm.dsl.constants import PROVIDER, ACCOUNT, VARIABLE
 from calm.dsl.store import Version
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
@@ -234,7 +236,7 @@ def create_account(client, account_payload, name=None, force_create=False):
     # For custom_provider type we create provider and resource_type before creating account
     if account_type == "custom_provider":
         if account_payload["provider"]:
-            create_custom_provider(
+            create_provider(
                 provider_payload=account_payload.get("provider", {}), name=name
             )
         if account_payload["resource_type"]:
@@ -845,7 +847,7 @@ def describe_k8s_account(spec):
     click.echo(highlight_text(auth_type))
 
 
-def describe_custom_provider_account(client, spec):
+def describe_cred_provider_account(client, spec):
     provider_name = resource_type_name = spec["provider_reference"]["name"]
     click.echo("Provider Name: {}".format(provider_name))
 
@@ -884,6 +886,22 @@ def describe_custom_provider_account(client, spec):
         click.echo("\t{}".format(highlight_text(variable["name"])))
 
 
+def describe_cloud_provider_account(provider_name, spec):
+    click.echo("Provider Name: {}".format(provider_name))
+    click.echo("Account Variables")
+    for var_dict in spec["variable_list"]:
+        click.echo(
+            "\t{} (Value: {})".format(
+                highlight_text(var_dict["label"] or var_dict["name"]),
+                highlight_text(
+                    var_dict["value"]
+                    if var_dict["type"] not in VARIABLE.SECRET_TYPES
+                    else "*******"
+                ),
+            )
+        )
+
+
 def describe_account(account_name):
 
     client = get_api_client()
@@ -903,7 +921,14 @@ def describe_account(account_name):
         + ")"
     )
     click.echo("Status: " + highlight_text(account["status"]["resources"]["state"]))
-    click.echo("Account Type: " + highlight_text(account_type.upper()))
+    click.echo(
+        "Account Type: "
+        + highlight_text(
+            account_type.upper()
+            if account_type in ACCOUNT.STANDARD_TYPES
+            else account_type
+        )
+    )
     click.echo(
         "Owner: " + highlight_text(account["metadata"]["owner_reference"]["name"])
     )
@@ -942,7 +967,10 @@ def describe_account(account_name):
         describe_azure_account(provider_data)
 
     elif account_type == "custom_provider":
-        describe_custom_provider_account(client, provider_data)
+        describe_cred_provider_account(client, provider_data)
+
+    elif get_provider_from_cache(account_type):
+        describe_cloud_provider_account(account_type, provider_data)
 
     else:
         click.echo("Provider details not present")
@@ -986,7 +1014,7 @@ def sync_account(account_name):
     LOG.info("Syncing account successfull")
 
 
-def verify_account(account_name):
+def verify_account(account_name, watch=False):
     """Verify an account with corresponding account name"""
 
     client = get_api_client()
@@ -997,13 +1025,32 @@ def verify_account(account_name):
         sys.exit(-1)
 
     LOG.info("Verifying account '{}'".format(account_name))
-    _, err = client.account.verify(account_uuid)
-
+    res, err = client.account.verify(account_uuid)
     if err:
         LOG.exception("[{}] - {}".format(err["code"], err["error"]))
         sys.exit("Account verification failed")
 
-    LOG.info("Account '{}' sucessfully verified".format(account_name))
+    response = res.json()
+    is_async_verify = "runlog_uuid" in response
+    if not is_async_verify:
+        LOG.info("Account '{}' sucessfully verified".format(account_name))
+        return
+
+    LOG.info(response["description"])
+    runlog_uuid = response["runlog_uuid"]
+    if watch:
+        LOG.debug("Watching on the execution status")
+        watch_action_execution(runlog_uuid)
+    else:
+        server_config = get_context().get_server_config()
+        run_url = (
+            "https://{}:{}/console/#page/explore/calm/providers/runlogs/{}".format(
+                server_config["pc_ip"], server_config["pc_port"], runlog_uuid
+            )
+        )
+        LOG.info("Verify action execution url: {}".format(highlight_text(run_url)))
+        watch_cmd = "calm watch provider-verify-execution {}".format(runlog_uuid)
+        LOG.info("Command to watch the execution: {}".format(highlight_text(watch_cmd)))
 
 
 def update_account(client, account_payload, name=None, updated_name=None):
@@ -1072,7 +1119,7 @@ def update_account_from_dsl(client, account_file, name=None, updated_name=None):
 
     # if is is a credential provider account
     if account_type == ACCOUNT.TYPE.CUSTOM_PROVIDER:
-        update_custom_provider(
+        update_provider(
             provider_payload=account_payload["provider"],
             name=name,
             updated_name=updated_name,

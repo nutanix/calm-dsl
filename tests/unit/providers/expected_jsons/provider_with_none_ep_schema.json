@@ -1,0 +1,63 @@
+{
+    "spec": {
+        "name": "DslProviderWithNoneEPSchema",
+        "resources": {
+            "type": "CUSTOM",
+            "infra_type": "cloud",
+            "auth_schema_list": [
+                {
+                    "name": "username",
+                    "description": "",
+                    "type": "LOCAL",
+                    "label": "",
+                    "attrs": {},
+                    "val_type": "STRING",
+                    "value": "",
+                    "data_type": "BASE",
+                    "is_hidden": false,
+                    "is_mandatory": false
+                },
+                {
+                    "name": "password",
+                    "description": "",
+                    "type": "SECRET",
+                    "label": "",
+                    "attrs": {
+                        "is_secret_modified": true,
+                        "type": "SECRET"
+                    },
+                    "val_type": "STRING",
+                    "value": "",
+                    "data_type": "BASE",
+                    "is_hidden": false,
+                    "is_mandatory": false
+                }
+            ],
+            "endpoint_schema": {
+                "type": "NONE"
+            },
+            "variable_list": [
+                {
+                    "name": "provider_var",
+                    "description": "",
+                    "type": "LOCAL",
+                    "label": "",
+                    "attrs": {},
+                    "val_type": "STRING",
+                    "value": "provider_val",
+                    "data_type": "BASE",
+                    "is_hidden": false,
+                    "is_mandatory": false
+                }
+            ],
+            "resource_type_list": [],
+            "action_list": [],
+            "credential_definition_list": []
+        },
+        "description": "Sample provider with authentication schema, variables & 'none' endpoint schema configured"
+    },
+    "metadata": {
+        "kind": "provider",
+        "name": "DslProviderWithNoneEPSchema"
+    }
+}

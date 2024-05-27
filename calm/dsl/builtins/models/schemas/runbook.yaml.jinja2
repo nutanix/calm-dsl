@@ -19,6 +19,11 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Variable'
+  output_variables:
+    x-calm-dsl-display-name: outputs
+    type: array
+    items:
+      type: string
 
 {%- endmacro %}
 

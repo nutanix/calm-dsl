@@ -14,6 +14,7 @@ def render_variable_template(
     cls,
     entity_context,
     context="",
+    variable_context="variable",  # In some case, the spec field might not be variable_list
     secrets_dict=[],
     credentials_list=[],
     rendered_credential_list=[],
@@ -24,8 +25,8 @@ def render_variable_template(
         raise TypeError("{} is not of type {}".format(cls, VariableType))
 
     # Updating the context of variables
-    entity_context = entity_context + "_variable_" + cls.__name__
-    context = context + "variable_list." + cls.__name__
+    entity_context = entity_context + "_" + variable_context + "_" + cls.__name__
+    context = context + variable_context + "_list." + cls.__name__
 
     user_attrs = cls.get_user_attrs()
     user_attrs["description"] = cls.__doc__ or ""

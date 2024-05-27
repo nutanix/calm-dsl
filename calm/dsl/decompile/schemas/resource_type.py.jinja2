@@ -1,0 +1,29 @@
+{%- macro resource_type(obj) %}
+class {{obj.name}}(ResourceType):
+    {% if obj.description %}"""{{obj.description}}"""{% endif %}
+
+    {% if obj.gui_display_name %}name = "{{obj.gui_display_name}}"{% endif %}
+
+    {% if obj.resource_kind %}resource_kind = "{{obj.resource_kind}}"{% endif %}
+
+    {% if obj.icon_name %}icon_name = "{{obj.icon_name}}"{% endif %}
+
+    schemas = [
+        {%- for variable in obj.schemas %}
+            {{variable}},
+        {%- endfor %}
+    ]
+
+    variables = [
+        {%- for variable in obj.variables %}
+            {{variable}},
+        {%- endfor %}
+    ]
+
+{% for action in obj.actions %}
+{{action | indent( width=4, first=True)}}
+{%- endfor %}
+
+{%- endmacro %}
+
+{{ resource_type(obj) }}

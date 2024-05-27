@@ -7,6 +7,7 @@ ENTITY_GUI_DSL_NAME_MAP = {}
 PACKAGE_NAME_MAP = {}
 DEPLOYMENT_NAME_MAP = {}
 POWER_ACTION_SUBSTRATE_MAP = {}
+RESOURCE_TYPE_NAME_MAP = {}
 
 
 def get_service_name(name):
@@ -34,6 +35,19 @@ def update_profile_name(ui_name, dsl_name):
 
     global PROFILE_NAME_MAP
     PROFILE_NAME_MAP[ui_name] = dsl_name
+
+
+def get_resource_type_name(name):
+    """returns the class name used for entity ref"""
+
+    global RESOURCE_TYPE_NAME_MAP
+    return RESOURCE_TYPE_NAME_MAP.get(name, None)
+
+
+def update_resource_type_name(ui_name, dsl_name):
+
+    global RESOURCE_TYPE_NAME_MAP
+    RESOURCE_TYPE_NAME_MAP[ui_name] = dsl_name
 
 
 def get_entity_gui_dsl_name(ui_name):
@@ -101,7 +115,8 @@ def update_power_action_target_substrate(runbook_name, substrate_name):
 
 def init_ref_dependency_globals():
 
-    global SERVICE_NAME_MAP, PROFILE_NAME_MAP, ENTITY_GUI_DSL_NAME_MAP, PACKAGE_NAME_MAP, DEPLOYMENT_NAME_MAP, POWER_ACTION_SUBSTRATE_MAP
+    global SERVICE_NAME_MAP, PROFILE_NAME_MAP, ENTITY_GUI_DSL_NAME_MAP
+    global PACKAGE_NAME_MAP, DEPLOYMENT_NAME_MAP, POWER_ACTION_SUBSTRATE_MAP, RESOURCE_TYPE_NAME_MAP
 
     SERVICE_NAME_MAP = {}
     PROFILE_NAME_MAP = {}
@@ -109,3 +124,4 @@ def init_ref_dependency_globals():
     PACKAGE_NAME_MAP = {}
     DEPLOYMENT_NAME_MAP = {}
     POWER_ACTION_SUBSTRATE_MAP = {}
+    RESOURCE_TYPE_NAME_MAP = {}

@@ -18,12 +18,13 @@ from .bps import launch_blueprint_simple, get_blueprint
 from .runbooks import get_runbook, poll_action, watch_runbook
 from .apps import watch_app
 from .runlog import get_runlog_status
+from .accounts import get_account
 from .endpoints import get_endpoint
 from calm.dsl.builtins.models.helper.common import get_project
 from .environments import get_project_environment
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Version
-from .constants import MARKETPLACE_ITEM
+from .constants import MARKETPLACE_ITEM, TASKS
 
 LOG = get_logging_handle(__name__)
 APP_STATES = [
@@ -2049,7 +2050,7 @@ def execute_marketplace_runbook(
         },
     }
 
-    patch_runbook_endpoints(client, mpi_data, payload)
+    patch_rb_endpoints_and_accounts(client, mpi_data, payload)
     if not ignore_runtime_variables:
         patch_runbook_runtime_editables(client, mpi_data, payload)
 
@@ -2105,7 +2106,7 @@ def execute_marketplace_runbook_renderer(screen, client, watch, payload={}):
     screen.refresh()
 
 
-def patch_runbook_endpoints(client, mpi_data, payload):
+def patch_rb_endpoints_and_accounts(client, mpi_data, payload):
     template_info = mpi_data["status"]["resources"].get("runbook_template_info", {})
     runbook = template_info.get("runbook_template", {})
 
@@ -2126,10 +2127,19 @@ def patch_runbook_endpoints(client, mpi_data, payload):
 
     tasks = runbook["spec"]["resources"]["runbook"]["task_definition_list"]
     used_endpoints = []
+    used_accounts = []
     for task in tasks:
         target_name = task.get("target_any_local_reference", {}).get("name", "")
         if target_name:
             used_endpoints.append(target_name)
+
+        # TODO: Check if NDB tasks need to be skipped
+        if task.get("type") == TASKS.TASK_TYPES.RT_OPERATION:
+            account_name = (
+                task.get("attrs", {}).get("account_reference", {}).get("name")
+            )
+            if account_name:
+                used_accounts.append(account_name)
 
     endpoints_description_map = {}
     for ep_info in runbook["spec"]["resources"].get("endpoints_information", []):
@@ -2152,7 +2162,22 @@ def patch_runbook_endpoints(client, mpi_data, payload):
             endpoint_id = endpoint.get("metadata", {}).get("uuid", "")
             endpoints_mapping[used_endpoint] = endpoint_id
 
+    if used_accounts:
+        LOG.info(
+            "Please select an account belonging to the selected project for every account used in the marketplace item."
+        )
+        used_accounts = list(set(used_accounts))
+    accounts_mapping = {}
+    for used_account in used_accounts:
+        selected_account = input("{}:".format(used_account))
+        if selected_account:
+            account = get_account(client, selected_account)
+            account_uuid = account.get("metadata", {}).get("uuid", "")
+            accounts_mapping[used_account] = account_uuid
+
     payload["spec"]["resources"]["endpoints_mapping"] = endpoints_mapping
+    payload["spec"]["resources"]["accounts_mapping"] = accounts_mapping
+    LOG.debug("Payload with mapped endpoints & accounts: {}".format(payload))
 
 
 def patch_runbook_runtime_editables(client, mpi_data, payload):

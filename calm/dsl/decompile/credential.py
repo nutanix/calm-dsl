@@ -11,7 +11,7 @@ CRED_VAR_NAME_MAP = {}
 CRED_FILES = []
 
 
-def render_credential_template(cls):
+def render_credential_template(cls, context="BP"):
 
     global CRED_VAR_NAME_MAP, CRED_FILES
     LOG.debug("Rendering {} credential template".format(cls.__name__))
@@ -23,7 +23,7 @@ def render_credential_template(cls):
 
     cred_type = user_attrs.get("cred_class", "")
 
-    var_name = "BP_CRED_{}".format(get_valid_identifier(cls.__name__))
+    var_name = "{}_CRED_{}".format(context, get_valid_identifier(cls.__name__))
     user_attrs["var_name"] = var_name
     if user_attrs.get("editables", {}):
         user_attrs["editables"] = user_attrs["editables"].get_dict()

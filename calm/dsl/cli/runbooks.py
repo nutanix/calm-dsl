@@ -812,7 +812,15 @@ def watch_runbook_execution(runlog_uuid):
     Display.wrapper(render_runbook_execution, True)
 
 
-def watch_runbook(runlog_uuid, runbook, screen, poll_interval=10, input_data={}):
+def watch_runbook(
+    runlog_uuid,
+    runbook,
+    screen,
+    poll_interval=10,
+    input_data={},
+    poll_function=None,
+    rerun_on_failure=True,
+):
 
     client = get_api_client()
 
@@ -831,9 +839,18 @@ def watch_runbook(runlog_uuid, runbook, screen, poll_interval=10, input_data={})
             for t in task_list:
                 top_level_tasks.append(t.get("uuid", ""))
 
+        # For runbooks calling runbooks or runbooks calling custom provider actions
+        # we need to build the task_type_map for tasks present in the called actions
+        # as well. Since this involves multiple API calls, leaving this unimplemented for now
+        # Impact would be that in watch output, users will see meta tasks as well, which
+        # we're hiding so far in DSL. Note: Meta tasks are still seen in UI audit logs
+        # if task.get('type', '') == 'RT_OPERATION':
+        #     # TODO: Build task type map for the whole RTAction
+        #     pass
+
     poll_action(
-        poll_func,
-        get_completion_func(screen),
+        poll_function or poll_func,
+        get_completion_func(screen, rerun_on_failure=rerun_on_failure),
         poll_interval=poll_interval,
         task_type_map=task_type_map,
         top_level_tasks=top_level_tasks,
@@ -1004,31 +1021,38 @@ def resume_runbook_execution(runlog_uuid):
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
-def abort_runbook_execution(runlog_uuid):
+def abort_runbook_execution(runlog_uuid, poll_fn=None, abort_fn=None, link=None):
 
     client = get_api_client()
-    res, err = client.runbook.poll_action_run(runlog_uuid)
+    if not poll_fn:
+        poll_fn = client.runbook.poll_action_run
+    res, err = poll_fn(runlog_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
     response = res.json()
     state = response["status"]["state"]
     if state in RUNLOG.TERMINAL_STATES:
         LOG.warning("Runbook Execution is in terminal state: {}".format(state))
         sys.exit(0)
-    res, err = client.runbook.abort(runlog_uuid)
+
+    if not abort_fn:
+        abort_fn = client.runbook.abort
+    res, err = abort_fn(runlog_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
     state = response["status"]["state"]
     LOG.info("Abort triggered for the given runbook execution.")
 
-    ContextObj = get_context()
-    server_config = ContextObj.get_server_config()
-    pc_ip = server_config["pc_ip"]
-    pc_port = server_config["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
-        pc_ip, pc_port, runlog_uuid
-    )
+    if not link:
+        ContextObj = get_context()
+        server_config = ContextObj.get_server_config()
+        pc_ip = server_config["pc_ip"]
+        pc_port = server_config["pc_port"]
+        link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+            pc_ip, pc_port, runlog_uuid
+        )
     stdout_dict = {"link": link, "state": state}
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 

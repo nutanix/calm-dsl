@@ -1,7 +1,7 @@
 from .entity import Entity, EntityType, EntityDict
 from .validator import PropertyValidator, get_property_validators
 from .vmware_account import VmwareAccountType
-from .custom_provider_account import CustomProviderType
+from .custom_provider_account import CustomProviderAccountType
 from calm.dsl.constants import ACCOUNT, ENTITY
 from types import MappingProxyType
 
@@ -42,8 +42,13 @@ class AccountResourcesDict(EntityDict):
 
         if "resources" in vdict:
             new_dict = dict(vdict)
-            if account_type:
+            if account_type in account_type_map:
                 new_dict["resources"] = (account_type_map[account_type], False)
+            elif account_type:
+                new_dict["resources"] = (
+                    property_validators[ENTITY.OPENAPI_TYPE.CUSTOM_PROVIDER],
+                    False,
+                )
             vdict = MappingProxyType(new_dict)
 
         return vdict, value
@@ -72,7 +77,7 @@ class AccountType(EntityType):
 
         if cdict["type"] == "NDB":
             if "parent_reference" in dir(cdict["data"]):
-                parent_reference = CustomProviderType.compile(cdict["data"]).pop(
+                parent_reference = CustomProviderAccountType.compile(cdict["data"]).pop(
                     "parent_reference", {}
                 )
                 cdict["parent_reference"] = parent_reference

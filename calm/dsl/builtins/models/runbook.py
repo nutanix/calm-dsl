@@ -12,6 +12,7 @@ from .descriptor import DescriptorType
 from .validator import PropertyValidator
 from .node_visitor import GetCallNodes
 from calm.dsl.log import get_logging_handle
+from calm.dsl.constants import RESOURCE_TYPE, CLOUD_PROVIDER as PROVIDER
 
 
 from _ast import AST
@@ -135,10 +136,16 @@ class runbook(metaclass=DescriptorType):
             LOG.exception(ex)
             sys.exit(-1)
 
+        subclasses = EntityType.get_entity_types()
+        is_runbook = (
+            self.__class__ == runbook
+            or isinstance(cls, subclasses[PROVIDER.ENTITY_NAME])
+            or isinstance(cls, subclasses[RESOURCE_TYPE.ENTITY_NAME])
+        )
         node_visitor = GetCallNodes(
             func_globals,
             target=self.task_target,
-            is_runbook=True if self.__class__ == runbook else False,
+            is_runbook=is_runbook,
             is_branch_present=self.is_branch_present,
         )
         try:
@@ -147,7 +154,7 @@ class runbook(metaclass=DescriptorType):
             LOG.exception(ex)
             sys.exit(-1)
 
-        tasks, variables, task_list = node_visitor.get_objects()
+        tasks, variables, task_list, outputs = node_visitor.get_objects()
         edges = []
         child_tasks = []
 
@@ -201,7 +208,7 @@ class runbook(metaclass=DescriptorType):
         # First create the dag
         self.user_dag = dag(
             name=dag_name,
-            child_tasks=child_tasks if self.__class__ == runbook else tasks,
+            child_tasks=child_tasks if is_runbook else tasks,
             edges=edges,
             target=self.task_target,
         )
@@ -211,6 +218,7 @@ class runbook(metaclass=DescriptorType):
         self.user_runbook.main_task_local_reference = self.user_dag.get_ref()
         self.user_runbook.tasks = [self.user_dag] + tasks
         self.user_runbook.variables = [variable for variable in variables.values()]
+        self.user_runbook.outputs = outputs
 
         # Finally create the runbook service, only for runbook class not action
         if self.__class__ == runbook:

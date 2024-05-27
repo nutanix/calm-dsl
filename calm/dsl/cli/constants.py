@@ -132,6 +132,22 @@ class APPLICATION:
         UPDATING = "updating"
 
 
+class ENTITY:
+    class KIND:
+        PROVIDER = "provider"
+        RESOURCE_TYPE = "resource_type"
+
+
+class PROVIDER:
+    class STATES:
+        DELETED = "DELETED"
+        DRAFT = "DRAFT"
+        ACTIVE = "ACTIVE"
+
+    class TYPE:
+        CUSTOM = "CUSTOM"
+
+
 class ACCOUNT:
     class STATES:
         DELETED = "DELETED"
@@ -212,6 +228,7 @@ class TASKS:
         EXEC = "EXEC"
         SET_VARIABLE = "SET_VARIABLE"
         HTTP = "HTTP"
+        RT_OPERATION = "RT_OPERATION"
 
     class SCRIPT_TYPES:
         POWERSHELL = "npsscript"

@@ -264,6 +264,12 @@ def _exec_create(
         params["attrs"]["tunnel_reference"] = tunnel
     if "inherit_target" in kwargs:
         params["inherit_target"] = kwargs.get("inherit_target")
+    if kwargs.get("ip"):
+        params["attrs"]["ip"] = kwargs["ip"]
+    if kwargs.get("port"):
+        params["attrs"]["port"] = kwargs["port"]
+    if kwargs.get("connection_protocol"):
+        params["attrs"]["connection_protocol"] = kwargs["connection_protocol"]
     return _task_create(**params)
 
 
@@ -313,6 +319,12 @@ def _decision_create(
         params["attrs"]["tunnel_reference"] = tunnel
     if "inherit_target" in kwargs:
         params["inherit_target"] = kwargs.get("inherit_target")
+    if kwargs.get("ip"):
+        params["attrs"]["ip"] = kwargs["ip"]
+    if kwargs.get("port"):
+        params["attrs"]["port"] = kwargs["port"]
+    if kwargs.get("connection_protocol"):
+        params["attrs"]["connection_protocol"] = kwargs["connection_protocol"]
     return _task_create(**params)
 
 
@@ -1969,6 +1981,37 @@ class CalmTask(BaseTask):
             return create_call_config(target, config, name)
 
 
+class ProviderTask(CalmTask):
+    class Decision:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = decision_task_ssh
+        powershell = decision_task_powershell
+        escript = EscriptTaskType.DecisionTask
+        python = decision_task_python
+
+    class Loop:
+        def __new__(
+            cls,
+            iterations,
+            name=None,
+            child_tasks=[],
+            loop_variable="iteration",
+            exit_condition=Status.DONT_CARE,
+            **kwargs,
+        ):
+            attrs = {"iterations": str(iterations), "loop_variable": loop_variable}
+            exit_code = EXIT_CONDITION_MAP.get(exit_condition, None)
+            if exit_code:
+                attrs["exit_condition_type"] = exit_code
+            else:
+                raise ValueError(
+                    "Valid Exit Conditions for loop are 'Status.SUCCESS/Status.FAILURE/Status.DONT_CARE'."
+                )
+            return while_loop(name=name, child_tasks=child_tasks, attrs=attrs, **kwargs)
+
+
 class RunbookTask(BaseTask):
     class Decision:
         def __new__(cls, *args, **kwargs):
@@ -2012,6 +2055,9 @@ class RunbookTask(BaseTask):
                 output_variables=output_variables,
                 tag=tag,
             )
+
+    class ResourceTypeAction(ResourceTypeOperationTask):
+        pass
 
     class Loop:
         def __new__(

@@ -120,6 +120,10 @@ class STRATOS:
         NDB = "NDB"
 
 
+class CLOUD_PROVIDERS:
+    MIN_SUPPORTED_VERSION = "4.0.0"
+
+
 class NETWORK_GROUP_TUNNEL_TASK:
     class STATUS:
         SUCCESS = "Succeeded"
@@ -160,6 +164,21 @@ class ACCOUNT:
         CREDENTIAL_PROVIDER = "credential_provider"
         NDB = "NDB"
         CUSTOM_PROVIDER = "custom_provider"
+
+    STANDARD_TYPES = [
+        TYPE.AHV,
+        TYPE.AHV_PE,
+        TYPE.AWS,
+        TYPE.AWS_C2S,
+        TYPE.AZURE,
+        TYPE.GCP,
+        TYPE.VMWARE,
+        TYPE.K8S_KARBON,
+        TYPE.K8S_VANILLA,
+        TYPE.CREDENTIAL_PROVIDER,
+        TYPE.CUSTOM_PROVIDER,
+        TYPE.NDB,
+    ]
 
 
 class PROVIDER:
@@ -213,11 +232,127 @@ class ENTITY:
         CUSTOM_PROVIDER = "app_custom_provider_account"
 
 
+class CLOUD_PROVIDER:
+    "Provider constants"
+
+    ENTITY_NAME = "CloudProvider"
+
+    class TYPE:
+        CUSTOM = "CUSTOM"
+
+    class INFRA_TYPE:
+        ONPREM = "on_prem"
+        CLOUD = "cloud"
+
+    class ENDPOINT_KIND:
+        NUTANIX_PC = "NUTANIX_PC"
+        VMWARE = "VMWARE"
+        AWS = "AWS"
+        GCP = "GCP"
+        AZURE = "AZURE"
+        CUSTOM = "CUSTOM"
+        NONE = "NONE"
+
+    INFRA_TYPES = [INFRA_TYPE.ONPREM, INFRA_TYPE.CLOUD]
+    VERIFY_ACTION_NAME = "Verify"
+
+    ENDPOINT_KINDS = [
+        ENDPOINT_KIND.NUTANIX_PC,
+        ENDPOINT_KIND.VMWARE,
+        ENDPOINT_KIND.AWS,
+        ENDPOINT_KIND.AZURE,
+        ENDPOINT_KIND.GCP,
+        ENDPOINT_KIND.CUSTOM,
+        ENDPOINT_KIND.NONE,
+    ]
+
+
+class ACTION:
+    class TYPE:
+        SYSTEM = "system"
+        USER = "user"
+        WORKFLOW = "workflow"
+        FRAGMENT = "fragment"
+        RULE = "rule"
+        PATCH = "PATCH"
+        PROVIDER = "provider"
+
+
+class RESOURCE_TYPE:
+    "ResourceType constants"
+
+    class TYPE:
+        USER = "USER"
+
+    class ACTION_TYPE:
+        LIST = "resource_type_list"
+        CREATE = "resource_type_create"
+        DELETE = "resource_type_delete"
+        GENERIC = "resource_type_generic"
+
+    ENTITY_NAME = "ResourceType"
+
+    ACTION_TYPES = [
+        ACTION_TYPE.LIST,
+        ACTION_TYPE.CREATE,
+        ACTION_TYPE.DELETE,
+        ACTION_TYPE.GENERIC,
+    ]
+
+
+class CREDENTIAL:
+    class CRED_CLASS:
+        STATIC = "static"
+        DYNAMIC = "dynamic"
+
+
 class DSL_CONFIG:
     EMPTY_CONFIG_ENTITY_NAME = "-"
     EMPTY_PROJECT_MESSAGE = "Project configuration not available. Use command `calm set config -pj <project_name>` to set it."
     SAAS_PORT = "443"
     SAAS_LOGIN_WARN = "Seems like you are trying to authenticate saas instance. Please provide API key location."
+
+
+class ENTITY_KIND:
+    "'kind' string for different entities"
+    APP_ICON = "app_icon"
+
+
+class VARIABLE:
+    class TYPE:
+        LOCAL = "LOCAL"
+        SECRET = "SECRET"
+        INPUT = "INPUT"
+        EXTERNAL = "EXTERNAL"
+        SYS_LOCAL = "SYS_LOCAL"
+        SYS_SECRET = "SYS_SECRET"
+        EXEC_LOCAL = "EXEC_LOCAL"
+        HTTP_LOCAL = "HTTP_LOCAL"
+        EXEC_SECRET = "EXEC_SECRET"
+        HTTP_SECRET = "HTTP_SECRET"
+        EXEC_EXTERNAL = "EXEC_EXTERNAL"
+        HTTP_EXTERNAL = "HTTP_EXTERNAL"
+        SYS_EXEC_LOCAL = "SYS_EXEC_LOCAL"
+        SYS_HTTP_LOCAL = "SYS_HTTP_LOCAL"
+        SYS_EXEC_SECRET = "SYS_EXEC_SECRET"
+        SYS_HTTP_SECRET = "SYS_HTTP_SECRET"
+        INTERNAL_LOCAL = "INTERNAL_LOCAL"
+
+    class OPTIONS:
+        class TYPE:
+            EXEC = "EXEC"
+            HTTP = "HTTP"
+
+    SECRET_TYPES = [
+        TYPE.SECRET,
+        TYPE.EXEC_SECRET,
+        TYPE.HTTP_SECRET,
+        TYPE.SYS_SECRET,
+        TYPE.SYS_EXEC_SECRET,
+        TYPE.SYS_HTTP_SECRET,
+    ]
+
+    SECRET_ATTRS_TYPE = "SECRET"
 
 
 class SUBSTRATE:

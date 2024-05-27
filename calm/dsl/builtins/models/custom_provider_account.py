@@ -9,10 +9,8 @@ from calm.dsl.constants import ENTITY
 
 LOG = get_logging_handle(__name__)
 
-# CustomProvider
 
-
-class CustomProviderType(EntityType):
+class CustomProviderAccountType(EntityType):
     __schema_name__ = "CustomProviderAccountResources"
     __openapi_type__ = ENTITY.OPENAPI_TYPE.CUSTOM_PROVIDER
 
@@ -30,13 +28,13 @@ class CustomProviderAccountResourcesTypeValidator(
     PropertyValidator, openapi_type=ENTITY.OPENAPI_TYPE.CUSTOM_PROVIDER
 ):
     __default__ = None
-    __kind__ = CustomProviderType
+    __kind__ = CustomProviderAccountType
 
 
 def custom_provider_account(**kwargs):
     name = kwargs.pop("name", None)
     bases = (Entity,)
-    return CustomProviderType(name, bases, kwargs)
+    return CustomProviderAccountType(name, bases, kwargs)
 
 
 CustomProviderAccountResources = custom_provider_account()

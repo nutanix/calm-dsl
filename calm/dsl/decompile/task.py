@@ -242,15 +242,7 @@ def render_task_template(
         }
         schema_file = "task_call_config.py.jinja2"
     elif cls.type == "RT_OPERATION":
-        acc_name = cls.attrs["account_reference"]["name"]
-        tag = cls.attrs.get("tag", "")
-        if tag == "Database":
-            schema_file, user_attrs = get_schema_file_and_user_attrs(
-                cls.name, cls.attrs, acc_name
-            )
-        else:
-            LOG.error("Tag {} not supported for RT operation".format(tag))
-            sys.exit("Tag {} not supported for RT operation".format(tag))
+        schema_file, user_attrs = get_schema_file_and_user_attrs(cls.name, cls.attrs)
     elif cls.type == "DECISION":
         script_type = cls.attrs["script_type"]
         cls.attrs["script_file"] = create_script_file(

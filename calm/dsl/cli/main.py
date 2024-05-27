@@ -442,6 +442,12 @@ def run():
 
 
 @main.group(cls=FeatureFlagGroup)
+def test():
+    """Test run provider & resource_type actions"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
 def watch():
     """Track actions running on apps or runbook executions"""
     pass

@@ -20,7 +20,7 @@ def handle_meta_create(node, func_globals, prefix=None):
         node_visitor.visit(node)
     except Exception as ex:
         raise ex
-    tasks, variables, task_list = node_visitor.get_objects()
+    tasks, variables, task_list, _ = node_visitor.get_objects()
 
     child_tasks = []
     for child_task in task_list:
@@ -50,19 +50,21 @@ class GetCallNodes(ast.NodeVisitor):
         self.task_list = []
         self.all_tasks = []
         self.variables = {}
+        self.outputs = []
         self.target = target or None
         self._globals = func_globals or {}.copy()
 
         self.is_branch_present = is_branch_present
 
-        # flag to check if this runbook is in context of RaaS, as decision, while, parallel tasks are supported only in RaaS
+        # flag to check if this runbook is in context of RaaS or custom providers,
+        # as decision, while, parallel tasks are supported only in RaaS & custom provider actions
         self.is_runbook = is_runbook
 
         # flag to check if tasks are in context of metatask
         self.is_metatask = is_metatask_context
 
     def get_objects(self):
-        return self.all_tasks, self.variables, self.task_list
+        return self.all_tasks, self.variables, self.task_list, self.outputs
 
     def visit_Call(self, node, return_task=False):
         sub_node = node.func
@@ -82,6 +84,25 @@ class GetCallNodes(ast.NodeVisitor):
         return self.generic_visit(node)
 
     def visit_Assign(self, node):
+        if isinstance(node.value, ast.List):  # Parse & set outputs
+            lhs = node.targets[0].id if node.targets else None
+            if lhs == "outputs":
+                self.outputs = []
+                for element in node.value.elts:
+                    try:
+                        value = element.value
+                    except AttributeError as ex:
+                        LOG.debug(
+                            "AttributeError while parsing action output variables"
+                        )
+                        LOG.debug(
+                            "Handling the error, assuming its because of older python version being used"
+                        )
+                        if not isinstance(element, ast.Str):
+                            raise Exception(ex)
+                        value = element.s
+                    self.outputs.append(value)
+
         if not isinstance(node.value, ast.Call):
             return self.generic_visit(node)
         sub_node = node.value.func
@@ -216,7 +237,7 @@ class GetCallNodes(ast.NodeVisitor):
                         _node_visitor.visit(statementBody)
                     except Exception as ex:
                         raise ex
-                    tasks, variables, task_list = _node_visitor.get_objects()
+                    tasks, variables, task_list, outputs = _node_visitor.get_objects()
                     if len(task_list) == 0:
                         raise ValueError(
                             "Atleast one task is required under parallel branch"
@@ -224,6 +245,7 @@ class GetCallNodes(ast.NodeVisitor):
                     parallel_tasks.append(task_list)
                     self.all_tasks.extend(tasks)
                     self.variables.update(variables)
+                    self.outputs = outputs
                 else:
                     raise ValueError(
                         "Only with branch() contexts are supported under parallel context."

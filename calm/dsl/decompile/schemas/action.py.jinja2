@@ -1,7 +1,8 @@
 {%- macro action(obj) -%}
 @action
-def {{obj.name}}({% if obj.gui_display_name -%}name="{{obj.gui_display_name}}"{%- endif %}):
+def {{obj.name}}({% if obj.gui_display_name -%}name="{{obj.gui_display_name}}"{%- endif %}{% if obj.type -%}type="{{obj.type}}"{%- endif %}):
     {% if obj.description -%}"""{{obj.description}}"""{%- endif %}
+    {% if obj.outputs %}outputs = {{obj.outputs}}{% endif %}
 {% if obj.variables or obj.tasks %}
 {%- for variable in obj.variables %}
 {{variable | indent( width=4, first=True)}}
