@@ -50,7 +50,8 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -83,7 +84,8 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -116,7 +118,8 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -149,7 +152,8 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -182,7 +186,8 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -215,7 +220,8 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         }
                     ]
@@ -252,7 +258,8 @@
                                     "timeout_secs": ""
                                 }
                             ],
-                            "variable_list": []
+                            "variable_list": [],
+                            "output_variables": []
                         },
                         "uninstall_runbook": {
                             "name": "Runbook_for_Package_VmDeploymentPackage_action_uninstall",
@@ -279,7 +286,8 @@
                                     "timeout_secs": ""
                                 }
                             ],
-                            "variable_list": []
+                            "variable_list": [],
+                            "output_variables": []
                         }
                     },
                     "service_local_reference_list": [

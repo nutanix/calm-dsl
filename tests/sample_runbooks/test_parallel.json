@@ -177,6 +177,7 @@
                 "timeout_secs": ""
             }
         ],
-        "variable_list": []
+        "variable_list": [],
+        "output_variables": []
     }
 }

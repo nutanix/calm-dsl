@@ -7,84 +7,81 @@
             "data": {
                 "provider_reference": {
                     "kind": "provider",
-                    "uuid": ""
+                    "uuid": "",
+                    "name": "NDB"
                 },
                 "variable_list": [
                     {
-                        "regex": {},
-                        "val_type": "STRING",
-                        "is_mandatory": true,
-                        "description": "",
-                        "data_type": "BASE",
-                        "message_list": [],
+                        "type": "LOCAL",
+                        "name": "ndb__ndb_endpoint",
                         "uuid": "",
-                        "value": "ENDPOINT_VALUE",
+                        "description": "",
+                        "regex": {},
+                        "options": {},
+                        "is_hidden": false,
+                        "is_mandatory": true,
+                        "data_type": "BASE",
+                        "val_type": "STRING",
                         "label": "Server IP",
                         "attrs": {},
                         "editables": {
                             "value": true
                         },
-                        "is_hidden": false,
-                        "type": "LOCAL",
-                        "options": {},
-                        "name": "ndb__ndb_endpoint"
+                        "value": "ENDPOINT_VALUE"
                     },
                     {
-                        "regex": {},
-                        "val_type": "STRING",
-                        "is_mandatory": true,
-                        "description": "",
-                        "data_type": "BASE",
-                        "message_list": [],
+                        "type": "LOCAL",
+                        "name": "ndb__ndb_username",
                         "uuid": "",
-                        "value": "USERNAME_VALUE",
+                        "description": "",
+                        "regex": {},
+                        "options": {},
+                        "is_hidden": false,
+                        "is_mandatory": true,
+                        "data_type": "BASE",
+                        "val_type": "STRING",
                         "label": "Username",
                         "attrs": {},
                         "editables": {
                             "value": true
                         },
-                        "is_hidden": false,
-                        "type": "LOCAL",
-                        "options": {},
-                        "name": "ndb__ndb_username"
+                        "value": "USERNAME_VALUE"
                     },
                     {
-                        "regex": {},
-                        "val_type": "STRING",
-                        "is_mandatory": true,
-                        "description": "",
-                        "data_type": "BASE",
-                        "message_list": [],
+                        "type": "SECRET",
+                        "name": "ndb__ndb_password",
                         "uuid": "",
-                        "value": "PASSWORD_VALUE",
+                        "description": "",
+                        "regex": {},
+                        "options": {},
+                        "is_hidden": false,
+                        "is_mandatory": true,
+                        "data_type": "BASE",
+                        "val_type": "STRING",
                         "label": "Password",
                         "editables": {
                             "value": true
                         },
-                        "is_hidden": false,
-                        "type": "SECRET",
-                        "options": {},
-                        "name": "ndb__ndb_password",
+                        "value": "PASSWORD_VALUE",
                         "attrs": {
                             "is_secret_modified": true
                         }
                     },
                     {
-                        "regex": {},
-                        "val_type": "BOOLEAN",
-                        "is_mandatory": false,
-                        "description": "",
-                        "data_type": "BASE",
-                        "message_list": [],
+                        "type": "LOCAL",
+                        "name": "ndb__insecure",
                         "uuid": "",
-                        "value": "true",
+                        "description": "",
+                        "regex": {},
+                        "options": {},
+                        "is_hidden": true,
+                        "is_mandatory": false,
+                        "data_type": "BASE",
+                        "val_type": "BOOLEAN",
                         "label": "",
                         "attrs": {},
                         "editables": {},
-                        "is_hidden": true,
-                        "type": "LOCAL",
-                        "options": {},
-                        "name": "ndb__insecure"
+                        "value": "true"
                     }
                 ]
             },

@@ -65,7 +65,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -98,7 +99,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -131,7 +133,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -164,7 +167,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -197,7 +201,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -230,7 +235,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -285,7 +291,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -372,7 +379,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -405,7 +413,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -438,7 +447,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -471,7 +481,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -504,7 +515,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -537,7 +549,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -592,7 +605,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -647,7 +661,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -722,7 +737,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -755,7 +771,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -788,7 +805,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -821,7 +839,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -854,7 +873,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -887,7 +907,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -942,7 +963,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -1041,7 +1063,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1074,7 +1097,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1107,7 +1131,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1140,7 +1165,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1173,7 +1199,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1206,7 +1233,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1261,7 +1289,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1316,7 +1345,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1371,7 +1401,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -1454,7 +1485,8 @@
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "AnimalPackage___uninstall___runbook",
@@ -1503,7 +1535,8 @@
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -1567,7 +1600,8 @@
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "DogPackage___uninstall___runbook",
@@ -1616,7 +1650,8 @@
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -1680,7 +1715,8 @@
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "CatPackage___uninstall___runbook",
@@ -1729,7 +1765,8 @@
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -1793,7 +1830,8 @@
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "HuskyPackage___uninstall___runbook",
@@ -1842,7 +1880,8 @@
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -2426,7 +2465,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ]

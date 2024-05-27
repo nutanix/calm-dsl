@@ -118,12 +118,6 @@ def add_account_details(config):
             # If it is local nutanix account, assign it to local nutanix ACCOUNT
             if a_entity["status"]["resources"]["data"].get("host_pc", False):
                 accounts["NTNX_LOCAL_AZ"] = account_data
-        elif account_type == "CUSTOM_PROVIDER":
-            provider_name = a_entity["status"]["resources"]["data"][
-                "provider_reference"
-            ]["name"]
-            if provider_name == STRATOS.PROVIDER.NDB:
-                accounts[STRATOS.PROVIDER.NDB] = account_data
 
         accounts[account_type].append(account_data)
 

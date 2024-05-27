@@ -77,7 +77,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -110,7 +111,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -143,7 +145,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -176,7 +179,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -209,7 +213,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -242,7 +247,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -292,7 +298,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -325,7 +332,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -358,7 +366,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -391,7 +400,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -424,7 +434,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -457,7 +468,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -573,7 +585,8 @@
                                 "is_hidden": false,
                                 "is_mandatory": false
                             }
-                        ]
+                        ],
+                        "output_variables": []
                     }
                 }
             ],
@@ -637,7 +650,8 @@
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "Runbook_for_Package_MySQLPackage_action_uninstall",
@@ -664,7 +678,8 @@
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -744,7 +759,8 @@
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "Runbook_for_Package_PHPPackage_action_uninstall",
@@ -771,7 +787,8 @@
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -862,7 +879,8 @@
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -2439,7 +2457,8 @@
                                 "is_hidden": true,
                                 "is_mandatory": true
                             }
-                        ]
+                        ],
+                        "output_variables":[]
                     }
                 }
             ]

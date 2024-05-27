@@ -96,6 +96,7 @@
                 "is_hidden": false,
                 "is_mandatory": false
             }
-        ]
+        ],
+        "output_variables": []
     }
 }
