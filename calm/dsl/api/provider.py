@@ -1,4 +1,5 @@
 import json
+import os
 
 from calm.dsl.log import get_logging_handle
 
@@ -19,8 +20,8 @@ class ProviderAPI(ResourceAPI):
         self.BULK_READ = self.ITEM + "/bulk"
         self.COMPILE = self.ITEM + "/compile"
         self.TEST_PROVIDER_VERIFY = self.PREFIX + "/{}/actions/{}/test_run"
-        self.ABORT_RUN = self.PREFIX + "/runlogs/{}/abort"
-        self.POLL_RUN = self.PREFIX + "/runlogs/{}"
+        self.ABORT_RUN = self.ITEM + "/runlogs/{}/abort"
+        self.POLL_RUN = self.ITEM + "/runlogs/{}"
         self.RUNLOG_LIST = self.CALM_ROOT + "/runbooks/runlogs/{}/children/list"
         self.CLONE = self.ITEM + "/clone"
         self.IMPORT_JSON = self.PREFIX + "/import_json"
@@ -100,22 +101,22 @@ class ProviderAPI(ResourceAPI):
             method=REQUEST.METHOD.POST,
         )
 
-    def poll_action_run(self, uuid, payload=None):
+    def poll_action_run(self, uuid, runlog_uuid, payload=None):
         if payload:
             return self.connection._call(
-                self.POLL_RUN.format(uuid),
+                self.POLL_RUN.format(uuid, runlog_uuid),
                 request_json=payload,
                 verify=False,
                 method=REQUEST.METHOD.POST,
             )
         else:
             return self.connection._call(
-                self.POLL_RUN.format(uuid), verify=False, method=REQUEST.METHOD.GET
+                self.POLL_RUN.format(uuid, runlog_uuid), verify=False, method=REQUEST.METHOD.GET
             )
 
-    def abort(self, runlog_uuid):
+    def abort(self, uuid, runlog_uuid):
         return self.connection._call(
-            self.ABORT_RUN.format(runlog_uuid),
+            self.ABORT_RUN.format(uuid, runlog_uuid),
             verify=False,
             request_json={},
             method=REQUEST.METHOD.POST,
@@ -143,17 +144,28 @@ class ProviderAPI(ResourceAPI):
         )
 
     def export_file(self, uuid, passphrase=None):
+        current_path = os.path.dirname(os.path.realpath(__file__))
         if passphrase:
-            return self.connection._call(
+            res, err = self.connection._call(
                 self.EXPORT_FILE.format(uuid),
                 verify=False,
                 method=REQUEST.METHOD.POST,
                 request_json={"passphrase": passphrase},
                 files=[],
             )
-        return self.connection._call(
-            self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.GET
-        )
+        else:
+            res, err = self.connection._call(
+                self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.GET
+            )
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        with open(current_path + "/" + uuid + ".json", "wb") as downloaded_file:
+            for chunk in res.iter_content(chunk_size=2048):
+                downloaded_file.write(chunk)
+
+        return current_path + "/" + uuid + ".json"
 
     def upload_using_import_file(self, payload, files):
         return self.connection._call(
