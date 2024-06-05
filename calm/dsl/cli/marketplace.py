@@ -68,11 +68,11 @@ def get_group_data_value(data_list, field, value_list=False):
             entity_value = entity["values"]
             if not entity_value:
                 return None
-            return (
-                entity_value[0]["values"]
-                if value_list
-                else entity_value[0]["values"][0]
-            )
+            if value_list:
+                return entity_value[0]["values"]
+            else:
+                _value_list = entity_value[0].get("values", [])
+                return _value_list[0] if _value_list else ""
 
     return None
 
