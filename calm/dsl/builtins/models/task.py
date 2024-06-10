@@ -41,6 +41,27 @@ EXIT_CONDITION_MAP = {
     Status.DONT_CARE: "dont_care",
 }
 
+
+def http_response_code_map(status, code_ranges, code):
+    if code:
+        response_code_status_map = {"status": status, "code_range_list": code_ranges, "code": code}
+    else:
+        response_code_status_map = {"status": status, "code_range_list": code_ranges}
+    return response_code_status_map
+
+class HTTPResponseHandle:
+    class TASK_STATUS:
+        Success = "SUCCESS"
+        Failure = "FAILURE"
+        Warning = "WARNING"
+
+    class ResponseCode:
+        def __new__(cls, status, code_ranges=[], code=None):
+            return http_response_code_map(
+                status=status,
+                code_ranges=code_ranges,
+                code=code,
+            )
 # Task
 
 
@@ -1162,6 +1183,7 @@ def http_task_on_endpoint(
     secret_headers=None,
     content_type=None,
     status_mapping=None,
+    response_code_status_map=[],
     response_paths=None,
     name=None,
     target=None,
@@ -1178,6 +1200,7 @@ def http_task_on_endpoint(
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         status_mapping (dict): Mapping of  Response status code (int) to
                                task status (True: success, False: Failure)
+        response_code_status_map (list): List of Response code ranges mapping
         response_paths (dict): Mapping of variable name (str) to path in response (str)
         name (str): Task name
         target (Ref): Target entity that this task runs under.
@@ -1194,6 +1217,7 @@ def http_task_on_endpoint(
         secret_headers=secret_headers,
         content_type=content_type,
         status_mapping=status_mapping,
+        response_code_status_map=response_code_status_map,
         response_paths=response_paths,
         name=name,
         target=target,
@@ -1265,6 +1289,7 @@ def http_task_get(
     retries=0,
     retry_interval=10,
     status_mapping=None,
+    response_code_status_map=[],
     response_paths=None,
     name=None,
     target=None,
@@ -1288,6 +1313,7 @@ def http_task_get(
         retry_interval (int): Time to wait in seconds between retries (Default: 10)
         status_mapping (dict): Mapping of  Response status code (int) to
                                task status (True: success, False: Failure)
+        response_code_status_map (list): List of Response code ranges mapping
         response_paths (dict): Mapping of variable name (str) to path in response (str)
         name (str): Task name
         target (Ref): Target entity that this task runs under.
@@ -1309,6 +1335,7 @@ def http_task_get(
         retries=retries,
         retry_interval=retry_interval,
         status_mapping=status_mapping,
+        response_code_status_map=response_code_status_map,
         response_paths=response_paths,
         name=name,
         target=target,
@@ -1328,6 +1355,7 @@ def http_task_post(
     retries=0,
     retry_interval=10,
     status_mapping=None,
+    response_code_status_map=[],
     response_paths=None,
     name=None,
     target=None,
@@ -1352,6 +1380,7 @@ def http_task_post(
         retry_interval (int): Time to wait in seconds between retries (Default: 10)
         status_mapping (dict): Mapping of  Response status code (int) to
                                task status (True: success, False: Failure)
+        response_code_status_map (list): List of Response code ranges mapping
         response_paths (dict): Mapping of variable name (str) to path in response (str)
         name (str): Task name
         target (Ref): Target entity that this task runs under.
@@ -1373,6 +1402,7 @@ def http_task_post(
         retries=retries,
         retry_interval=retry_interval,
         status_mapping=status_mapping,
+        response_code_status_map=response_code_status_map,
         response_paths=response_paths,
         name=name,
         target=target,
@@ -1392,6 +1422,7 @@ def http_task_put(
     retries=0,
     retry_interval=10,
     status_mapping=None,
+    response_code_status_map=[],
     response_paths=None,
     name=None,
     target=None,
@@ -1416,6 +1447,7 @@ def http_task_put(
         retry_interval (int): Time to wait in seconds between retries (Default: 10)
         status_mapping (dict): Mapping of  Response status code (int) to
                                task status (True: success, False: Failure)
+        response_code_status_map (list): List of Response code ranges mapping
         response_paths (dict): Mapping of variable name (str) to path in response (str)
         name (str): Task name
         target (Ref): Target entity that this task runs under.
@@ -1437,6 +1469,7 @@ def http_task_put(
         retries=retries,
         retry_interval=retry_interval,
         status_mapping=status_mapping,
+        response_code_status_map=response_code_status_map,
         response_paths=response_paths,
         name=name,
         target=target,
@@ -1456,6 +1489,7 @@ def http_task_delete(
     retries=0,
     retry_interval=10,
     status_mapping=None,
+    response_code_status_map=[],
     response_paths=None,
     name=None,
     target=None,
@@ -1480,6 +1514,7 @@ def http_task_delete(
         retry_interval (int): Time to wait in seconds between retries (Default: 10)
         status_mapping (dict): Mapping of  Response status code (int) to
                                task status (True: success, False: Failure)
+        response_code_status_map (list): List of Response code ranges mapping
         response_paths (dict): Mapping of variable name (str) to path in response (str)
         name (str): Task name
         target (Ref): Target entity that this task runs under.
@@ -1501,6 +1536,7 @@ def http_task_delete(
         retries=retries,
         retry_interval=retry_interval,
         status_mapping=status_mapping,
+        response_code_status_map=response_code_status_map,
         response_paths=response_paths,
         name=name,
         target=target,
@@ -1553,6 +1589,7 @@ def http_task(
     retries=0,
     retry_interval=10,
     status_mapping=None,
+    response_code_status_map=[],
     response_paths=None,
     name=None,
     target=None,
@@ -1577,6 +1614,7 @@ def http_task(
         retry_interval (int): Time to wait in seconds between retries (Default: 10)
         status_mapping (dict): Mapping of  Response status code (int) to
                                task status (True: success, False: Failure)
+        response_code_status_map (list): List of Response code ranges mapping
         response_paths (dict): Mapping of variable name (str) to path in response (str)
         name (str): Task name
         target (Ref): Target entity that this task runs under.
@@ -1659,8 +1697,14 @@ def http_task(
             _header_variables_from_dict(secret_headers, secret=True)
         )
         params["attrs"]["headers"] = header_variables
+    
+    if status_mapping and response_code_status_map:
+        err_msg = "Both status_mapping and response_code_status_map cannot be present together. status_mapping is now deprecated, start using response_code_status_map"
+        LOG.error(err_msg)
+        sys.exit(-1)
 
     if status_mapping is not None:
+        LOG.warning("status_mapping will be deprecated soon, start using response_code_status_map")
         LOG.debug("Status mapping for HTTP Task : {}".format(status_mapping))
         if not isinstance(status_mapping, dict):
             raise TypeError(
@@ -1686,6 +1730,10 @@ def http_task(
                 {"status": "SUCCESS" if state else "FAILURE", "code": code}
             )
         params["attrs"]["expected_response_params"] = expected_response
+
+    # If both response code status map and status mapping is present raise the error
+    if response_code_status_map:
+        params["attrs"]["expected_response_params"] = response_code_status_map
 
     if response_paths is not None:
         LOG.debug("Response paths for HTTP Task : {}".format(response_paths))
@@ -1916,6 +1964,7 @@ class BaseTask:
             retries=0,
             retry_interval=10,
             status_mapping=None,
+            response_code_status_map=[],
             response_paths=None,
             name=None,
             target=None,
@@ -1935,6 +1984,7 @@ class BaseTask:
                 retries=retries,
                 retry_interval=retry_interval,
                 status_mapping=status_mapping,
+                response_code_status_map=response_code_status_map,
                 response_paths=response_paths,
                 name=name,
                 target=target,
@@ -2089,6 +2139,7 @@ class RunbookTask(BaseTask):
             secret_headers=None,
             content_type=None,
             status_mapping=None,
+            response_code_status_map=[],
             response_paths=None,
             name=None,
             target=None,
@@ -2102,6 +2153,7 @@ class RunbookTask(BaseTask):
                 secret_headers=secret_headers,
                 content_type=content_type,
                 status_mapping=status_mapping,
+                response_code_status_map=response_code_status_map,
                 response_paths=response_paths,
                 name=name,
                 target=target,

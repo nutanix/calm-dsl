@@ -1,0 +1,17 @@
+{% macro success() -%}
+HTTPResponseHandle.TASK_STATUS.Success
+{%- endmacro %}
+
+{% macro failure() -%}
+HTTPResponseHandle.TASK_STATUS.Failure
+{%- endmacro %}
+
+{% macro warning() -%}
+HTTPResponseHandle.TASK_STATUS.Warning
+{%- endmacro %}
+
+{% macro response_code(obj) -%}
+HTTPResponseHandle.ResponseCode(
+    status = {%- if obj.status == "SUCCESS" %} {{success()}}{%- endif %} {%- if obj.status == "FAILURE" %}{{failure()}}{%- endif %} {%- if obj.status == "WARNING" %}{{warning()}}{%- endif %} {% if obj.code_range_list %}, code_ranges = {{obj.code_range_list}} {%- endif %} {% if obj.code %}, code = {{obj.code}} {%- endif %}
+),
+{%- endmacro %}

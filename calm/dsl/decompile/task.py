@@ -135,7 +135,7 @@ def render_task_template(
         attrs = cls.attrs
         user_attrs["headers"] = {}
         user_attrs["secret_headers"] = {}
-        user_attrs["status_mapping"] = {}
+        user_attrs["response_code_status_map"] = attrs.get("expected_response_params", [])
 
         for var in attrs.get("headers", []):
             var_type = var["type"]
@@ -151,11 +151,6 @@ def render_task_template(
                         "secret_value": var["value"],
                     }
                 )
-
-        for status in attrs.get("expected_response_params", []):
-            user_attrs["status_mapping"][status["code"]] = (
-                True if status["status"] == "SUCCESS" else False
-            )
 
         # Store auth objects
         auth_obj = attrs.get("authentication", {})
