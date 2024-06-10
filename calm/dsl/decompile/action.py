@@ -23,6 +23,8 @@ def render_action_template(
     secrets_dict=[],
     endpoints=[],
     ep_list=[],
+    credential_list=[],
+    rendered_credential_list=[],
 ):
 
     global RUNBOOK_ACTION_MAP
@@ -63,6 +65,8 @@ def render_action_template(
                 secrets_dict=secrets_dict,
                 decision_tasks=decision_tasks,
                 while_tasks=while_loop_tasks,
+                credentials_list=credential_list,
+                rendered_credential_list=rendered_credential_list,
             )
         )
 
@@ -74,6 +78,8 @@ def render_action_template(
                 entity_context,
                 context=runbook_context,
                 secrets_dict=secrets_dict,
+                credentials_list=credential_list,
+                rendered_credential_list=rendered_credential_list,
             )
         )
 

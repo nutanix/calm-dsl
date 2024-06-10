@@ -13,6 +13,8 @@ def render_task_tree_template(
     while_tasks=None,
     context="",
     secrets_dict=[],
+    credentials_list=[],
+    rendered_credential_list=[],
 ):
     """render task tree template"""
 
@@ -26,6 +28,8 @@ def render_task_tree_template(
                 CONFIG_SPEC_MAP,
                 context,
                 secrets_dict,
+                credentials_list=credentials_list,
+                rendered_credential_list=rendered_credential_list,
             )
             for tasks in ["success_tasks", "failure_tasks"]:
                 for task in decision_tasks[decision_task][tasks]:
@@ -36,6 +40,8 @@ def render_task_tree_template(
                         CONFIG_SPEC_MAP,
                         context,
                         secrets_dict,
+                        credentials_list=credentials_list,
+                        rendered_credential_list=rendered_credential_list,
                     )
 
     while_loop_rendered_tasks = {}
@@ -48,6 +54,8 @@ def render_task_tree_template(
                 CONFIG_SPEC_MAP,
                 context,
                 secrets_dict,
+                credentials_list=credentials_list,
+                rendered_credential_list=rendered_credential_list,
             )
             for child_task in while_tasks[base_task]["child_tasks"]:
                 while_loop_rendered_tasks[child_task.name] = render_task_template(
@@ -57,6 +65,8 @@ def render_task_tree_template(
                     CONFIG_SPEC_MAP,
                     context,
                     secrets_dict,
+                    credentials_list=credentials_list,
+                    rendered_credential_list=rendered_credential_list,
                 )
     special_task_data = {"decision_tasks": decision_tasks, "while_tasks": while_tasks}
     rendered_tasks = {}
@@ -84,6 +94,8 @@ def render_task_tree_template(
                     CONFIG_SPEC_MAP,
                     context,
                     secrets_dict,
+                    credentials_list=credentials_list,
+                    rendered_credential_list=rendered_credential_list,
                 )
     task_indent_tree = []
     visited = []

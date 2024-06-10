@@ -156,11 +156,14 @@ def render_variable_template(
             options.pop("choices", None)
             task = TaskType.decompile(options)
             task.__name__ = "SampleTask"
+            if user_attrs["value"]:  # CALM-45352
+                user_attrs["default_value"] = user_attrs.pop("value")
             user_attrs["value"] = render_task_template(
                 task,
                 entity_context=entity_context,
                 credentials_list=credentials_list,
                 rendered_credential_list=rendered_credential_list,
+                use_calm_var_task=True,
             )
 
             if data_type == "BASE":
@@ -175,6 +178,8 @@ def render_variable_template(
                 elif var_val_type == "DATE_TIME":
                     schema_file = "var_with_options_fromTask_datetime.py.jinja2"
                 elif var_val_type == "MULTILINE_STRING":
+                    if user_attrs.get("default_value"):
+                        user_attrs["default_value"] = repr(user_attrs["default_value"])
                     schema_file = "var_with_options_fromTask_multiline.py.jinja2"
             else:
                 if var_val_type == "STRING":
@@ -188,6 +193,8 @@ def render_variable_template(
                 elif var_val_type == "DATE_TIME":
                     schema_file = "var_with_options_fromTask_array_datetime.py.jinja2"
                 elif var_val_type == "MULTILINE_STRING":
+                    if user_attrs["default_value"]:
+                        user_attrs["default_value"] = repr(user_attrs["default_value"])
                     schema_file = "var_with_options_fromTask_array_multiline.py.jinja2"
 
     if not schema_file:

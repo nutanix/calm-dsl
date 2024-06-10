@@ -65,9 +65,10 @@ def render_runbook_template(
 
     rendered_credential_list = []
     credentials_list = []
+    credential_names = []
     for cred in credentials:
         rendered_credential_list.append(render_credential_template(cred))
-        credentials_list.append(get_cred_var_name(cred.name))
+        credential_names.append(get_cred_var_name(cred.name))
     # get mapping used for rendering task_tree template
 
     root_node, task_child_map, decision_tasks, while_loop_tasks = get_task_order(
@@ -83,6 +84,8 @@ def render_runbook_template(
             CONFIG_SPEC_MAP,
             decision_tasks,
             while_tasks=while_loop_tasks,
+            credentials_list=credentials_list,
+            rendered_credential_list=rendered_credential_list,
         )
     )
     variables = []
@@ -104,6 +107,8 @@ def render_runbook_template(
     if while_loop_tasks:
         import_status = True
 
+    credential_names.extend([cred['name_in_file'] for cred in credentials_list])
+
     # runbook project reference
     project_name = metadata_obj.project["name"]
     user_attrs = {
@@ -111,7 +116,7 @@ def render_runbook_template(
         "description": runbook_cls.__doc__ or "",
         "secret_files": secret_files,
         "endpoints": endpoints,
-        "credentials_list": credentials_list,
+        "credentials_list": credential_names,
         "credentials": rendered_credential_list,
         "tasks": tasks,
         "variables": variables,

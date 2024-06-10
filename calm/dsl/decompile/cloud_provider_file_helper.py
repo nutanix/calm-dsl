@@ -39,6 +39,8 @@ def render_cloud_provider_file_template(
     user_attrs["name"] = cls.__name__
     user_attrs["description"] = cls.__doc__
 
+    # Step-1: Decompile creds configured on the Provider. Since these are referred to, at
+    # multiple places, its crucial this happens first.
     secrets_dict = []
     credential_list = []
     cred_file_dict = dict()
@@ -59,11 +61,45 @@ def render_cloud_provider_file_template(
             }
         )
 
-    # Map to store the [Name: Rendered template for entity]
-    entity_name_text_map = {}
-
+    # Step-2: Decompile Resource Types
+    entity_name_text_map = {}  # Map to store the [Name: Rendered template for entity]
     for resource_type in cls.resource_types:
         entity_name_text_map[resource_type.get_ref().name] = resource_type
+
+    dependepent_entities = [v for v in entity_name_text_map.values()]
+    for k, v in enumerate(dependepent_entities):
+        update_entity_gui_dsl_name(v.get_gui_name(), v.__name__)
+
+    # Rendering templates
+    implied_credentials = []
+    implied_credential_templates = []
+    for k, v in enumerate(dependepent_entities):
+        if isinstance(v, ResourceTypeEntity):
+            dependepent_entities[k] = render_resource_type_template(
+                v, secrets_dict, credential_list=implied_credentials,
+                rendered_credential_list=implied_credential_templates,
+            )
+
+    # Step-3: Decompile Provider fields
+    provider = render_cloud_provider_template(
+        cls, secrets_dict, credential_list=implied_credentials,
+        rendered_credential_list=implied_credential_templates,
+    )
+
+    # Step-4: Decompile implicit credentials i.e..,.
+    # credentials created out of HTTP tasks/variables using basic auth
+    for index, cred in enumerate(implied_credentials):
+        cred_name = cred['name_in_file']
+        cred_file_name = "{}_{}".format(cred_name, cred['type'])
+        credential_list.append(implied_credential_templates[index])
+        cred_file_dict[cred_file_name] = cred.get('password', {}).get('value', '')
+        secrets_dict.append(
+            {
+                "context": "credential_definition_list." + cred_name,
+                "secret_name": cred['name'],
+                "secret_value": cred_file_dict[cred_file_name],
+            }
+        )
 
     # Getting the local files used for secrets
     secret_files = get_secret_variable_files()
@@ -78,6 +114,11 @@ def render_cloud_provider_file_template(
             if contains_encrypted_secrets:
                 try:
                     secret_val = cred_file_dict[file_name]
+                except KeyError:
+
+                    # Secret files corresponding to non-cred secrets. Value would have been
+                    # already written to the file if available in the payload. No need to write again
+                    continue
                 except Exception as exp:
                     LOG.debug("Got traceback\n{}".format(traceback.format_exc()))
                     LOG.error("Secret value not found due to {}".format(exp))
@@ -93,22 +134,11 @@ def render_cloud_provider_file_template(
             with open(file_loc, "w+") as fd:
                 fd.write(secret_val)
 
-    dependepent_entities = [v for v in entity_name_text_map.values()]
-    for k, v in enumerate(dependepent_entities):
-        update_entity_gui_dsl_name(v.get_gui_name(), v.__name__)
-
-    # Rendering templates
-    for k, v in enumerate(dependepent_entities):
-        if isinstance(v, ResourceTypeEntity):
-            dependepent_entities[k] = render_resource_type_template(v, secrets_dict)
-
     is_any_secret_value_available = False
     for _e in secrets_dict:
         if _e.get("secret_value", ""):
             is_any_secret_value_available = True
             break
-
-    provider = render_cloud_provider_template(cls, secrets_dict)
     if is_any_secret_value_available:
         LOG.info("Creating secret metadata file")
         encrypt_decompile_secrets(secrets_dict=secrets_dict)

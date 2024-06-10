@@ -9,7 +9,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_resource_type_template(cls, secrets_dict):
+def render_resource_type_template(cls, secrets_dict, credential_list=[], rendered_credential_list=[]):
 
     LOG.debug("Rendering {} resource_type template".format(cls.__name__))
     if not isinstance(cls, ResourceTypeEntity):
@@ -41,13 +41,16 @@ def render_resource_type_template(cls, secrets_dict):
                 entity_context,
                 secrets_dict=secrets_dict,
                 context=context,
+                credential_list=credential_list,
+                rendered_credential_list=rendered_credential_list,
             )
         )
 
     variable_list = []
     for entity in user_attrs.get("variables", []):
         var_template = render_variable_template(
-            entity, entity_context, secrets_dict=secrets_dict, context=context
+            entity, entity_context, secrets_dict=secrets_dict, context=context,
+            credentials_list=credential_list, rendered_credential_list=rendered_credential_list,
         )
         variable_list.append(modify_var_format(var_template))
 
@@ -59,6 +62,8 @@ def render_resource_type_template(cls, secrets_dict):
             secrets_dict=secrets_dict,
             context=context,
             variable_context="schema",
+            credentials_list=credential_list,
+            rendered_credential_list=rendered_credential_list,
         )
         schema_list.append(modify_var_format(var_template))
 
@@ -66,7 +71,5 @@ def render_resource_type_template(cls, secrets_dict):
     user_attrs["schemas"] = schema_list
     user_attrs["actions"] = action_list
 
-    LOG.info("RT user attrs")
-    LOG.info(user_attrs)
     text = render_template("resource_type.py.jinja2", obj=user_attrs)
     return text.strip()

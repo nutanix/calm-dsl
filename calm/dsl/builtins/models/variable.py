@@ -1565,6 +1565,7 @@ class CalmVariable:
                 is_hidden=False,
                 is_mandatory=False,
                 description="",
+                value="",
             ):
                 return variable_string_with_options_from_task(
                     task,
@@ -1575,6 +1576,7 @@ class CalmVariable:
                     is_hidden=is_hidden,
                     is_mandatory=is_mandatory,
                     description=description,
+                    value=value,
                 )
 
             string = variable_string_with_options_from_task

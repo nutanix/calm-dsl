@@ -1,6 +1,6 @@
 from calm.dsl.builtins.models.cloud_provider import CloudProviderType
 
-# from calm.dsl.constants import CLOUD_PROVIDER as PROVIDER
+from calm.dsl.constants import CLOUD_PROVIDER as PROVIDER
 from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.ndb import modify_var_format
 from calm.dsl.decompile.render import render_template
@@ -11,7 +11,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_cloud_provider_template(cls, secrets_dict):
+def render_cloud_provider_template(cls, secrets_dict, credential_list=[], rendered_credential_list=[]):
 
     LOG.debug("Rendering {} provider template".format(cls.__name__))
     if not isinstance(cls, CloudProviderType):
@@ -29,6 +29,8 @@ def render_cloud_provider_template(cls, secrets_dict):
             entity_context,
             secrets_dict=secrets_dict,
             variable_context="auth_schema",
+            credentials_list=credential_list,
+            rendered_credential_list=rendered_credential_list,
         )
         auth_schema_variables.append(modify_var_format(var_template))
 
@@ -38,20 +40,25 @@ def render_cloud_provider_template(cls, secrets_dict):
             entity,
             entity_context,
             secrets_dict=secrets_dict,
+            credentials_list=credential_list,
+            rendered_credential_list=rendered_credential_list,
         )
         provider_variables.append(modify_var_format(var_template))
 
     endpoint_schema_variables = []
     endpoint_schema = user_attrs.get("endpoint_schema")
     if endpoint_schema:
-        for entity in endpoint_schema.variables:
-            var_template = render_variable_template(
-                entity,
-                entity_context,
-                secrets_dict=secrets_dict,
-                variable_context="endpoint_schema",
-            )
-            endpoint_schema_variables.append(modify_var_format(var_template))
+        if endpoint_schema.type == PROVIDER.ENDPOINT_KIND.CUSTOM:
+            for entity in endpoint_schema.variables:
+                var_template = render_variable_template(
+                    entity,
+                    entity_context,
+                    secrets_dict=secrets_dict,
+                    variable_context="endpoint_schema",
+                    credentials_list=credential_list,
+                    rendered_credential_list=rendered_credential_list,
+                )
+                endpoint_schema_variables.append(modify_var_format(var_template))
 
     test_account_variables = []
     test_account = user_attrs.get("test_account")
@@ -62,14 +69,10 @@ def render_cloud_provider_template(cls, secrets_dict):
                 entity_context,
                 secrets_dict=secrets_dict,
                 variable_context="test_account_variable",
+                credentials_list=credential_list,
+                rendered_credential_list=rendered_credential_list,
             )
             test_account_variables.append(modify_var_format(var_template))
-
-    credential_list = []
-    for cred in cls.credentials:
-        credential_list.append(
-            get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
-        )
 
     resource_types = []
     for resource_type in cls.resource_types:
@@ -79,9 +82,17 @@ def render_cloud_provider_template(cls, secrets_dict):
     for action in user_attrs.get("actions", []):
         action_list.append(
             render_action_template(
-                action, entity_context=entity_context, secrets_dict=secrets_dict
+                action, entity_context=entity_context, secrets_dict=secrets_dict,
+                credential_list=credential_list, rendered_credential_list=rendered_credential_list,
             )
         )
+
+    credential_names = []
+    for cred in cls.credentials:
+        credential_names.append(
+            get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
+        )
+    credential_names.extend([cred['name_in_file'] for cred in credential_list])
 
     user_attrs.update(
         {
@@ -90,7 +101,7 @@ def render_cloud_provider_template(cls, secrets_dict):
             "endpoint_schema_variables": endpoint_schema_variables,
             "test_account_variables": test_account_variables,
             "resource_types": ", ".join(resource_types),
-            "credentials": ", ".join(credential_list),
+            "credentials": ", ".join(credential_names),
             "actions": action_list,
         }
     )

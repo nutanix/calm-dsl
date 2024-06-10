@@ -9,6 +9,7 @@ import json     #no_qa
 import os       #no_qa
 
 from calm.dsl.builtins import *  #no_qa
+from calm.dsl.builtins import CalmTask as CalmVarTask
 from calm.dsl.builtins.models.task import Status, ProviderTask as CalmTask
 from calm.dsl.constants import CLOUD_PROVIDER as PROVIDER, RESOURCE_TYPE
 from calm.dsl.runbooks import parallel, branch
@@ -26,7 +27,9 @@ from calm.dsl.runbooks import parallel, branch
 {%- endfor %}
 
 # ResourceTypes
-{% for entity in obj.dependent_entities %}{{entity}}{% endfor %}
+{% for entity in obj.dependent_entities %}
+{{entity}}
+{% endfor %}
 
 {{obj.provider}}
 
