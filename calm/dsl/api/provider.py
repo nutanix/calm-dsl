@@ -144,6 +144,19 @@ class ProviderAPI(ResourceAPI):
         )
 
     def export_file(self, uuid, passphrase=None):
+        if passphrase:
+            return self.connection._call(
+                self.EXPORT_FILE.format(uuid),
+                verify=False,
+                method=REQUEST.METHOD.POST,
+                request_json={"passphrase": passphrase},
+                files=[],
+            )
+        return self.connection._call(
+            self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.GET
+        )
+
+    def export_provider(self, uuid, passphrase=None):
         current_path = os.path.dirname(os.path.realpath(__file__))
         if passphrase:
             res, err = self.connection._call(

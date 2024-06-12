@@ -76,27 +76,31 @@ def render_cloud_provider_file_template(
     for k, v in enumerate(dependepent_entities):
         if isinstance(v, ResourceTypeEntity):
             dependepent_entities[k] = render_resource_type_template(
-                v, secrets_dict, credential_list=implied_credentials,
+                v,
+                secrets_dict,
+                credential_list=implied_credentials,
                 rendered_credential_list=implied_credential_templates,
             )
 
     # Step-3: Decompile Provider fields
     provider = render_cloud_provider_template(
-        cls, secrets_dict, credential_list=implied_credentials,
+        cls,
+        secrets_dict,
+        credential_list=implied_credentials,
         rendered_credential_list=implied_credential_templates,
     )
 
     # Step-4: Decompile implicit credentials i.e..,.
     # credentials created out of HTTP tasks/variables using basic auth
     for index, cred in enumerate(implied_credentials):
-        cred_name = cred['name_in_file']
-        cred_file_name = "{}_{}".format(cred_name, cred['type'])
+        cred_name = cred["name_in_file"]
+        cred_file_name = "{}_{}".format(cred_name, cred["type"])
         credential_list.append(implied_credential_templates[index])
-        cred_file_dict[cred_file_name] = cred.get('password', {}).get('value', '')
+        cred_file_dict[cred_file_name] = cred.get("password", {}).get("value", "")
         secrets_dict.append(
             {
                 "context": "credential_definition_list." + cred_name,
-                "secret_name": cred['name'],
+                "secret_name": cred["name"],
                 "secret_value": cred_file_dict[cred_file_name],
             }
         )

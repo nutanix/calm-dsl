@@ -135,7 +135,9 @@ def render_task_template(
         attrs = cls.attrs
         user_attrs["headers"] = {}
         user_attrs["secret_headers"] = {}
-        user_attrs["response_code_status_map"] = attrs.get("expected_response_params", [])
+        user_attrs["response_code_status_map"] = attrs.get(
+            "expected_response_params", []
+        )
 
         for var in attrs.get("headers", []):
             var_type = var["type"]
@@ -168,15 +170,23 @@ def render_task_template(
                 "username": auth_obj["username"],
                 "password": auth_obj["password"],
                 "type": "PASSWORD",
-                "name": "Credential" + str(uuid.uuid4())[:8]
+                "name": "Credential" + str(uuid.uuid4())[:8],
             }
             cred = CredentialType.decompile(cred_dict)
-            rendered_credential_list.append(render_credential_template(
-                cred, context="PROVIDER" if (entity_context.startswith('CloudProvider') or entity_context.startswith('ResourceType')) else "BP"
-            ))
+            rendered_credential_list.append(
+                render_credential_template(
+                    cred,
+                    context="PROVIDER"
+                    if (
+                        entity_context.startswith("CloudProvider")
+                        or entity_context.startswith("ResourceType")
+                    )
+                    else "BP",
+                )
+            )
             cred = get_cred_var_name(cred.name)
             user_attrs["credentials_list"] = cred
-            cred_dict['name_in_file'] = cred
+            cred_dict["name_in_file"] = cred
             credentials_list.append(cred_dict)
 
         user_attrs["response_paths"] = attrs.get("response_paths", {})
@@ -197,7 +207,7 @@ def render_task_template(
         elif method == "DELETE":
             schema_file = "task_http_delete.py.jinja2"
 
-        if cls.attrs["request_body"] != '' and cls.attrs["request_body"] != None:
+        if cls.attrs["request_body"] != "" and cls.attrs["request_body"] != None:
             cls.attrs["request_body"] = repr(cls.attrs["request_body"])
 
     elif cls.type == "CALL_RUNBOOK":
@@ -245,8 +255,10 @@ def render_task_template(
         schema_file = "task_call_config.py.jinja2"
     elif cls.type == "RT_OPERATION":
         schema_file, user_attrs = get_schema_file_and_user_attrs(
-            cls.name, cls.attrs, credentials_list=credentials_list,
-            rendered_credential_list=rendered_credential_list
+            cls.name,
+            cls.attrs,
+            credentials_list=credentials_list,
+            rendered_credential_list=rendered_credential_list,
         )
     elif cls.type == "DECISION":
         script_type = cls.attrs["script_type"]

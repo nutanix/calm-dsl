@@ -9,7 +9,9 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_resource_type_template(cls, secrets_dict, credential_list=[], rendered_credential_list=[]):
+def render_resource_type_template(
+    cls, secrets_dict, credential_list=[], rendered_credential_list=[]
+):
 
     LOG.debug("Rendering {} resource_type template".format(cls.__name__))
     if not isinstance(cls, ResourceTypeEntity):
@@ -49,8 +51,12 @@ def render_resource_type_template(cls, secrets_dict, credential_list=[], rendere
     variable_list = []
     for entity in user_attrs.get("variables", []):
         var_template = render_variable_template(
-            entity, entity_context, secrets_dict=secrets_dict, context=context,
-            credentials_list=credential_list, rendered_credential_list=rendered_credential_list,
+            entity,
+            entity_context,
+            secrets_dict=secrets_dict,
+            context=context,
+            credentials_list=credential_list,
+            rendered_credential_list=rendered_credential_list,
         )
         variable_list.append(modify_var_format(var_template))
 

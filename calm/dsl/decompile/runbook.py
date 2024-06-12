@@ -107,7 +107,7 @@ def render_runbook_template(
     if while_loop_tasks:
         import_status = True
 
-    credential_names.extend([cred['name_in_file'] for cred in credentials_list])
+    credential_names.extend([cred["name_in_file"] for cred in credentials_list])
 
     # runbook project reference
     project_name = metadata_obj.project["name"]

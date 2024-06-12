@@ -11,7 +11,9 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_cloud_provider_template(cls, secrets_dict, credential_list=[], rendered_credential_list=[]):
+def render_cloud_provider_template(
+    cls, secrets_dict, credential_list=[], rendered_credential_list=[]
+):
 
     LOG.debug("Rendering {} provider template".format(cls.__name__))
     if not isinstance(cls, CloudProviderType):
@@ -82,8 +84,11 @@ def render_cloud_provider_template(cls, secrets_dict, credential_list=[], render
     for action in user_attrs.get("actions", []):
         action_list.append(
             render_action_template(
-                action, entity_context=entity_context, secrets_dict=secrets_dict,
-                credential_list=credential_list, rendered_credential_list=rendered_credential_list,
+                action,
+                entity_context=entity_context,
+                secrets_dict=secrets_dict,
+                credential_list=credential_list,
+                rendered_credential_list=rendered_credential_list,
             )
         )
 
@@ -92,7 +97,7 @@ def render_cloud_provider_template(cls, secrets_dict, credential_list=[], render
         credential_names.append(
             get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
         )
-    credential_names.extend([cred['name_in_file'] for cred in credential_list])
+    credential_names.extend([cred["name_in_file"] for cred in credential_list])
 
     user_attrs.update(
         {

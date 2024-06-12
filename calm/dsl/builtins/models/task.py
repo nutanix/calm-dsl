@@ -44,10 +44,15 @@ EXIT_CONDITION_MAP = {
 
 def http_response_code_map(status, code_ranges, code):
     if code:
-        response_code_status_map = {"status": status, "code_range_list": code_ranges, "code": code}
+        response_code_status_map = {
+            "status": status,
+            "code_range_list": code_ranges,
+            "code": code,
+        }
     else:
         response_code_status_map = {"status": status, "code_range_list": code_ranges}
     return response_code_status_map
+
 
 class HTTPResponseHandle:
     class TASK_STATUS:
@@ -62,6 +67,8 @@ class HTTPResponseHandle:
                 code_ranges=code_ranges,
                 code=code,
             )
+
+
 # Task
 
 
@@ -1697,14 +1704,16 @@ def http_task(
             _header_variables_from_dict(secret_headers, secret=True)
         )
         params["attrs"]["headers"] = header_variables
-    
+
     if status_mapping and response_code_status_map:
         err_msg = "Both status_mapping and response_code_status_map cannot be present together. status_mapping is now deprecated, start using response_code_status_map"
         LOG.error(err_msg)
         sys.exit(-1)
 
     if status_mapping is not None:
-        LOG.warning("status_mapping will be deprecated soon, start using response_code_status_map")
+        LOG.warning(
+            "status_mapping will be deprecated soon, start using response_code_status_map"
+        )
         LOG.debug("Status mapping for HTTP Task : {}".format(status_mapping))
         if not isinstance(status_mapping, dict):
             raise TypeError(

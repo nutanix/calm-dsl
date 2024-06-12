@@ -428,7 +428,7 @@ def get_schema_file_and_user_attrs_for_rtop_task(
     inarg_list,
     output_variable_map,
     credentials_list=[],
-    rendered_credential_list=[]
+    rendered_credential_list=[],
 ):
     input_variables = []
     from .variable import render_variable_template
@@ -436,8 +436,10 @@ def get_schema_file_and_user_attrs_for_rtop_task(
     for variable in inarg_list:
         var_cls = VariableType.decompile(variable)
         var_template = render_variable_template(
-            var_cls, "Task_" + task_name, credentials_list=credentials_list,
-            rendered_credential_list=rendered_credential_list
+            var_cls,
+            "Task_" + task_name,
+            credentials_list=credentials_list,
+            rendered_credential_list=rendered_credential_list,
         )
         input_variables.append(modify_var_format(var_template))
 
@@ -453,7 +455,9 @@ def get_schema_file_and_user_attrs_for_rtop_task(
     return "task_resource_type_action.py.jinja2", user_attrs
 
 
-def get_schema_file_and_user_attrs(task_name, attrs, credentials_list=[], rendered_credential_list=[]):
+def get_schema_file_and_user_attrs(
+    task_name, attrs, credentials_list=[], rendered_credential_list=[]
+):
     account_ref_dict = attrs.get("account_reference", {})
     account_uuid = account_ref_dict.get("uuid", "")
     account_name = account_ref_dict.get("name", "")
@@ -520,7 +524,7 @@ def get_schema_file_and_user_attrs(task_name, attrs, credentials_list=[], render
                     attrs.get("inarg_list", []),
                     attrs.get("output_variables", None),
                     credentials_list=credentials_list,
-                    rendered_credential_list=rendered_credential_list
+                    rendered_credential_list=rendered_credential_list,
                 )
 
     msg = "Action '{}' not found on resource type '{}'".format(
