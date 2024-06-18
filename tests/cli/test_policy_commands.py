@@ -383,7 +383,8 @@ class TestPolicyCommands:
     def _test_get_approval_requests(self):
         time.sleep(10)
         runner = CliRunner()
-        result = runner.invoke(cli, ["get", "approval-requests"])
+
+        result = runner.invoke(cli, ["get", "approval-requests", "--out=json"])
         if result.exit_code:
             cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
             LOG.info(result.output)
@@ -393,9 +394,17 @@ class TestPolicyCommands:
                 )
             )
             pytest.fail("Policy get approval request call from python file failed")
+
         assert (
             self.approval_request_name in result.output
         ), "Approval Request {} not found".format(self.approval_request_name)
+        res = json.loads(result.output)
+        for entity in res["entities"]:
+            LOG.info(entity["spec"]["name"])
+            if self.approval_request_name in entity["spec"]["name"]:
+                self.approval_request_name = entity["spec"]["name"]
+                self.approval_request_uuid = entity["metadata"]["uuid"]
+                break
         LOG.info("Success")
 
     def _test_execution_check_in_get_policy_execution(self):
@@ -500,6 +509,7 @@ class TestPolicyCommands:
                 "approve",
                 "approval-request",
                 self.approval_request_name,
+                "--uuid={}".format(self.approval_request_uuid),
             ],
         )
 
