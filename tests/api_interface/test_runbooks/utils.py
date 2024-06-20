@@ -8,6 +8,11 @@ import json
 from calm.dsl.cli.constants import MARKETPLACE_ITEM
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
+from calm.dsl.api import get_resource_api
+from calm.dsl.log import get_logging_handle
+
+
+LOG = get_logging_handle(__name__)
 
 
 def change_uuids(bp, context):
@@ -582,3 +587,51 @@ def add_account_uuid(endpoint_payload):
     else:
         err_msg = "Unable to fetch account name from given account reference"
         return False, err_msg
+
+
+def add_vm_reference(vm_references, project_name):
+    client = get_api_client()
+
+    if vm_references:
+        payload = {
+            "entity_type": "mh_vm",
+            "query_name": "",
+            "grouping_attribute": " ",
+            "group_count": 20,
+            "group_offset": 0,
+            "group_attributes": [],
+            "group_member_count": 20,
+            "group_member_offset": 0,
+            "group_member_sort_attribute": "vm_name",
+            "group_member_sort_order": "ASCENDING",
+            "group_member_attributes": [{"attribute": "vm_name"}],
+            "filter_criteria": "is_cvm==0;power_state==on;project_name=={}".format(
+                project_name
+            ),
+        }
+        Obj = get_resource_api("groups", client.connection)
+        res, err = Obj.create(payload)
+        if err:
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+
+        response = res.json()
+        group_results = response.get("group_results", [])
+        if group_results:
+            entity_results = group_results[0].get("entity_results", [])
+            if not entity_results:
+                LOG.debug("vm groups call response: {}".format(response))
+                pytest.fail(
+                    "No target vm reference found for project {}".format(project_name)
+                )
+
+            vm_name = entity_results[0]["data"][0]["values"][0]["values"][0]
+            vm_uuid = entity_results[0]["entity_id"]
+
+            vm_references[0]["name"] = vm_name
+            vm_references[0]["uuid"] = vm_uuid
+
+        else:
+            LOG.debug("vm groups call response: {}".format(response))
+            pytest.fail(
+                "No target vm reference found for project {}".format(project_name)
+            )

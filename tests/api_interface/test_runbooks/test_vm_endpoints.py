@@ -1,11 +1,27 @@
 import pytest
 import os
+import json
 from distutils.version import LooseVersion as LV
 
 from calm.dsl.store import Version
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import ENDPOINT
-from utils import read_test_config, change_uuids, add_account_uuid
+from tests.api_interface.test_runbooks.utils import (
+    read_test_config,
+    change_uuids,
+    add_account_uuid,
+    add_vm_reference,
+)
+from calm.dsl.builtins import read_local_file
+from calm.dsl.log import get_logging_handle
+
+
+LOG = get_logging_handle(__name__)
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
+PROJECT_NAME = PROJECT["NAME"]
+
 
 LinuxVMStaticAHVEpPayload = read_test_config(
     file_name="linux_vm_static_ahv_ep_payload.json"
@@ -43,8 +59,14 @@ class TestVMEndpoints:
     def test_vm_endpoint_static_crud(self, EndpointPayload):
         """Endpoint for VM crud"""
         client = get_api_client()
+        vm_references = EndpointPayload["spec"]["resources"]["attrs"].get(
+            "vm_references", []
+        )
+
+        add_vm_reference(vm_references, PROJECT_NAME)
         endpoint = change_uuids(EndpointPayload, {})
         res, err = add_account_uuid(EndpointPayload)
+
         if not res:
             pytest.fail(err)
 
