@@ -18,11 +18,6 @@ from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
-DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
-PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
-PROJECT_NAME = PROJECT["NAME"]
-
-
 LinuxVMStaticAHVEpPayload = read_test_config(
     file_name="linux_vm_static_ahv_ep_payload.json"
 )
@@ -63,7 +58,7 @@ class TestVMEndpoints:
             "vm_references", []
         )
 
-        add_vm_reference(vm_references, PROJECT_NAME)
+        add_vm_reference(vm_references)
         endpoint = change_uuids(EndpointPayload, {})
         res, err = add_account_uuid(EndpointPayload)
 

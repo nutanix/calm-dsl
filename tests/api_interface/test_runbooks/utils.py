@@ -589,7 +589,8 @@ def add_account_uuid(endpoint_payload):
         return False, err_msg
 
 
-def add_vm_reference(vm_references, project_name):
+def add_vm_reference(vm_references):
+    project_name = "_internal"
     client = get_api_client()
 
     if vm_references:
