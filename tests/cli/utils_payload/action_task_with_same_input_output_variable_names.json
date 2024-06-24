@@ -1,0 +1,77 @@
+{
+    "name": "TestUtilsAction4",
+    "description": "List Action for TestUtilsResourceType",
+    "type": "resource_type_generic",
+    "critical": false,
+    "runbook": {
+        "name": "TestUtilsResourceType_TestUtilsAction4_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "TestUtilsResourceType_TestUtilsAction4_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "TestUtilsResourceType_TestUtilsAction4_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": []
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "TestUtilsTask4"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Set Outputs",
+                "description": "",
+                "type": "SET_VARIABLE",
+                "attrs": {
+                    "script_type": "static_py3",
+                    "script": "print ('input_output_var = out_val')",
+                    "eval_variables": [
+                        "input_output_var"
+                    ]
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": [
+            {
+                "name": "input_output_var",
+                "description": "",
+                "type": "LOCAL",
+                "label": "",
+                "attrs": {},
+                "val_type": "STRING",
+                "value": "input_value",
+                "data_type": "BASE",
+                "is_hidden": false,
+                "is_mandatory": false
+            }
+        ],
+        "output_variable_list": [
+            {
+                "name": "input_output_var",
+                "description": "",
+                "type": "LOCAL",
+                "label": "",
+                "attrs": {},
+                "val_type": "STRING",
+                "value": "output_value",
+                "data_type": "BASE",
+                "is_hidden": false,
+                "is_mandatory": false
+            }
+        ]
+    }
+}

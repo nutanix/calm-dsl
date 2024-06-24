@@ -1,0 +1,60 @@
+{
+    "name": "TestUtilsAction1",
+    "description": "List Action for TestUtilsResourceType",
+    "type": "resource_type_generic",
+    "critical": false,
+    "runbook": {
+        "name": "TestUtilsResourceType_TestUtilsAction1_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "TestUtilsResourceType_TestUtilsAction1_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "TestUtilsResourceType_TestUtilsAction1_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": []
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "TestUtilsAction1"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "TestUtilsAction1",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static_py3",
+                    "script": "print ('Successfully Authenticated')"
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": [
+            {
+                "name": "action_var1",
+                "description": "",
+                "type": "LOCAL",
+                "label": "",
+                "attrs": {},
+                "val_type": "STRING",
+                "value": "action_var1_value",
+                "data_type": "BASE",
+                "is_hidden": false,
+                "is_mandatory": false
+            }
+        ]
+    }
+}

@@ -277,6 +277,16 @@ class ACTION:
         PATCH = "PATCH"
         PROVIDER = "provider"
 
+    TYPES = [
+        TYPE.SYSTEM,
+        TYPE.USER,
+        TYPE.WORKFLOW,
+        TYPE.FRAGMENT,
+        TYPE.RULE,
+        TYPE.PATCH,
+        TYPE.PROVIDER,
+    ]
+
 
 class RESOURCE_TYPE:
     "ResourceType constants"

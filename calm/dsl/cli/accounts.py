@@ -507,15 +507,16 @@ def create_resource_type_payload(UserAccount, provider_uuid):
 
     action_list = resources.get("action_list", []).copy()
 
-    name_uuid_map = {}
     action_list_with_uuid = copy.deepcopy(action_list)
 
     # Inserting uuids in action_list
-    insert_uuid(
-        action=action_list,
-        name_uuid_map=name_uuid_map,
-        action_list_with_uuid=action_list_with_uuid,
-    )
+    if action_list:
+        for index, action in enumerate(action_list):
+            insert_uuid(
+                action=action,
+                name_uuid_map={},
+                action_list_with_uuid=action_list_with_uuid[index]
+            )
 
     for input_var in input_vars:
         input_var["uuid"] = str(uuid.uuid4())
