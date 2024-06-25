@@ -207,7 +207,7 @@ def render_task_template(
         elif method == "DELETE":
             schema_file = "task_http_delete.py.jinja2"
 
-        if cls.attrs["request_body"] != "" and cls.attrs["request_body"] != None:
+        if cls.attrs["request_body"] != None:
             cls.attrs["request_body"] = repr(cls.attrs["request_body"])
 
     elif cls.type == "CALL_RUNBOOK":

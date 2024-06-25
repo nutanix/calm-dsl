@@ -1100,8 +1100,10 @@ def strip_uuids(upload_payload):
         for key in key_list:
             if key == "uuid":
                 del upload_payload[key]
-            elif key == "icon_reference":
-                continue
+
+            # elif key == "icon_reference":
+            #     continue
+
             else:
                 strip_uuids(upload_payload[key])
     elif isinstance(upload_payload, list):
