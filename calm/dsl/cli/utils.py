@@ -265,6 +265,9 @@ def insert_uuid(action, name_uuid_map, action_list_with_uuid, entity_key=""):
         if entity_key in ['variable_list', 'headers', 'output_variable_list']:
             entity_name_uuid_map = {}
         for i in range(len(action)):
+            # CALM-44963 - Adding uuids to each edge in attrs of dag task to retain task ordering when rendered in UI
+            if entity_key == 'edges' and ('uuid' not in action_list_with_uuid[i] or not action_list_with_uuid[i]['uuid']):
+                action_list_with_uuid[i]['uuid'] = str(uuid.uuid4())
             if isinstance(action[i], (dict, list)):
                 insert_uuid(action[i], entity_name_uuid_map, action_list_with_uuid[i])
     elif isinstance(action, dict):

@@ -66,3 +66,17 @@ class TestInsertUuid:
 
         assert action_list_with_uuid["runbook"]["variable_list"][0]["uuid"] != action_list_with_uuid["runbook"]["output_variable_list"][0]["uuid"]
         assert action_list_with_uuid["runbook"]["variable_list"][0]["value"] != action_list_with_uuid["runbook"]["output_variable_list"][0]["value"]
+
+    def test_insert_uuid_with_action_having_multiple_tasks(self):
+        json_file = "action_task_with_multiple_tasks.json"
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        file_path = os.path.join(dir_path + '/utils_payload', json_file)
+        action = json.loads(open(file_path).read())
+
+        name_uuid_map = {}
+        action_list_with_uuid = copy.deepcopy(action)
+        entity_key = ""
+
+        insert_uuid(action, name_uuid_map, action_list_with_uuid, entity_key)
+
+        assert "uuid" in action_list_with_uuid["runbook"]["task_definition_list"][0]["attrs"]["edges"][0], "UUID is missing in edges"
