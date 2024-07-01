@@ -262,12 +262,15 @@ def insert_uuid(action, name_uuid_map, action_list_with_uuid, entity_key=""):
     if isinstance(action, list):
         entity_name_uuid_map = name_uuid_map
         # CALM-43094 - Passing a separate map for variable_list to avoid uuid duplication in variables or other entities with same names.
-        if entity_key in ['variable_list', 'headers', 'output_variable_list']:
+        if entity_key in ["variable_list", "headers", "output_variable_list"]:
             entity_name_uuid_map = {}
         for i in range(len(action)):
             # CALM-44963 - Adding uuids to each edge in attrs of dag task to retain task ordering when rendered in UI
-            if entity_key == 'edges' and ('uuid' not in action_list_with_uuid[i] or not action_list_with_uuid[i]['uuid']):
-                action_list_with_uuid[i]['uuid'] = str(uuid.uuid4())
+            if entity_key == "edges" and (
+                "uuid" not in action_list_with_uuid[i]
+                or not action_list_with_uuid[i]["uuid"]
+            ):
+                action_list_with_uuid[i]["uuid"] = str(uuid.uuid4())
             if isinstance(action[i], (dict, list)):
                 insert_uuid(action[i], entity_name_uuid_map, action_list_with_uuid[i])
     elif isinstance(action, dict):
@@ -275,11 +278,14 @@ def insert_uuid(action, name_uuid_map, action_list_with_uuid, entity_key=""):
             # if the key is name then assign a unique uuid to it if not already assigned
             if key == "name":
                 # Adding an extra condition to assign different uuids for task and action with same names.
-                entity_type = 'action' if action.get('type', '') in (ACTION.TYPES + RESOURCE_TYPE.ACTION_TYPES) else 'non_action'
+                entity_type = (
+                    "action"
+                    if action.get("type", "")
+                    in (ACTION.TYPES + RESOURCE_TYPE.ACTION_TYPES)
+                    else "non_action"
+                )
                 if value not in name_uuid_map:
-                    name_uuid_map[value] = {
-                        entity_type: str(uuid.uuid4())
-                    }
+                    name_uuid_map[value] = {entity_type: str(uuid.uuid4())}
                 else:
                     if entity_type not in name_uuid_map[value]:
                         name_uuid_map[value][entity_type] = str(uuid.uuid4())

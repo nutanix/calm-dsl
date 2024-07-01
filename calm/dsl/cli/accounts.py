@@ -515,7 +515,7 @@ def create_resource_type_payload(UserAccount, provider_uuid):
             insert_uuid(
                 action=action,
                 name_uuid_map={},
-                action_list_with_uuid=action_list_with_uuid[index]
+                action_list_with_uuid=action_list_with_uuid[index],
             )
 
     for input_var in input_vars:

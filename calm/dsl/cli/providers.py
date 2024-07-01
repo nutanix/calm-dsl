@@ -153,11 +153,14 @@ def _prepare_resource_type_dict(resource_type_dict, name_uuid_map, for_create):
     action_list = resource_type_dict.get("action_list")
     if action_list:
         action_list_with_uuid = copy.deepcopy(action_list)
-        modified_name_uuid_map = {name: {'non_action': uuid} for name, uuid in name_uuid_map.items()}
+        modified_name_uuid_map = {
+            name: {"non_action": uuid} for name, uuid in name_uuid_map.items()
+        }
         for index, action in enumerate(action_list):
             insert_uuid(
-                action=action, name_uuid_map=copy.deepcopy(modified_name_uuid_map),
-                action_list_with_uuid=action_list_with_uuid[index]
+                action=action,
+                name_uuid_map=copy.deepcopy(modified_name_uuid_map),
+                action_list_with_uuid=action_list_with_uuid[index],
             )
         resource_type_dict["action_list"] = action_list_with_uuid
 
@@ -568,11 +571,13 @@ def compile_provider(provider_file, for_create=False):
     action_list = cloud_provider_resources_dict.get("action_list", [])
     if len(action_list) == 1:
         action_list_with_uuid = copy.deepcopy(action_list)
-        modified_name_uuid_map = {name: {'non_action': uuid} for name, uuid in cred_name_uuid_map.items()}
+        modified_name_uuid_map = {
+            name: {"non_action": uuid} for name, uuid in cred_name_uuid_map.items()
+        }
         insert_uuid(  # Inserting uuids in action_list
             action=action_list[0],
             name_uuid_map=copy.deepcopy(modified_name_uuid_map),
-            action_list_with_uuid=action_list_with_uuid[0]
+            action_list_with_uuid=action_list_with_uuid[0],
         )
         cloud_provider_dict["spec"]["resources"]["action_list"] = action_list_with_uuid
         consolidated_action_list.extend(action_list_with_uuid)
