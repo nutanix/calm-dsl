@@ -288,24 +288,12 @@ def create_account(client, account_payload, name=None, force_create=False):
 
     account_name = account_payload["spec"]["name"]
 
-    return client.account.create(
+    res, err = client.account.create(
         account_name,
         account_payload,
         force_create=force_create,
     )
 
-
-def create_account_from_dsl(client, account_file, name=None, force_create=False):
-
-    account_payload = compile_account(account_file)
-
-    if account_payload is None:
-        LOG.error("User account not found in {}".format(account_file))
-        sys.exit("User account not found")
-
-    res, err = create_account(
-        client, account_payload, name=name, force_create=force_create
-    )
     if err:
         LOG.error(err["error"])
         sys.exit("Account creation failed")
@@ -372,6 +360,32 @@ def create_account_from_dsl(client, account_file, name=None, force_create=False)
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
     return stdout_dict
+
+
+def create_account_from_dsl(client, account_file, name=None, force_create=False):
+    """
+    Create an account from a DSL file.
+
+    Args:
+        client (object): The client object for interacting with the API.
+        account_file (str): The path to the DSL file containing the account details.
+        name (str, optional): The name of the account. Defaults to None.
+        force_create (bool, optional): Whether to force the creation of the account if it already exists. Defaults to False.
+
+    Returns:
+        object: The created account object.
+
+    Raises:
+        SystemExit: If the user account is not found in the DSL file.
+    """
+
+    account_payload = compile_account(account_file)
+
+    if account_payload is None:
+        LOG.error("User account not found in {}".format(account_file))
+        sys.exit("User account not found")
+
+    return create_account(client, account_payload, name=name, force_create=force_create)
 
 
 def get_account_module_from_file(account_file):
