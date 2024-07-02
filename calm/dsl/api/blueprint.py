@@ -37,6 +37,8 @@ class BlueprintAPI(ResourceAPI):
         self.PROTECTION_POLICY_LIST = (
             self.ITEM + "/app_profile/{}/config_spec/{}/app_protection_policies/list"
         )
+        self.RUN_SCRIPT = self.PREFIX + "/{}/run_script"
+        self.GET_SCRIPT = self.RUN_SCRIPT + "/output/{}/{}"
 
     # TODO https://jira.nutanix.com/browse/CALM-17178
     # Blueprint creation timeout is dependent on payload.
@@ -383,4 +385,20 @@ class BlueprintAPI(ResourceAPI):
         url = self.VARIABLE_VALUES_WITH_TRLID.format(uuid, var_uuid, req_id, trl_id)
         return self.connection._call(
             url, verify=False, method=REQUEST.METHOD.GET, ignore_error=True
+        )
+
+    def run_scripts(self, bp_uuid, payload):
+        return self.connection._call(
+            self.RUN_SCRIPT.format(bp_uuid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
+    def test_scripts(self, bp_uuid, trl_id, request_id):
+        return self.connection._call(
+            self.GET_SCRIPT.format(bp_uuid, trl_id, request_id),
+            verify=False,
+            method=REQUEST.METHOD.GET,
+            ignore_error=True,
         )
