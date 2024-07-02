@@ -31,6 +31,8 @@ WindowsVMDynamicAHVEpPayload = read_test_config(
     file_name="windows_vm_dynamic_ahv_ep_payload.json"
 )
 
+AHV_LINUX_ID = read_local_file(".tests/runbook_tests/ahv_linux_id")
+
 # calm_version
 CALM_VERSION = Version.get_version("Calm")
 
@@ -57,13 +59,32 @@ class TestVMEndpoints:
         vm_references = EndpointPayload["spec"]["resources"]["attrs"].get(
             "vm_references", []
         )
+        context = {}
 
-        add_vm_reference(vm_references)
-        endpoint = change_uuids(EndpointPayload, {})
+        if len(vm_references) > 0:
+            vm_references[0] = {
+                "uuid": AHV_LINUX_ID,
+            }
+            context[AHV_LINUX_ID] = AHV_LINUX_ID
+        endpoint = change_uuids(EndpointPayload, context)
         res, err = add_account_uuid(EndpointPayload)
 
         if not res:
             pytest.fail(err)
+
+        project_list_params = {"filter": "name=={}".format("default")}
+        res, err = client.project.list(params=project_list_params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        default_project_uuid = response["entities"][0]["metadata"]["uuid"]
+        print(">> Default project uuid: {}".format(default_project_uuid))
+
+        endpoint["metadata"]["project_reference"] = {
+            "uuid": default_project_uuid,
+            "name": "default",
+            "kind": "project",
+        }
 
         # Endpoint Create
         print(">> Creating endpoint")
@@ -126,14 +147,6 @@ class TestVMEndpoints:
         # download the endpoint
         print(">> Downloading endpoint (uuid={})".format(ep_uuid))
         file_path = client.endpoint.export_file(ep_uuid, passphrase="test_passphrase")
-
-        project_list_params = {"filter": "name=={}".format("default")}
-        res, err = client.project.list(params=project_list_params)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        response = res.json()
-        default_project_uuid = response["entities"][0]["metadata"]["uuid"]
-        print(">> Default project uuid: {}".format(default_project_uuid))
 
         # upload the endpoint
         print(">> Uploading endpoint (uuid={})".format(ep_uuid))

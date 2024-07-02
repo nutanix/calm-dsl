@@ -88,7 +88,7 @@ def update_endpoints_name(rb, context):
     return rb
 
 
-def upload_runbook(client, rb_name, Runbook):
+def upload_runbook(client, rb_name, Runbook, return_error_response=False):
     """
     This routine uploads the given runbook
     Args:
@@ -135,7 +135,8 @@ def upload_runbook(client, rb_name, Runbook):
         print(">> {} uploaded with creds >>".format(Runbook))
         assert res.ok is True
     else:
-        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        if not return_error_response:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     return res.json()
 
