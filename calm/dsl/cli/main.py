@@ -116,7 +116,7 @@ def main(ctx, config_file, sync):
     project_config = ContextObj.get_project_config()
     project_name = project_config.get("name")
 
-    if project_name == DSL_CONFIG.EMPTY_PROJECT_NAME:
+    if project_name == DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME:
         LOG.warning(DSL_CONFIG.EMPTY_PROJECT_MESSAGE)
 
     if sync:

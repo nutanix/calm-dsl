@@ -1,7 +1,11 @@
 import copy
+import json
 import sys
+import os
 
 from calm.dsl.log import get_logging_handle
+from calm.dsl.config import get_context
+from calm.dsl.constants import DSL_CONFIG
 
 LOG = get_logging_handle(__name__)
 
@@ -502,6 +506,54 @@ def patch_secrets(resources, secret_map, secret_variables, existing_secrets=[]):
                 variable["value"] = secret
 
     return resources
+
+
+def get_auth_info(api_key_location):
+    """
+    Reads name+token from specified api-key file (if it exists) as username+password
+    Else it reads username+password from config.
+    Args:
+        api_key_location (str): location of api-key
+    Returns:
+        dict: containing username and password for authentication.
+    """
+
+    if api_key_location not in [None, DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME]:
+        if not os.path.exists(api_key_location):
+            LOG.error("{} not found".format(api_key_location))
+            sys.exit(-1)
+
+        with open(api_key_location, "r") as f:
+            auth_creds = f.read()
+            auth_creds = json.loads(auth_creds)
+
+        if not auth_creds.get("name"):
+            LOG.error(
+                "Badly formatted key file. Key name not present in {}".format(
+                    api_key_location
+                )
+            )
+            sys.exit(-1)
+
+        if not auth_creds.get("token"):
+            LOG.error(
+                "Badly formatted key file. Token not present in {}".format(
+                    api_key_location
+                )
+            )
+            sys.exit(-1)
+
+        cred = {"username": auth_creds.get("name"), "password": auth_creds.get("token")}
+    # Read username/password from config when api-key is not supplied
+    else:
+        context = get_context()
+        server_config = context.get_server_config()
+        cred = {
+            "username": server_config.get("pc_username"),
+            "password": server_config.get("pc_password"),
+        }
+
+    return cred
 
 
 def _create_task_name_substrate_map(bp_payload, entity_type, **kwargs):

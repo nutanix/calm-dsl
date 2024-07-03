@@ -35,6 +35,7 @@ class CONFIG:
         PORT = "pc_port"
         USERNAME = "pc_username"
         PASSWORD = "pc_password"
+        API_KEY_LOCATION = "api_key_location"
 
     class PROJECT(IterableConstants):
         NAME = "name"

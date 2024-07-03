@@ -329,7 +329,7 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
             ]
         else:
             project_name = project_config["name"]
-            if project_name == DSL_CONFIG.EMPTY_PROJECT_NAME:
+            if project_name == DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME:
                 LOG.error(DSL_CONFIG.EMPTY_PROJECT_MESSAGE)
                 sys.exit("Invalid project configuration")
 

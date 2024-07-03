@@ -104,7 +104,7 @@ class Context:
 
         config = self.project_config
         if not config.get(CONFIG.PROJECT.NAME):
-            config["name"] = DSL_CONFIG.EMPTY_PROJECT_NAME
+            config["name"] = DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME
 
         return config
 
@@ -205,6 +205,9 @@ class Context:
             port=server_config[CONFIG.SERVER.PORT],
             username=server_config[CONFIG.SERVER.USERNAME],
             password="xxxxxxxx",  # Do not render password
+            api_key_location=server_config.get(
+                CONFIG.SERVER.API_KEY_LOCATION, DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME
+            ),
             project_name=project_config[CONFIG.PROJECT.NAME],
             log_level=log_config[CONFIG.LOG.LEVEL],
             policy_status=policy_config[CONFIG.POLICY.STATUS],

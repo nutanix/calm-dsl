@@ -67,7 +67,7 @@ def create_blueprint_payload(UserBlueprint, metadata={}):
     #  Project will be taken from config if not provided
     if not metadata.get("project_reference", {}):
         project_name = project_config["name"]
-        if project_name == DSL_CONFIG.EMPTY_PROJECT_NAME:
+        if project_name == DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME:
             LOG.error(DSL_CONFIG.EMPTY_PROJECT_MESSAGE)
             sys.exit("Invalid project configuration")
 
