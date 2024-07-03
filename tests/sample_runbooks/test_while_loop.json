@@ -25,9 +25,20 @@
                                 "kind": "app_task",
                                 "name": "WhileTask2"
                             }
+                        },
+                        {
+                            "from_task_reference": {
+                                "kind": "app_task",
+                                "name": "WhileTask2"
+                            },
+                            "to_task_reference": {
+                                "kind": "app_task",
+                                "name": "WhileTask"
+                            }
                         }
                     ]
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -36,6 +47,10 @@
                     {
                         "kind": "app_task",
                         "name": "WhileTask2"
+                    },
+                    {
+                        "kind": "app_task",
+                        "name": "WhileTask"
                     }
                 ],
                 "variable_list": [],
@@ -47,6 +62,7 @@
                 "description": "",
                 "type": "META",
                 "attrs": {},
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -65,6 +81,7 @@
                     "script_type": "static_py3",
                     "script": "print('Inside loop1 @@{loop_var}@@')"
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",
@@ -79,6 +96,7 @@
                     "loop_variable": "loop_var",
                     "exit_condition_type": "on_success"
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -94,6 +112,7 @@
                 "description": "",
                 "type": "META",
                 "attrs": {},
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -112,6 +131,7 @@
                     "script_type": "static_py3",
                     "script": "print('Inside loop2 @@{iteration}@@')"
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",
@@ -126,10 +146,69 @@
                     "loop_variable": "iteration",
                     "exit_condition_type": "dont_care"
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
                         "name": "WhileTask2_loop_meta_task"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "WhileTask_loop_meta_task",
+                "description": "",
+                "type": "META",
+                "attrs": {},
+                "status_map_list": [],
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "Task1"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Task1",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static_py3",
+                    "script": "print('Inside loop1 @@{loop_var}@@')"
+                },
+                "status_map_list": [],
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "WhileTask",
+                "description": "",
+                "type": "WHILE_LOOP",
+                "attrs": {
+                    "iterations": "2",
+                    "loop_variable": "loop_var",
+                    "exit_condition_type": "on_success"
+                },
+                "status_map_list": [
+                    {
+                        "match_values": [
+                            "FAILURE"
+                        ],
+                        "type": "status",
+                        "result_status": "WARNING"
+                    }
+                ],
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "WhileTask_loop_meta_task"
                     }
                 ],
                 "variable_list": [],

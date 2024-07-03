@@ -44,6 +44,7 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
@@ -78,6 +79,7 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
@@ -112,6 +114,7 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
@@ -146,6 +149,7 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
@@ -180,6 +184,7 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
@@ -214,6 +219,7 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
@@ -252,6 +258,7 @@
                                     "attrs": {
                                         "edges": []
                                     },
+                                    "status_map_list": [],
                                     "child_tasks_local_reference_list": [],
                                     "variable_list": [],
                                     "retries": "",
@@ -280,6 +287,7 @@
                                     "attrs": {
                                         "edges": []
                                     },
+                                    "status_map_list": [],
                                     "child_tasks_local_reference_list": [],
                                     "variable_list": [],
                                     "retries": "",

@@ -17,6 +17,7 @@
                 "attrs": {
                     "edges": []
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -35,6 +36,7 @@
                     "script_type": "static_py3",
                     "script": "\nprint(\"@@{var1}@@\")\nif \"@@{var1}@@\" == \"test\":\n    print(\"yes\")\nelse:\n    print(\"no\")\nprint(\"@@{var2}@@\")\nif \"@@{var2}@@\" == \"test\":\n    print(\"yes\")\nelse:\n    print(\"no\")\nprint(\"Hello @@{firstname}@@ @@{lastname}@@\")\n"
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",

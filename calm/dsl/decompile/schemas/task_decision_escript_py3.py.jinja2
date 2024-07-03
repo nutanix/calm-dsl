@@ -1,12 +1,18 @@
+{% import "status_handle.py.jinja2" as status_handle %}
+
+{%- macro common_details(obj) -%}
+name='{{obj.name}}', filename={{obj.attrs.script_file}} {%- if obj.attrs.tunnel_reference%}, tunnel=Ref.Tunnel(name="{{ obj.attrs.tunnel_reference.name }}"){%- endif %} {%- if obj.status_map_list %}, status_map_list=[{%- for status_map in obj.status_map_list %}{%- if status_map.type == "exit_code" %}{{ status_handle.exit_code(status_map) }}{% endif %} {%- if status_map.type == "status" %}{{ status_handle.task_status(status_map) }}{% endif %}{%- endfor %}] {%- endif %}
+{%- endmacro %}
+
 {%- macro decision_escript_py3_task(obj) -%}
 {%- if obj.cred is not defined and obj.target is not defined %}
-CalmTask.Decision.escript.py3(name='{{obj.name}}', filename={{obj.attrs.script_file}} {%- if obj.attrs.tunnel_reference%}, tunnel=Ref.Tunnel(name="{{ obj.attrs.tunnel_reference.name }}"){%- endif %})
+CalmTask.Decision.escript.py3({{ common_details(obj) }})
 {%- elif obj.cred is not defined %}
-CalmTask.Decision.escript.py3(name='{{obj.name}}', filename={{obj.attrs.script_file}}, target={{obj.target}} {%- if obj.attrs.tunnel_reference%}, tunnel=Ref.Tunnel(name="{{ obj.attrs.tunnel_reference.name }}"){%- endif %})
+CalmTask.Decision.escript.py3({{ common_details(obj) }}, target={{obj.target}})
 {%- elif obj.target is not defined %}
-CalmTask.Decision.escript.py3(name='{{obj.name}}', filename={{obj.attrs.script_file}}, cred={{obj.cred}} {%- if obj.attrs.tunnel_reference%}, tunnel=Ref.Tunnel(name="{{ obj.attrs.tunnel_reference.name }}"){%- endif %})
+CalmTask.Decision.escript.py3({{ common_details(obj) }}, cred={{obj.cred}})
 {%- else %}
-CalmTask.Decision.escript.py3(name='{{obj.name}}', filename={{obj.attrs.script_file}}, cred={{obj.cred}}, target={{obj.target}} {%- if obj.attrs.tunnel_reference%}, tunnel=Ref.Tunnel(name="{{ obj.attrs.tunnel_reference.name }}"){%- endif %})
+CalmTask.Decision.escript.py3({{ common_details(obj) }}, cred={{obj.cred}}, target={{obj.target}})
 {%- endif %}
 {%- endmacro %}
 

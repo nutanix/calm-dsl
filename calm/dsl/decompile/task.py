@@ -60,6 +60,9 @@ def render_task_template(
         user_attrs["cred"] = "ref({})".format(
             get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
         )
+    status_map_list = getattr(cls, "status_map_list", [])
+    if status_map_list:
+        user_attrs["status_map_list"] = status_map_list
 
     if cls.type == "EXEC":
         user_attrs["calm_var_task"] = use_calm_var_task

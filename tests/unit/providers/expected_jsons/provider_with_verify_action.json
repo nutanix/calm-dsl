@@ -102,6 +102,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -120,6 +121,7 @@
                                     "script_type": "static_py3",
                                     "script": "# Script to verify credentials of custom provider accounts\n\nprint (\"Account credentials being validated:\")\nprint (\"Username: @@{username}@@, Password: @@{password}@@\")\n\nprint (\"Making a dummy request to authenticate to the below provider endpoint\")\nprint (\"Server IP: @@{server_ip}@@, Port: @@{port_number}@@\")\n\nprint (\"Successfully Authenticated!!!\")\n"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",

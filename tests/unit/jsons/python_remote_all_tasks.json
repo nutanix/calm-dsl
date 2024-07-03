@@ -17,6 +17,7 @@
                 "attrs": {
                     "edges": []
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -32,6 +33,7 @@
                 "description": "",
                 "type": "META",
                 "attrs": {},
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -58,6 +60,7 @@
                     "script_type": "python_remote",
                     "script": "print(\"just printing...\")\n"
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",
@@ -78,6 +81,7 @@
                         "var1"
                     ]
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",
@@ -88,6 +92,7 @@
                 "description": "",
                 "type": "META",
                 "attrs": {},
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -110,6 +115,7 @@
                     "script_type": "python_remote",
                     "script": "print \"Decision else part\""
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",
@@ -135,6 +141,7 @@
                         "name": "python_decision_failure_meta_task"
                     }
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",

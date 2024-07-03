@@ -58,6 +58,7 @@
                         }
                     ]
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -92,6 +93,7 @@
                     "script_type": "static_py3",
                     "script": "print(\"Start\")\nsleep(20)\nprint(\"End\")"
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",
@@ -105,6 +107,7 @@
                     "script_type": "static_py3",
                     "script": "print(\"Start\")\nsleep(20)\nprint(\"End\")"
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",
@@ -118,6 +121,7 @@
                     "script_type": "static_py3",
                     "script": "print(\"Start\")\nsleep(20)\nprint(\"End\")"
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",
@@ -131,6 +135,7 @@
                     "script_type": "static_py3",
                     "script": "print(\"Start\")\nsleep(20)\nprint(\"End\")"
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",
@@ -144,6 +149,7 @@
                     "script_type": "static_py3",
                     "script": "print(\"Start\")\nsleep(20)\nprint(\"End\")"
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",

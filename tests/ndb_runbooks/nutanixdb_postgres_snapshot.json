@@ -17,6 +17,7 @@
                 "attrs": {
                     "edges": []
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -34,16 +35,32 @@
                 "attrs": {
                     "type": "RT_OPERATION",
                     "resource_type_reference": {
-                        "uuid": "722a4722-beb9-49ec-8229-80e552091a24",
+                        "uuid": "19c07696-473b-4c48-ba7d-133dff3f98a6",
                         "name": "Postgres Database Instance",
                         "kind": "resource_type"
                     },
                     "action_reference": {
                         "kind": "app_action",
                         "name": "Create Snapshot",
-                        "uuid": "a0bbfae7-2643-4932-85bb-adafbf961bd2"
+                        "uuid": "74aa193b-c019-4e73-a255-6f66f07a08db"
                     },
                     "inarg_list": [
+                        {
+                            "name": "create_snapshot_nutanix_ndb_database__is_removal_configured",
+                            "description": "",
+                            "type": "INPUT",
+                            "label": "Removal Schedule",
+                            "attrs": {
+                                "type": "",
+                                "is_internal": true,
+                                "omit_on_empty": false
+                            },
+                            "val_type": "BOOLEAN",
+                            "value": "true",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": false
+                        },
                         {
                             "name": "create_snapshot_nutanix_ndb_database__name",
                             "description": "",
@@ -61,25 +78,13 @@
                             "is_mandatory": false
                         },
                         {
-                            "name": "create_snapshot_nutanix_ndb_database__time_machine_id",
-                            "description": "",
-                            "type": "LOCAL",
-                            "label": "Target Time Machine",
-                            "attrs": {},
-                            "val_type": "STRING",
-                            "value": "@@{tm_uuid}@@",
-                            "data_type": "BASE",
-                            "is_hidden": false,
-                            "is_mandatory": true
-                        },
-                        {
                             "name": "create_snapshot_nutanix_ndb_database__remove_schedule_in_days",
                             "description": "",
                             "type": "INPUT",
                             "label": "Remove in (number of days)",
                             "attrs": {
-                                "is_internal": false,
                                 "type": "",
+                                "is_internal": false,
                                 "omit_on_empty": true
                             },
                             "val_type": "STRING",
@@ -93,20 +98,16 @@
                             "is_mandatory": false
                         },
                         {
-                            "name": "create_snapshot_nutanix_ndb_database__is_removal_configured",
+                            "name": "create_snapshot_nutanix_ndb_database__time_machine_id",
                             "description": "",
-                            "type": "INPUT",
-                            "label": "Removal Schedule",
-                            "attrs": {
-                                "is_internal": true,
-                                "type": "",
-                                "omit_on_empty": false
-                            },
-                            "val_type": "BOOLEAN",
-                            "value": "true",
+                            "type": "LOCAL",
+                            "label": "Target Time Machine",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "@@{tm_uuid}@@",
                             "data_type": "BASE",
                             "is_hidden": false,
-                            "is_mandatory": false
+                            "is_mandatory": true
                         }
                     ],
                     "output_variables": {
@@ -116,9 +117,10 @@
                     "account_reference": {
                         "kind": "account",
                         "name": "dnd_era_secondary_account",
-                        "uuid": "12c995cb-3b82-47ef-9e4d-efd8af07e294"
+                        "uuid": "0bba3490-6677-49b3-a6d5-a67ef63883b0"
                     }
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",

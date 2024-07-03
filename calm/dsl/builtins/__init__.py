@@ -11,7 +11,7 @@ from .models.variable import Variable, setvar, CalmVariable, VariableType
 from .models.action import action, parallel, ActionType, get_runbook_action
 from .models.credential import basic_cred, secret_cred, dynamic_cred, CredentialType
 
-from .models.task import Task, CalmTask, TaskType, HTTPResponseHandle
+from .models.task import Task, CalmTask, TaskType, HTTPResponseHandle, StatusHandle
 
 from .models.port import Port, port, PortType
 from .models.service import (
@@ -178,6 +178,7 @@ __all__ = [
     "CalmTask",
     "TaskType",
     "HTTPResponseHandle",
+    "StatusHandle",
     "action",
     "ActionType",
     "get_runbook_action",

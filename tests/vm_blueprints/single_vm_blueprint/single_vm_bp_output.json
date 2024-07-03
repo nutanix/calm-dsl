@@ -34,6 +34,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -68,6 +69,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -102,6 +104,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -136,6 +139,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -170,6 +174,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -204,6 +209,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -243,6 +249,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [
                                 {
                                     "kind": "app_task",
@@ -265,6 +272,7 @@
                                 "script_type": "sh",
                                 "script": "#!/bin/bash\n\nset -e\n\necho \"Installation script goes here ...\"\nsleep 3\n"
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
@@ -293,6 +301,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
@@ -404,6 +413,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -426,6 +436,7 @@
                                     "script_type": "static_py3",
                                     "script": "print ('Hello!')"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -537,6 +548,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -559,6 +571,7 @@
                                     "script_type": "sh",
                                     "script": "echo \"Hello\""
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",

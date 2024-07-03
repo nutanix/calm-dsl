@@ -69,6 +69,41 @@ class HTTPResponseHandle:
             )
 
 
+def task_status_map(result, values):
+    task_status_map = {"match_values": values, "type": StatusHandle.Type.Status, "result_status": result}
+    return task_status_map
+
+def exit_code_map(result, values):
+    exit_code_status_map = {"match_values": values, "type": StatusHandle.Type.ExitCode, "result_status": result}
+    return exit_code_status_map
+
+class StatusHandle:
+    class Type:
+        Status = "status"
+        ExitCode = "exit_code"
+
+    class Mapping:
+        """
+        Exit Code Mapping is allowed for Execute, Set Variable and Decision Task.
+        Task Status Mapping is not allowed for Execute Escript task.
+        """
+        exit_code = exit_code_map
+        task_status = task_status_map
+    
+    class Result:
+        """
+        Status can be mapped to only Warning
+        """
+        Warning = "WARNING"
+    
+    class Status:
+        """
+        TaskFailure can be used for all Exec, Decision and Set Variable Tasks except Escript, VM Operations, HTTP Task.
+        Failure can be used only for Loop Task
+        """
+        TaskFailure = "TASK_FAILURE"
+        Failure = "FAILURE"
+
 # Task
 
 
@@ -256,6 +291,7 @@ def _exec_create(
     cred=None,
     depth=2,
     tunnel=None,
+    status_map_list=[],
     **kwargs,
 ):
     if script is not None and filename is not None:
@@ -281,6 +317,7 @@ def _exec_create(
         "name": name,
         "type": "EXEC",
         "attrs": {"script_type": script_type, "script": script},
+        "status_map_list": status_map_list,
     }
     if cred is not None:
         params["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
@@ -310,6 +347,7 @@ def _decision_create(
     cred=None,
     depth=2,
     tunnel=None,
+    status_map_list=[],
     **kwargs,
 ):
     if script is not None and filename is not None:
@@ -338,6 +376,7 @@ def _decision_create(
         "name": name,
         "type": "DECISION",
         "attrs": {"script_type": script_type, "script": script},
+        "status_map_list": status_map_list,
     }
     if cred is not None:
         params["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
@@ -420,7 +459,7 @@ def parallel_task(name=None, child_tasks=[], attrs={}):
     return _task_create(**kwargs)
 
 
-def while_loop(name=None, child_tasks=[], attrs={}, **kwargs):
+def while_loop(name=None, child_tasks=[], attrs={}, status_map_list=[], **kwargs):
     """
     Create a WHILE LOOP
     Args:
@@ -441,6 +480,7 @@ def while_loop(name=None, child_tasks=[], attrs={}, **kwargs):
         ],
         "type": "WHILE_LOOP",
         "attrs": attrs,
+        "status_map_list": status_map_list,
     }
     if "inherit_target" in kwargs:
         params["inherit_target"] = kwargs.get("inherit_target")
@@ -569,6 +609,7 @@ def exec_task_ssh(
     target_endpoint=None,
     cred=None,
     depth=2,
+    status_map_list=[],
     **kwargs,
 ):
     return _exec_create(
@@ -580,6 +621,7 @@ def exec_task_ssh(
         target_endpoint=target_endpoint,
         cred=cred,
         depth=depth,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
@@ -591,6 +633,7 @@ def exec_task_escript(
     target=None,
     depth=2,
     tunnel=None,
+    status_map_list=[],
     **kwargs,
 ):
     return _exec_create(
@@ -602,6 +645,7 @@ def exec_task_escript(
         target_endpoint=None,
         depth=depth,
         tunnel=tunnel,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
@@ -613,6 +657,7 @@ def exec_task_escript_py3(
     target=None,
     depth=2,
     tunnel=None,
+    status_map_list=[],
     **kwargs,
 ):
     return _exec_create(
@@ -624,6 +669,7 @@ def exec_task_escript_py3(
         target_endpoint=None,
         depth=depth,
         tunnel=tunnel,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
@@ -636,6 +682,7 @@ def exec_task_powershell(
     target_endpoint=None,
     cred=None,
     depth=2,
+    status_map_list=[],
     **kwargs,
 ):
     return _exec_create(
@@ -647,6 +694,7 @@ def exec_task_powershell(
         target_endpoint=target_endpoint,
         cred=cred,
         depth=depth,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
@@ -659,6 +707,7 @@ def exec_task_python(
     target_endpoint=None,
     cred=None,
     depth=2,
+    status_map_list=[],
     **kwargs,
 ):
     return _exec_create(
@@ -670,12 +719,13 @@ def exec_task_python(
         target_endpoint=target_endpoint,
         cred=cred,
         depth=depth,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
 
 def exec_task_ssh_runbook(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
+    script=None, filename=None, name=None, target=None, cred=None, depth=2, status_map_list=[], **kwargs
 ):
     """
     This function is used to create exec task with shell target
@@ -698,12 +748,13 @@ def exec_task_ssh_runbook(
         target=target,
         cred=cred,
         depth=depth,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
 
 def exec_task_powershell_runbook(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
+    script=None, filename=None, name=None, target=None, cred=None, depth=2, status_map_list=[], **kwargs
 ):
     """
     This function is used to create exec task with shell target
@@ -726,12 +777,13 @@ def exec_task_powershell_runbook(
         target=target,
         cred=cred,
         depth=depth,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
 
 def exec_task_python_runbook(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
+    script=None, filename=None, name=None, target=None, cred=None, depth=2, status_map_list=[], **kwargs
 ):
     """
     This function is used to create exec task with python_remote target
@@ -754,12 +806,13 @@ def exec_task_python_runbook(
         target=target,
         cred=cred,
         depth=depth,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
 
 def decision_task_ssh(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
+    script=None, filename=None, name=None, target=None, cred=None, depth=2, status_map_list=[], **kwargs
 ):
     """
     This function is used to create decision task with shell target
@@ -782,12 +835,13 @@ def decision_task_ssh(
         target=target,
         cred=cred,
         depth=depth,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
 
 def decision_task_powershell(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
+    script=None, filename=None, name=None, target=None, cred=None, depth=2, status_map_list=[], **kwargs
 ):
     """
     This function is used to create decision task with powershell target
@@ -810,12 +864,13 @@ def decision_task_powershell(
         target=target,
         cred=cred,
         depth=depth,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
 
 def decision_task_python(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
+    script=None, filename=None, name=None, target=None, cred=None, depth=2, status_map_list=[], **kwargs
 ):
     """
     This function is used to create decision task with python_remote target
@@ -838,6 +893,7 @@ def decision_task_python(
         target=target,
         cred=cred,
         depth=depth,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
@@ -849,6 +905,7 @@ def decision_task_escript(
     target=None,
     depth=2,
     tunnel=None,
+    status_map_list=[],
     **kwargs,
 ):
     """
@@ -872,6 +929,7 @@ def decision_task_escript(
         target=target,
         depth=depth,
         tunnel=tunnel,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
@@ -883,6 +941,7 @@ def decision_task_escript_py3(
     target=None,
     depth=2,
     tunnel=None,
+    status_map_list=[],
     **kwargs,
 ):
     """
@@ -906,6 +965,7 @@ def decision_task_escript_py3(
         target=target,
         depth=depth,
         tunnel=tunnel,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
@@ -934,6 +994,7 @@ def set_variable_task_ssh(
     variables=None,
     depth=3,
     cred=None,
+    status_map_list=[],
     **kwargs,
 ):
     """
@@ -957,6 +1018,7 @@ def set_variable_task_ssh(
         target_endpoint=target_endpoint,
         depth=depth,
         cred=cred,
+        status_map_list=status_map_list,
         **kwargs,
     )
     return _set_variable_create(task, variables)
@@ -970,6 +1032,7 @@ def set_variable_task_escript(
     variables=None,
     depth=3,
     tunnel=None,
+    status_map_list=[],
     **kwargs,
 ):
     """
@@ -992,6 +1055,7 @@ def set_variable_task_escript(
         target=target,
         depth=depth,
         tunnel=tunnel,
+        status_map_list=status_map_list,
         **kwargs,
     )
     return _set_variable_create(task, variables)
@@ -1005,6 +1069,7 @@ def set_variable_task_escript_py3(
     variables=None,
     depth=3,
     tunnel=None,
+    status_map_list=[],
     **kwargs,
 ):
     """
@@ -1027,6 +1092,7 @@ def set_variable_task_escript_py3(
         target=target,
         depth=depth,
         tunnel=tunnel,
+        status_map_list=status_map_list,
         **kwargs,
     )
     return _set_variable_create(task, variables)
@@ -1041,6 +1107,7 @@ def set_variable_task_powershell(
     variables=None,
     depth=3,
     cred=None,
+    status_map_list=[],
     **kwargs,
 ):
     """
@@ -1064,6 +1131,7 @@ def set_variable_task_powershell(
         target_endpoint=target_endpoint,
         depth=depth,
         cred=cred,
+        status_map_list=status_map_list,
         **kwargs,
     )
     return _set_variable_create(task, variables)
@@ -1078,6 +1146,7 @@ def set_variable_task_python(
     variables=None,
     depth=3,
     cred=None,
+    status_map_list=[],
     **kwargs,
 ):
     """
@@ -1101,6 +1170,7 @@ def set_variable_task_python(
         target_endpoint=target_endpoint,
         depth=depth,
         cred=cred,
+        status_map_list=status_map_list,
         **kwargs,
     )
     return _set_variable_create(task, variables)
@@ -1116,6 +1186,7 @@ class EscriptTaskType:
             target=None,
             depth=2,
             tunnel=None,
+            status_map_list=[],
             **kwargs,
         ):
             return exec_task_escript_py3(
@@ -1125,6 +1196,7 @@ class EscriptTaskType:
                 target=target,
                 depth=depth + 1,
                 tunnel=tunnel,
+                status_map_list=status_map_list,
                 **kwargs,
             )
 
@@ -1140,6 +1212,7 @@ class EscriptTaskType:
             target=None,
             depth=2,
             tunnel=None,
+            status_map_list=[],
             **kwargs,
         ):
             return decision_task_escript_py3(
@@ -1149,6 +1222,7 @@ class EscriptTaskType:
                 target=target,
                 depth=depth + 1,
                 tunnel=tunnel,
+                status_map_list=status_map_list,
                 **kwargs,
             )
 
@@ -1165,6 +1239,7 @@ class EscriptTaskType:
             variables=None,
             depth=3,
             tunnel=None,
+            status_map_list=[],
             **kwargs,
         ):
             return set_variable_task_escript_py3(
@@ -1175,6 +1250,7 @@ class EscriptTaskType:
                 variables=variables,
                 depth=depth + 1,
                 tunnel=tunnel,
+                status_map_list=status_map_list,
                 **kwargs,
             )
 
@@ -1194,6 +1270,7 @@ def http_task_on_endpoint(
     response_paths=None,
     name=None,
     target=None,
+    status_map_list=[],
     **kwargs,
 ):
     """
@@ -1228,6 +1305,7 @@ def http_task_on_endpoint(
         response_paths=response_paths,
         name=name,
         target=target,
+        status_map_list=status_map_list,
         **kwargs,
     )
 
@@ -1302,6 +1380,7 @@ def http_task_get(
     target=None,
     cred=None,
     tunnel=None,
+    status_map_list=[],
 ):
     """
 
@@ -1347,6 +1426,7 @@ def http_task_get(
         name=name,
         target=target,
         tunnel=tunnel,
+        status_map_list=status_map_list,
     )
 
 
@@ -1368,6 +1448,7 @@ def http_task_post(
     target=None,
     cred=None,
     tunnel=None,
+    status_map_list=[],
 ):
     """
 
@@ -1414,6 +1495,7 @@ def http_task_post(
         name=name,
         target=target,
         tunnel=tunnel,
+        status_map_list=status_map_list,
     )
 
 
@@ -1435,6 +1517,7 @@ def http_task_put(
     target=None,
     cred=None,
     tunnel=None,
+    status_map_list=[],
 ):
     """
 
@@ -1481,6 +1564,7 @@ def http_task_put(
         name=name,
         target=target,
         tunnel=tunnel,
+        status_map_list=status_map_list,
     )
 
 
@@ -1502,6 +1586,7 @@ def http_task_delete(
     target=None,
     cred=None,
     tunnel=None,
+    status_map_list=[],
 ):
     """
 
@@ -1548,6 +1633,7 @@ def http_task_delete(
         name=name,
         target=target,
         tunnel=tunnel,
+        status_map_list=status_map_list,
     )
 
 
@@ -1601,6 +1687,7 @@ def http_task(
     name=None,
     target=None,
     tunnel=None,
+    status_map_list=[],
     **kwargs,
 ):
     """
@@ -1680,6 +1767,7 @@ def http_task(
             "retry_count": retries + 1,
             "retry_interval": retry_interval,
         },
+        "status_map_list": status_map_list,
     }
 
     if relative_url is not None:
@@ -1705,6 +1793,8 @@ def http_task(
         )
         params["attrs"]["headers"] = header_variables
 
+
+    # If both response code status map and status mapping is present raise the error
     if status_mapping and response_code_status_map:
         err_msg = "Both status_mapping and response_code_status_map cannot be present together. status_mapping is now deprecated, start using response_code_status_map"
         LOG.error(err_msg)
@@ -1740,7 +1830,6 @@ def http_task(
             )
         params["attrs"]["expected_response_params"] = expected_response
 
-    # If both response code status map and status mapping is present raise the error
     if response_code_status_map:
         params["attrs"]["expected_response_params"] = response_code_status_map
 
@@ -1851,7 +1940,7 @@ def delay_task(delay_seconds=None, name=None, target=None):
     return _task_create(**kwargs)
 
 
-def vm_operation(name=None, type="VM_OPERATION", target=None, **kwargs):
+def vm_operation(name=None, type="VM_OPERATION", target=None, status_map_list=[], **kwargs):
     """
     Defines a vm_operation task i.e. POWERON/ POWEROFF/ RESTART
     Args:
@@ -1862,7 +1951,7 @@ def vm_operation(name=None, type="VM_OPERATION", target=None, **kwargs):
     Returns:
         (Task): VM Operation task
     """
-    params = {"name": name, "type": type}
+    params = {"name": name, "type": type, "status_map_list": status_map_list}
     if target is not None:
         params["target_any_local_reference"] = _get_target_ref(target)
     if "inherit_target" in kwargs:
@@ -1978,6 +2067,7 @@ class BaseTask:
             name=None,
             target=None,
             tunnel=None,
+            status_map_list=[],
         ):
             return http_task(
                 method,
@@ -1998,6 +2088,7 @@ class BaseTask:
                 name=name,
                 target=target,
                 tunnel=tunnel,
+                status_map_list=status_map_list,
             )
 
         get = http_task_get
@@ -2126,6 +2217,7 @@ class RunbookTask(BaseTask):
             child_tasks=[],
             loop_variable="iteration",
             exit_condition=Status.DONT_CARE,
+            status_map_list=[],
             **kwargs,
         ):
             attrs = {"iterations": str(iterations), "loop_variable": loop_variable}
@@ -2136,7 +2228,7 @@ class RunbookTask(BaseTask):
                 raise ValueError(
                     "Valid Exit Conditions for loop are 'Status.SUCCESS/Status.FAILURE/Status.DONT_CARE'."
                 )
-            return while_loop(name=name, child_tasks=child_tasks, attrs=attrs, **kwargs)
+            return while_loop(name=name, child_tasks=child_tasks, attrs=attrs, status_map_list=status_map_list, **kwargs)
 
     class HTTP:
         def __new__(
@@ -2152,6 +2244,7 @@ class RunbookTask(BaseTask):
             response_paths=None,
             name=None,
             target=None,
+            status_map_list=[],
             **kwargs,
         ):
             return http_task_on_endpoint(
@@ -2166,6 +2259,7 @@ class RunbookTask(BaseTask):
                 response_paths=response_paths,
                 name=name,
                 target=target,
+                status_map_list=status_map_list,
                 **kwargs,
             )
 
@@ -2183,16 +2277,16 @@ class RunbookTask(BaseTask):
             return confirm_task(timeout=timeout, name=name)
 
     class VMPowerOn:
-        def __new__(cls, name=None, target=None, **kwargs):
-            return vm_operation(name=name, type="VM_POWERON", target=target, **kwargs)
+        def __new__(cls, name=None, target=None, status_map_list=[], **kwargs):
+            return vm_operation(name=name, type="VM_POWERON", target=target, status_map_list=status_map_list, **kwargs)
 
     class VMPowerOff:
-        def __new__(cls, name=None, target=None, **kwargs):
-            return vm_operation(name=name, type="VM_POWEROFF", target=target, **kwargs)
+        def __new__(cls, name=None, target=None, status_map_list=[], **kwargs):
+            return vm_operation(name=name, type="VM_POWEROFF", target=target, status_map_list=status_map_list, **kwargs)
 
     class VMRestart:
-        def __new__(cls, name=None, target=None, **kwargs):
-            return vm_operation(name=name, type="VM_RESTART", target=target, **kwargs)
+        def __new__(cls, name=None, target=None, status_map_list=[], **kwargs):
+            return vm_operation(name=name, type="VM_RESTART", target=target, status_map_list=status_map_list, **kwargs)
 
     class NutanixDB:
         """This is the base class of all the NDB Task DSL Support (Not Callable)"""

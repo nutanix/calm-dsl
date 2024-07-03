@@ -81,7 +81,7 @@ class TestVMEndpointsFailureScenarios:
         )
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
-        assert state == RUNLOG.STATUS.ERROR
+        assert state == RUNLOG.STATUS.FAILURE
 
         # Finding the trl id for the shell and escript task (all runlogs for multiple IPs)
         escript_tasks = []
@@ -100,7 +100,7 @@ class TestVMEndpointsFailureScenarios:
                 for reason in entity["status"]["reason_list"]:
                     reasons += reason
                 assert warning_msg in reasons
-                assert entity["status"]["state"] == RUNLOG.STATUS.ERROR
+                assert entity["status"]["state"] == RUNLOG.STATUS.FAILURE
             elif (
                 entity["status"]["type"] == "task_runlog"
                 and entity["status"]["task_reference"]["name"] == "EscriptTask"
@@ -189,7 +189,7 @@ class TestVMEndpointsFailureScenarios:
         )
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
-        assert state == RUNLOG.STATUS.ERROR
+        assert state == RUNLOG.STATUS.FAILURE
 
         # Finding the trl id for the shell and escript task (all runlogs for multiple IPs)
         escript_tasks = []
@@ -208,7 +208,7 @@ class TestVMEndpointsFailureScenarios:
                 for reason in entity["status"]["reason_list"]:
                     reasons += reason
                 assert warning_msg in reasons
-                assert entity["status"]["state"] == RUNLOG.STATUS.ERROR
+                assert entity["status"]["state"] == RUNLOG.STATUS.FAILURE
             elif (
                 entity["status"]["type"] == "task_runlog"
                 and entity["status"]["task_reference"]["name"] == "EscriptTask"

@@ -17,6 +17,7 @@
                 "attrs": {
                     "edges": []
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -34,14 +35,14 @@
                 "attrs": {
                     "type": "RT_OPERATION",
                     "resource_type_reference": {
-                        "uuid": "7d60e0a6-b021-4c22-b6a5-2fd311930709",
+                        "uuid": "19c07696-473b-4c48-ba7d-133dff3f98a6",
                         "name": "Postgres Database Instance",
                         "kind": "resource_type"
                     },
                     "action_reference": {
                         "kind": "app_action",
                         "name": "Delete",
-                        "uuid": "71c95c88-f7ad-4854-b636-dd5f0b03064d"
+                        "uuid": "112e4186-7981-4823-9b63-79800b6c155c"
                     },
                     "inarg_list": [
                         {
@@ -61,10 +62,11 @@
                     "tag": "Database",
                     "account_reference": {
                         "kind": "account",
-                        "name": "ndb-account",
-                        "uuid": "65d3ec1d-8044-4c5c-af50-881acb3c3a3d"
+                        "name": "dnd_era_secondary_account",
+                        "uuid": "0bba3490-6677-49b3-a6d5-a67ef63883b0"
                     }
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",

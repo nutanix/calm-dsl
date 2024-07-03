@@ -71,6 +71,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -105,6 +106,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -139,6 +141,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -173,6 +176,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -207,6 +211,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -241,6 +246,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -292,6 +298,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -326,6 +333,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -360,6 +368,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -394,6 +403,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -428,6 +438,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -462,6 +473,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -507,6 +519,7 @@
                                         }
                                     ]
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -533,6 +546,7 @@
                                     "script_type": "sh",
                                     "script": "echo \"Hello\"; sleep 10"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -554,6 +568,7 @@
                                         "name": "default cred"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -618,6 +633,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [
                                 {
                                     "kind": "app_task",
@@ -644,6 +660,7 @@
                                     "name": "default cred"
                                 }
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
@@ -672,6 +689,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
@@ -731,6 +749,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [
                                 {
                                     "kind": "app_task",
@@ -753,6 +772,7 @@
                                 "script_type": "sh",
                                 "script": "echo @@{foo}@@"
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
@@ -781,6 +801,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
@@ -851,6 +872,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -873,6 +895,7 @@
                                     "script_type": "static_py3",
                                     "script": "print ('Hello!')"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -1954,6 +1977,7 @@
                                         }
                                     ]
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -2024,6 +2048,7 @@
                                     "script_type": "sh",
                                     "script": "echo \"Hello\"\nsleep 10\n"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2043,6 +2068,7 @@
                                         "name": "PHPService_test_action_runbook"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2112,6 +2138,7 @@
                                         "foo_title": "$.title"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2165,6 +2192,7 @@
                                         "foo_title": "$.title"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2214,6 +2242,7 @@
                                         "foo_title": "$.title"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2259,6 +2288,7 @@
                                         }
                                     ]
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2308,6 +2338,7 @@
                                         "foo_title": "$.title"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2325,6 +2356,7 @@
                                     "scaling_type": "SCALEOUT",
                                     "scaling_count": "1"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2341,6 +2373,7 @@
                                 "attrs": {
                                     "interval_secs": 60
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2358,6 +2391,7 @@
                                     "scaling_type": "SCALEIN",
                                     "scaling_count": "1"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2375,6 +2409,7 @@
                                     "script_type": "static_py3",
                                     "script": "print ('Hello World!')"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2395,6 +2430,7 @@
                                         "var1"
                                     ]
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2415,6 +2451,7 @@
                                         "var2"
                                     ]
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2458,7 +2495,7 @@
                                 "is_mandatory": true
                             }
                         ],
-                        "output_variables":[]
+                        "output_variables": []
                     }
                 }
             ]

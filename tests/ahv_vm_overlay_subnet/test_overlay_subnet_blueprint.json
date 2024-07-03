@@ -38,13 +38,15 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -71,13 +73,15 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -104,13 +108,15 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -137,13 +143,15 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -170,13 +178,15 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -203,13 +213,15 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -247,6 +259,7 @@
                                                 }
                                             ]
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [
                                             {
                                                 "kind": "app_task",
@@ -273,6 +286,7 @@
                                             "script_type": "sh",
                                             "script": "echo \"Hello\""
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
@@ -290,13 +304,15 @@
                                             "script_type": "sh",
                                             "script": "echo \"Hello again\""
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         }
                     ],
@@ -328,13 +344,15 @@
                                     "attrs": {
                                         "edges": []
                                     },
+                                    "status_map_list": [],
                                     "child_tasks_local_reference_list": [],
                                     "variable_list": [],
                                     "retries": "",
                                     "timeout_secs": ""
                                 }
                             ],
-                            "variable_list": []
+                            "variable_list": [],
+                            "output_variables": []
                         },
                         "uninstall_runbook": {
                             "name": "Runbook_for_Package_HelloPackage_action_uninstall",
@@ -355,13 +373,15 @@
                                     "attrs": {
                                         "edges": []
                                     },
+                                    "status_map_list": [],
                                     "child_tasks_local_reference_list": [],
                                     "variable_list": [],
                                     "retries": "",
                                     "timeout_secs": ""
                                 }
                             ],
-                            "variable_list": []
+                            "variable_list": [],
+                            "output_variables": []
                         }
                     },
                     "service_local_reference_list": [
@@ -411,8 +431,8 @@
                         },
                         "cluster_reference": {
                             "kind": "cluster",
-                            "name": "auto_cluster_prod_4fee9603c584",
-                            "uuid": "0005e1e4-a1d9-6e40-3d2a-00e0ed87fc48"
+                            "name": "auto_cluster_prod_364563e22ade",
+                            "uuid": "00061bf1-a3c2-2890-32b9-ac1f6b6f97aa"
                         },
                         "resources": {
                             "nic_list": [
@@ -422,14 +442,14 @@
                                     "subnet_reference": {
                                         "kind": "subnet",
                                         "name": "vpc_subnet_1",
-                                        "uuid": "4fd66b65-d9a3-4b00-80cb-59fc148519df"
+                                        "uuid": "07027cb4-92f3-4a14-a689-f5060027f525"
                                     },
                                     "network_function_chain_reference": null,
                                     "mac_address": "",
                                     "ip_endpoint_list": [],
                                     "vpc_reference": {
                                         "name": "vpc_name_1",
-                                        "uuid": "4d479b14-cc11-4344-9beb-269ac4a21c29",
+                                        "uuid": "49466fab-0237-441d-be30-2fe7edd51a09",
                                         "kind": "vpc"
                                     }
                                 }
@@ -438,7 +458,7 @@
                             "num_sockets": 2,
                             "memory_size_mib": 4096,
                             "power_state": "ON",
-                            "account_uuid": "24b46e0f-ef08-4e63-b25d-68cea9af5720",
+                            "account_uuid": "e653631b-2880-4a07-8321-f0527f671de5",
                             "gpu_list": [],
                             "disk_list": [
                                 {
@@ -500,6 +520,7 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [
                                             {
                                                 "kind": "app_task",
@@ -522,13 +543,15 @@
                                             "script_type": "static_py3",
                                             "script": "print ('Pre Create task runs before VM is created')"
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -555,6 +578,7 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [
                                             {
                                                 "kind": "app_task",
@@ -577,13 +601,15 @@
                                             "script_type": "static_py3",
                                             "script": "print ('Post delete task runs after VM is deleted')"
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         }
                     ],
@@ -652,49 +678,6 @@
                     "restore_config_list": []
                 }
             ],
-            "client_attrs": {
-                "None": {
-                    "Service": {
-                        "HelloService": {
-                            "dsl_name": "HelloService",
-                            "Action": {}
-                        }
-                    },
-                    "Package": {
-                        "centos_disk": {
-                            "dsl_name": "centos_disk",
-                            "Action": {}
-                        },
-                        "HelloPackage": {
-                            "dsl_name": "HelloPackage",
-                            "Action": {}
-                        }
-                    },
-                    "Deployment": {
-                        "HelloDeployment": {
-                            "dsl_name": "HelloDeployment",
-                            "Action": {}
-                        }
-                    },
-                    "Profile": {
-                        "HelloProfile": {
-                            "dsl_name": "HelloProfile",
-                            "Action": {}
-                        }
-                    },
-                    "Substrate": {
-                        "HelloSubstrate": {
-                            "dsl_name": "HelloSubstrate",
-                            "Action": {},
-                            "AhvVm": {
-                                "HelloVm": {
-                                    "dsl_name": "HelloVm"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
             "default_credential_local_reference": {
                 "kind": "app_credential",
                 "name": "Centos"

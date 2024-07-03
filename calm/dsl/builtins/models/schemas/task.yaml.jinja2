@@ -18,6 +18,12 @@ properties:
     type: object
     additionalProperties: true
     x-calm-dsl-type: dict
+  status_map_list:
+    type: array
+    x-calm-dsl-min-version: 3.9.0
+    items:
+      type: object
+      x-calm-dsl-type: dict
   child_tasks_local_reference_list:
     type: array
     items:
