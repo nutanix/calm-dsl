@@ -33,9 +33,7 @@ def DslWhileLoopRunbook():
         loop_variable="loop_var",
         status_map_list=[
             StatusHandle.Mapping.task_status(
-                values=[
-                    StatusHandle.Status.Failure
-                ],
+                values=[StatusHandle.Status.Failure],
                 result=StatusHandle.Result.Warning,
             )
         ],

@@ -26,7 +26,12 @@ from calm.dsl.builtins.models.utils import (
 )
 
 from calm.dsl.builtins.models.variable import RunbookVariable
-from calm.dsl.builtins.models.task import RunbookTask, Status, StatusHandle, HTTPResponseHandle
+from calm.dsl.builtins.models.task import (
+    RunbookTask,
+    Status,
+    StatusHandle,
+    HTTPResponseHandle,
+)
 from calm.dsl.builtins.models.runbook import (
     Runbook,
     RunbookType,

@@ -70,12 +70,22 @@ class HTTPResponseHandle:
 
 
 def task_status_map(result, values):
-    task_status_map = {"match_values": values, "type": StatusHandle.Type.Status, "result_status": result}
+    task_status_map = {
+        "match_values": values,
+        "type": StatusHandle.Type.Status,
+        "result_status": result,
+    }
     return task_status_map
 
+
 def exit_code_map(result, values):
-    exit_code_status_map = {"match_values": values, "type": StatusHandle.Type.ExitCode, "result_status": result}
+    exit_code_status_map = {
+        "match_values": values,
+        "type": StatusHandle.Type.ExitCode,
+        "result_status": result,
+    }
     return exit_code_status_map
+
 
 class StatusHandle:
     class Type:
@@ -87,22 +97,26 @@ class StatusHandle:
         Exit Code Mapping is allowed for Execute, Set Variable and Decision Task.
         Task Status Mapping is not allowed for Execute Escript task.
         """
+
         exit_code = exit_code_map
         task_status = task_status_map
-    
+
     class Result:
         """
         Status can be mapped to only Warning
         """
+
         Warning = "WARNING"
-    
+
     class Status:
         """
         TaskFailure can be used for all Exec, Decision and Set Variable Tasks except Escript, VM Operations, HTTP Task.
         Failure can be used only for Loop Task
         """
+
         TaskFailure = "TASK_FAILURE"
         Failure = "FAILURE"
+
 
 # Task
 
@@ -725,7 +739,14 @@ def exec_task_python(
 
 
 def exec_task_ssh_runbook(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2, status_map_list=[], **kwargs
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    cred=None,
+    depth=2,
+    status_map_list=[],
+    **kwargs,
 ):
     """
     This function is used to create exec task with shell target
@@ -754,7 +775,14 @@ def exec_task_ssh_runbook(
 
 
 def exec_task_powershell_runbook(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2, status_map_list=[], **kwargs
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    cred=None,
+    depth=2,
+    status_map_list=[],
+    **kwargs,
 ):
     """
     This function is used to create exec task with shell target
@@ -783,7 +811,14 @@ def exec_task_powershell_runbook(
 
 
 def exec_task_python_runbook(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2, status_map_list=[], **kwargs
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    cred=None,
+    depth=2,
+    status_map_list=[],
+    **kwargs,
 ):
     """
     This function is used to create exec task with python_remote target
@@ -812,7 +847,14 @@ def exec_task_python_runbook(
 
 
 def decision_task_ssh(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2, status_map_list=[], **kwargs
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    cred=None,
+    depth=2,
+    status_map_list=[],
+    **kwargs,
 ):
     """
     This function is used to create decision task with shell target
@@ -841,7 +883,14 @@ def decision_task_ssh(
 
 
 def decision_task_powershell(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2, status_map_list=[], **kwargs
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    cred=None,
+    depth=2,
+    status_map_list=[],
+    **kwargs,
 ):
     """
     This function is used to create decision task with powershell target
@@ -870,7 +919,14 @@ def decision_task_powershell(
 
 
 def decision_task_python(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2, status_map_list=[], **kwargs
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    cred=None,
+    depth=2,
+    status_map_list=[],
+    **kwargs,
 ):
     """
     This function is used to create decision task with python_remote target
@@ -1793,7 +1849,6 @@ def http_task(
         )
         params["attrs"]["headers"] = header_variables
 
-
     # If both response code status map and status mapping is present raise the error
     if status_mapping and response_code_status_map:
         err_msg = "Both status_mapping and response_code_status_map cannot be present together. status_mapping is now deprecated, start using response_code_status_map"
@@ -1940,7 +1995,9 @@ def delay_task(delay_seconds=None, name=None, target=None):
     return _task_create(**kwargs)
 
 
-def vm_operation(name=None, type="VM_OPERATION", target=None, status_map_list=[], **kwargs):
+def vm_operation(
+    name=None, type="VM_OPERATION", target=None, status_map_list=[], **kwargs
+):
     """
     Defines a vm_operation task i.e. POWERON/ POWEROFF/ RESTART
     Args:
@@ -2228,7 +2285,13 @@ class RunbookTask(BaseTask):
                 raise ValueError(
                     "Valid Exit Conditions for loop are 'Status.SUCCESS/Status.FAILURE/Status.DONT_CARE'."
                 )
-            return while_loop(name=name, child_tasks=child_tasks, attrs=attrs, status_map_list=status_map_list, **kwargs)
+            return while_loop(
+                name=name,
+                child_tasks=child_tasks,
+                attrs=attrs,
+                status_map_list=status_map_list,
+                **kwargs,
+            )
 
     class HTTP:
         def __new__(
@@ -2278,15 +2341,33 @@ class RunbookTask(BaseTask):
 
     class VMPowerOn:
         def __new__(cls, name=None, target=None, status_map_list=[], **kwargs):
-            return vm_operation(name=name, type="VM_POWERON", target=target, status_map_list=status_map_list, **kwargs)
+            return vm_operation(
+                name=name,
+                type="VM_POWERON",
+                target=target,
+                status_map_list=status_map_list,
+                **kwargs,
+            )
 
     class VMPowerOff:
         def __new__(cls, name=None, target=None, status_map_list=[], **kwargs):
-            return vm_operation(name=name, type="VM_POWEROFF", target=target, status_map_list=status_map_list, **kwargs)
+            return vm_operation(
+                name=name,
+                type="VM_POWEROFF",
+                target=target,
+                status_map_list=status_map_list,
+                **kwargs,
+            )
 
     class VMRestart:
         def __new__(cls, name=None, target=None, status_map_list=[], **kwargs):
-            return vm_operation(name=name, type="VM_RESTART", target=target, status_map_list=status_map_list, **kwargs)
+            return vm_operation(
+                name=name,
+                type="VM_RESTART",
+                target=target,
+                status_map_list=status_map_list,
+                **kwargs,
+            )
 
     class NutanixDB:
         """This is the base class of all the NDB Task DSL Support (Not Callable)"""

@@ -20,7 +20,7 @@ def DslVMOperationsRunbook():
                 values=[StatusHandle.Status.TaskFailure],
                 result=StatusHandle.Result.Warning,
             )
-        ]
+        ],
     )
     Task.VMPowerOn(
         name="VM Power On Task", target=ref(Endpoint.use_existing("VMEndpoint"))
