@@ -537,16 +537,18 @@ def _set_config(
     api_key_location = api_key_location or server_config.get(
         "api_key_location", DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME
     )
-    api_key_location = os.path.expanduser(api_key_location)
+
+    # Resetting stored location of api key (for PC login case)
+    if api_key_location != DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME:
+        api_key_location = os.path.expanduser(api_key_location)
+    else:
+        api_key_location = None
+
     port = port or server_config["pc_port"]
 
     cred = get_auth_info(api_key_location)
     stored_username = cred.get("username")
     stored_password = cred.get("password")
-
-    # Resetting stored location of api key for (PC login case)
-    if username or password:
-        api_key_location = None
 
     username = username or stored_username
     password = password or stored_password
