@@ -2,7 +2,7 @@ import enum
 import uuid
 import os
 import sys
-
+from distutils.version import LooseVersion as LV
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
@@ -13,6 +13,7 @@ from .variable import CalmVariable
 from .helper import common as common_helper
 from .utils import is_compile_secrets
 
+from calm.dsl.store.version import Version
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
 from calm.dsl.builtins.models.ndb import (
@@ -26,6 +27,8 @@ from calm.dsl.builtins.models.constants import NutanixDB as NutanixDBConst
 from calm.dsl.constants import CACHE, SUBSTRATE, PROVIDER, TASKS
 
 LOG = get_logging_handle(__name__)
+
+CALM_VERSION = Version.get_version("Calm")
 
 
 class Status(enum.Enum):
@@ -44,11 +47,14 @@ EXIT_CONDITION_MAP = {
 
 def http_response_code_map(status, code_ranges, code):
     if code:
-        response_code_status_map = {
-            "status": status,
-            "code_range_list": code_ranges,
-            "code": code,
-        }
+        if LV(CALM_VERSION) >= LV("3.9.0"):
+            response_code_status_map = {
+                "status": status,
+                "code_range_list": code_ranges,
+                "code": code,
+            }
+        else:
+            response_code_status_map = {"status": status, "code": code}
     else:
         response_code_status_map = {"status": status, "code_range_list": code_ranges}
     return response_code_status_map
@@ -331,8 +337,9 @@ def _exec_create(
         "name": name,
         "type": "EXEC",
         "attrs": {"script_type": script_type, "script": script},
-        "status_map_list": status_map_list,
     }
+    if LV(CALM_VERSION) >= LV("3.9.0"):
+        params["status_map_list"] = status_map_list
     if cred is not None:
         params["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
     if target is not None:
@@ -389,9 +396,13 @@ def _decision_create(
     params = {
         "name": name,
         "type": "DECISION",
-        "attrs": {"script_type": script_type, "script": script},
-        "status_map_list": status_map_list,
+        "attrs": {
+            "script_type": script_type,
+            "script": script,
+        },
     }
+    if LV(CALM_VERSION) >= LV("3.9.0"):
+        params["status_map_list"] = status_map_list
     if cred is not None:
         params["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
     if target is not None:
@@ -494,8 +505,9 @@ def while_loop(name=None, child_tasks=[], attrs={}, status_map_list=[], **kwargs
         ],
         "type": "WHILE_LOOP",
         "attrs": attrs,
-        "status_map_list": status_map_list,
     }
+    if LV(CALM_VERSION) >= LV("3.9.0"):
+        params["status_map_list"] = status_map_list
     if "inherit_target" in kwargs:
         params["inherit_target"] = kwargs.get("inherit_target")
     return _task_create(**params)
@@ -1823,8 +1835,10 @@ def http_task(
             "retry_count": retries + 1,
             "retry_interval": retry_interval,
         },
-        "status_map_list": status_map_list,
     }
+
+    if LV(CALM_VERSION) >= LV("3.9.0"):
+        params["status_map_list"] = status_map_list
 
     if relative_url is not None:
         params["attrs"]["relative_url"] = relative_url
@@ -2008,7 +2022,10 @@ def vm_operation(
     Returns:
         (Task): VM Operation task
     """
-    params = {"name": name, "type": type, "status_map_list": status_map_list}
+    params = {"name": name, "type": type}
+    if LV(CALM_VERSION) >= LV("3.9.0"):
+        params["status_map_list"] = status_map_list
+
     if target is not None:
         params["target_any_local_reference"] = _get_target_ref(target)
     if "inherit_target" in kwargs:

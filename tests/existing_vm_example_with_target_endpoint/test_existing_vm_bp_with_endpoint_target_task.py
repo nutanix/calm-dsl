@@ -18,6 +18,7 @@ from calm.dsl.builtins import CalmEndpoint
 # for tcs
 from calm.dsl.store import Version
 from distutils.version import LooseVersion as LV
+from tests.helper.status_map_helper import remove_status_map_from_bp
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 TEST_PC_IP = DSL_CONFIG["EXISTING_MACHINE"]["IP_1"]
@@ -526,5 +527,8 @@ def test_json():
     if LV(CALM_VERSION) >= LV("3.4.0"):
         for cred in known_json["credential_definition_list"]:
             cred["cred_class"] = "static"
+
+    if LV(CALM_VERSION) < LV("3.9.0"):
+        remove_status_map_from_bp(known_json)
 
     assert generated_json == known_json

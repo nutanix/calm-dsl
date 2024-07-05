@@ -4,7 +4,9 @@ Test for testing runbook generated json against known json
 import os
 import pytest
 import json
+from distutils.version import LooseVersion as LV
 
+from calm.dsl.store import Version
 from calm.dsl.runbooks import runbook_json
 from calm.dsl.builtins.models.utils import read_local_file
 from calm.dsl.constants import STRATOS
@@ -151,6 +153,12 @@ def _test_compare_compile_result(Runbook, json_file, action_name):
     generated_json["runbook"]["task_definition_list"][1]["attrs"][
         "inarg_list"
     ] = sorted(generated_inargs, key=lambda x: x["name"])
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) < LV("3.9.0"):
+        for task in known_json["runbook"]["task_definition_list"]:
+            if "status_map_list" in task:
+                task.pop("status_map_list")
 
     # Update account name
     known_attrs["account_reference"]["name"] = ACCOUNTS[STRATOS.PROVIDER.NDB][0]["NAME"]

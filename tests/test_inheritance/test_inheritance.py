@@ -1,6 +1,8 @@
 import os
 import json
+from distutils.version import LooseVersion as LV
 
+from calm.dsl.store.version import Version
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import CalmVariable as Variable
@@ -10,6 +12,7 @@ from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import vm_disk_package, AhvVmDisk, AhvVmNic
 from calm.dsl.builtins import AhvVmGC, AhvVmResources, AhvVm
 from calm.dsl.config import get_context
+from tests.helper.status_map_helper import remove_status_map_from_bp
 
 
 # SSH Credentials
@@ -275,5 +278,9 @@ def test_json():
 
     for _cred in generated_json["credential_definition_list"]:
         _cred.pop("cred_class", None)
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) < LV("3.9.0"):
+        remove_status_map_from_bp(known_json)
 
     assert sorted(known_json.items()) == sorted(generated_json.items())

@@ -45,8 +45,7 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": [],
-                                "output_variables": []
+                                "variable_list": []
                             }
                         },
                         {
@@ -80,8 +79,7 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": [],
-                                "output_variables": []
+                                "variable_list": []
                             }
                         },
                         {
@@ -115,8 +113,7 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": [],
-                                "output_variables": []
+                                "variable_list": []
                             }
                         },
                         {
@@ -150,8 +147,7 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": [],
-                                "output_variables": []
+                                "variable_list": []
                             }
                         },
                         {
@@ -185,8 +181,7 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": [],
-                                "output_variables": []
+                                "variable_list": []
                             }
                         },
                         {
@@ -220,8 +215,7 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": [],
-                                "output_variables": []
+                                "variable_list": []
                             }
                         },
                         {
@@ -311,8 +305,7 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": [],
-                                "output_variables": []
+                                "variable_list": []
                             }
                         }
                     ],
@@ -351,8 +344,7 @@
                                     "timeout_secs": ""
                                 }
                             ],
-                            "variable_list": [],
-                            "output_variables": []
+                            "variable_list": []
                         },
                         "uninstall_runbook": {
                             "name": "Runbook_for_Package_HelloPackage_action_uninstall",
@@ -380,8 +372,7 @@
                                     "timeout_secs": ""
                                 }
                             ],
-                            "variable_list": [],
-                            "output_variables": []
+                            "variable_list": []
                         }
                     },
                     "service_local_reference_list": [
@@ -550,8 +541,7 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": [],
-                                "output_variables": []
+                                "variable_list": []
                             }
                         },
                         {
@@ -608,8 +598,7 @@
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": [],
-                                "output_variables": []
+                                "variable_list": []
                             }
                         }
                     ],

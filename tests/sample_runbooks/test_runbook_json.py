@@ -3,6 +3,8 @@ Test for testing runbook generated json against known json
 """
 import os
 import pytest
+import json
+from distutils.version import LooseVersion as LV
 
 from distutils.version import LooseVersion as LV
 from calm.dsl.store import Version
@@ -64,5 +66,14 @@ def _test_compare_compile_result(Runbook, json_file):
     generated_json = runbook_json(Runbook)
     known_json = open(file_path).read()
 
-    assert generated_json == known_json
+    known_json = json.loads(known_json)
+    generated_json = json.loads(generated_json)
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) < LV("3.9.0"):
+        for task in known_json["runbook"]["task_definition_list"]:
+            if "status_map_list" in task:
+                task.pop("status_map_list")
+
+    assert sorted(known_json.items()) == sorted(generated_json.items())
     print("JSON compilation successful for {}".format(Runbook.action_name))

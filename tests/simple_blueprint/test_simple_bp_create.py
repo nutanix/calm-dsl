@@ -12,6 +12,7 @@ from calm.dsl.builtins import read_local_file
 # for tcs
 from calm.dsl.store import Version
 from distutils.version import LooseVersion as LV
+from tests.helper.status_map_helper import remove_status_map_from_bp
 
 # Setting the recursion limit to max for
 sys.setrecursionlimit(100000)
@@ -148,5 +149,7 @@ class TestSimpleBlueprint:
 
         # Pop the project referecne from metadata
         generated_json["metadata"].pop("project_reference", None)
+        if LV(CALM_VERSION) < LV("3.9.0"):
+            remove_status_map_from_bp(known_json)
 
         assert sorted(known_json.items()) == sorted(generated_json.items())

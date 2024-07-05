@@ -1,7 +1,9 @@
 import json
 import os
 import pytest
+from distutils.version import LooseVersion as LV
 
+from calm.dsl.store.version import Version
 from calm.dsl.cli.providers import compile_provider
 from calm.dsl.log import get_logging_handle
 
@@ -61,6 +63,13 @@ def _test_compare_compile_result(provider_file, expected_output_file):
 
     known_json = open(os.path.join(dir_path, expected_output_file)).read()
     known_json = json.loads(known_json)
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) < LV("3.9.0"):
+        for action in known_json["spec"]["resources"]["action_list"]:
+            for task in action["runbook"]["task_definition_list"]:
+                if "status_map_list" in task:
+                    task.pop("status_map_list")
 
     assert generated_json == known_json
     LOG.info("JSON compilation successful for {}".format(provider_file))
