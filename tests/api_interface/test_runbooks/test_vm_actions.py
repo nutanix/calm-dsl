@@ -66,7 +66,7 @@ class TestVMActions:
         )
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
-        if LV(CALM_VERSION) >= LV("3.9.0"):
+        if LV(CALM_VERSION) >= LV("4.0.1"):
             assert state == RUNLOG.STATUS.FAILURE
         else:
             assert state == RUNLOG.STATUS.ERROR
@@ -86,7 +86,7 @@ class TestVMActions:
                 for reason in entity["status"]["reason_list"]:
                     reasons += reason
                 assert warning_msg in reasons
-                if LV(CALM_VERSION) >= LV("3.9.0"):
+                if LV(CALM_VERSION) >= LV("4.0.1"):
                     assert entity["status"]["state"] == RUNLOG.STATUS.FAILURE
                 else:
                     assert entity["status"]["state"] == RUNLOG.STATUS.ERROR
