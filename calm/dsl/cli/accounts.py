@@ -359,7 +359,8 @@ def create_account(client, account_payload, name=None, force_create=False):
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
-    return stdout_dict
+    # Sending back all the responses including the res and err to not break automation tests.
+    return res, err, stdout_dict
 
 
 def create_account_from_dsl(client, account_file, name=None, force_create=False):
@@ -385,7 +386,10 @@ def create_account_from_dsl(client, account_file, name=None, force_create=False)
         LOG.error("User account not found in {}".format(account_file))
         sys.exit("User account not found")
 
-    return create_account(client, account_payload, name=name, force_create=force_create)
+    _, _, stdout_dict = create_account(
+        client, account_payload, name=name, force_create=force_create
+    )
+    return stdout_dict
 
 
 def get_account_module_from_file(account_file):
