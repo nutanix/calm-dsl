@@ -635,6 +635,17 @@ class ACP:
     }
 
 
+class ACP_4_0_0:
+    class ENTITY_FILTER_EXPRESSION_LIST:
+        COMMON = [
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "container"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        ]
+
+
 class ACP_3_8_0:
     class ENTITY_FILTER_EXPRESSION_LIST:
         COMMON = [
