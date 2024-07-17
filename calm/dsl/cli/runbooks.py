@@ -5,6 +5,7 @@ import sys
 import uuid
 import pathlib
 
+from distutils.version import LooseVersion as LV
 from ruamel import yaml
 import arrow
 import click
@@ -28,6 +29,7 @@ from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins.models.calm_ref import Ref
 from calm.dsl.constants import CACHE, DSL_CONFIG
 from calm.dsl.store import Cache
+from calm.dsl.store.version import Version
 from calm.dsl.tools import get_module_from_file
 from .utils import (
     Display,
@@ -1140,3 +1142,59 @@ def displayTaskNode(node, pre):
         )
     else:
         click.echo("\t{}{}".format(pre, highlight_text(node.name)))
+
+
+def clone_runbook(original_runbook_name, cloned_runbook_name):
+    calm_version = Version.get_version("Calm")
+
+    if LV(calm_version) < LV("4.0.0"):
+        LOG.error(
+            "Runbook clone is supported from Calm version 4.0.0. Please upgrade your Calm version to use this feature."
+        )
+        sys.exit("Runbook clone is supported from Calm version 4.0.0 onwards")
+
+    client = get_api_client()
+
+    try:
+        duplicate_runbook = get_runbook(client, cloned_runbook_name)
+        if duplicate_runbook:
+            LOG.error(
+                "Duplicate runbook name '{}' used for cloning".format(
+                    cloned_runbook_name
+                )
+            )
+            sys.exit(
+                "Duplicate runbook name '{}' used for cloning".format(
+                    cloned_runbook_name
+                )
+            )
+    except Exception as e:
+        if str(e).startswith("No runbook found with name"):
+            LOG.info("Runbook name '{}' is valid.".format(cloned_runbook_name))
+        else:
+            LOG.error(e)
+            sys.exit(e)
+
+    request_spec = {
+        "api_version": "3.0",
+        "runbook_name": cloned_runbook_name,
+        "metadata": {
+            "kind": "runbook",
+            "uuid": str(uuid.uuid4()),
+        },
+    }
+
+    LOG.info("Cloning runbook to '{}'".format(cloned_runbook_name))
+    original_runbook = get_runbook(client, original_runbook_name)
+    runbook_res, err = client.runbook.clone(
+        original_runbook["metadata"]["uuid"], request_spec
+    )
+    if err:
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
+
+    LOG.info("Success")
+    runbook_res = runbook_res.json()
+    click.echo(
+        "Successfully cloned. Runbook uuid is: {}".format(runbook_res["runbook_uuid"])
+    )

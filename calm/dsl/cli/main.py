@@ -643,3 +643,9 @@ def run_script(script_type, script_file, project_name, endpoint_file):
     else:
         LOG.error("Invalid script type {}. Use one of {}".format(test_scripts_type()))
         sys.exit(-1)
+
+
+@main.group(cls=FeatureFlagGroup)
+def clone():
+    """Clone entities"""
+    pass
