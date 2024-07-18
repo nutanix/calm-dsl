@@ -20,6 +20,7 @@ from calm.dsl.constants import CACHE
 from calm.dsl.store import Cache
 from calm.dsl.tools import get_escaped_quotes_string
 from calm.dsl.decompile.file_handler import get_local_dir
+from calm.dsl.decompile.decompile_helpers import modify_var_format
 
 from calm.dsl.log import get_logging_handle
 
@@ -403,20 +404,6 @@ rt_action_class_map = {
         NutanixDBConst.ACTION_TYPE.CREATE_SNAPSHOT,
     ): get_schema_file_and_user_attrs_for_postgres_create_snapshot,
 }
-
-
-def modify_var_format(variable):
-    """
-    Converts the variable definition from one format to other as below
-
-    "input_var = CalmVariable.Simple('@@{runbook_var}@@', label='', is_mandatory=True, is_hidden=False, runtime=False, description='')"
-            <gets converted to>
-    "CalmVariable.Simple('@@{runbook_var}@@', label='', is_mandatory=True, is_hidden=False, runtime=False, description='', name=input_var)"
-    """
-    arr = variable.split("=")
-    ret = "=".join(arr[1:]).strip()
-    ret = ret[:-1] + ", name='{}')".format(arr[0].strip())
-    return ret
 
 
 def get_schema_file_and_user_attrs_for_rtop_task(

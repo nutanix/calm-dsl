@@ -14,7 +14,10 @@ from calm.dsl.decompile.credential import (
 )
 from calm.dsl.decompile.ndb import get_NDB_files
 
-from calm.dsl.decompile.decompile_helpers import process_variable_name
+from calm.dsl.decompile.decompile_helpers import (
+    process_variable_name,
+    modify_var_format,
+)
 from calm.dsl.builtins import CalmEndpoint as Endpoint
 from calm.dsl.builtins.models.runbook import RunbookType, runbook
 from calm.dsl.log import get_logging_handle
@@ -124,6 +127,18 @@ def render_runbook_template(
         "import_status": import_status,
         "default_endpoint_name": default_endpoint_name,
     }
+
+    runbook_outputs = getattr(runbook_cls, "outputs", [])
+    if runbook_outputs:
+        outputs = []
+        for output in runbook_cls.outputs:
+            var_template = render_variable_template(
+                output,
+                entity_context,
+                variable_context="output_variable",
+            )
+            outputs.append(modify_var_format(var_template))
+        user_attrs["outputs"] = outputs
 
     gui_display_name = getattr(runbook_cls, "name", "") or runbook_cls.__name__
     if gui_display_name != runbook_cls.__name__:

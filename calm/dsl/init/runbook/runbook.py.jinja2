@@ -54,6 +54,11 @@ def {{runbook_name}}(endpoints=[PCEndpoint, IPEndpoint]):
     runbooks_count   = Variable.Simple.int("0", runtime=True)  # noqa
     apps_count       = Variable.Simple.int("0", runtime=True)  # noqa
 
+    outputs = [
+        Variable.Simple.string(name="blueprints_count", value=""),
+        Variable.Simple.string(name="runbooks_count", value=""),
+    ]
+
     # HTTP Tasks to get CALM Entity Counts
     # default target is set as endpoints[0] = PCEndpoint, therefore target not required for http tasks
     Task.HTTP.post(

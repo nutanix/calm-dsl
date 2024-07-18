@@ -32,7 +32,7 @@ class HelloResourceType(ResourceType):
     def Create(type=RESOURCE_TYPE.ACTION_TYPE.CREATE):
         """Create Action for HelloResourceType"""
         input_var = CalmVariable.Simple.string("default_val", is_mandatory=True)
-        outputs = ["output_var"]
+        outputs = [CalmVariable.Simple.string(name="output_var", value="")]
         Task.Exec.escript(
             name="Create Resource",
             script="print ('Creating an instance of HelloResourceType');print('@@{input_var}@@')",
@@ -55,7 +55,7 @@ class HelloResourceType(ResourceType):
     @action
     def List(type=RESOURCE_TYPE.ACTION_TYPE.LIST):
         """List Action for HelloResourceType"""
-        outputs = ["resource_ids"]
+        outputs = [CalmVariable.Simple.string(name="resource_ids", value="")]
         Task.SetVariable.escript(
             name="List Resources",
             variables=["resource_ids"],

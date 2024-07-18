@@ -13,6 +13,7 @@ from calm.dsl.builtins import vm_disk_package, AhvVmDisk, AhvVmNic
 from calm.dsl.builtins import AhvVmGC, AhvVmResources, AhvVm
 from calm.dsl.config import get_context
 from tests.helper.status_map_helper import remove_status_map_from_bp
+from tests.helper.output_variables_helper import remove_output_variables_from_bp
 
 
 # SSH Credentials
@@ -282,5 +283,8 @@ def test_json():
     CALM_VERSION = Version.get_version("Calm")
     if LV(CALM_VERSION) < LV("3.9.0"):
         remove_status_map_from_bp(known_json)
+
+    remove_output_variables_from_bp(known_json)
+    remove_output_variables_from_bp(generated_json)
 
     assert sorted(known_json.items()) == sorted(generated_json.items())

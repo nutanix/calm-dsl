@@ -10,6 +10,7 @@ from calm.dsl.builtins import action, ActionType
 from calm.dsl.constants import SUBSTRATE
 from calm.dsl.log import get_logging_handle
 from calm.dsl.decompile.ref_dependency import get_power_action_substrate_map
+from calm.dsl.decompile.decompile_helpers import modify_var_format
 
 LOG = get_logging_handle(__name__)
 RUNBOOK_ACTION_MAP = {}
@@ -131,8 +132,18 @@ def render_action_template(
         "endpoints": endpoints,
     }
 
-    if runbook.outputs:
-        user_attrs["outputs"] = runbook.outputs
+    runbook_outputs = getattr(runbook, "outputs", [])
+    if runbook_outputs:
+        outputs = []
+        for output in runbook.outputs:
+            var_template = render_variable_template(
+                output,
+                entity_context,
+                context=runbook_context,
+                variable_context="output_variable",
+            )
+            outputs.append(modify_var_format(var_template))
+        user_attrs["outputs"] = outputs
 
     if cls.type != "user":
         user_attrs["type"] = cls.type  # Only set if non-default

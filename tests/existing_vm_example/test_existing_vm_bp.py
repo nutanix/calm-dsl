@@ -15,6 +15,7 @@ from calm.dsl.builtins import provider_spec, read_local_file
 from calm.dsl.store import Version
 from distutils.version import LooseVersion as LV
 from tests.helper.status_map_helper import remove_status_map_from_bp
+from tests.helper.output_variables_helper import remove_output_variables_from_bp
 
 DNS_SERVER = read_local_file(".tests/dns_server")
 
@@ -522,5 +523,8 @@ def test_json():
 
     if LV(CALM_VERSION) < LV("3.9.0"):
         remove_status_map_from_bp(known_json)
+
+    remove_output_variables_from_bp(known_json)
+    remove_output_variables_from_bp(generated_json)
 
     assert generated_json == known_json

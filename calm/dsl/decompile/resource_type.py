@@ -1,6 +1,6 @@
 from calm.dsl.builtins.models.resource_type import ResourceTypeEntity
 from calm.dsl.decompile.action import render_action_template
-from calm.dsl.decompile.ndb import modify_var_format
+from calm.dsl.decompile.decompile_helpers import modify_var_format
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.ref_dependency import update_resource_type_name
 from calm.dsl.decompile.variable import render_variable_template

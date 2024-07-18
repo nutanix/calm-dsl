@@ -1,6 +1,7 @@
 import ast
 import sys
 import inspect
+from distutils.version import LooseVersion as LV
 
 from .ref import ref
 from .task import dag
@@ -12,6 +13,7 @@ from .descriptor import DescriptorType
 from .validator import PropertyValidator
 from .node_visitor import GetCallNodes
 from calm.dsl.log import get_logging_handle
+from calm.dsl.store.version import Version
 from calm.dsl.constants import RESOURCE_TYPE, CLOUD_PROVIDER as PROVIDER
 
 
@@ -218,7 +220,10 @@ class runbook(metaclass=DescriptorType):
         self.user_runbook.main_task_local_reference = self.user_dag.get_ref()
         self.user_runbook.tasks = [self.user_dag] + tasks
         self.user_runbook.variables = [variable for variable in variables.values()]
-        self.user_runbook.outputs = outputs
+
+        CALM_VERSION = Version.get_version("Calm")
+        if LV(CALM_VERSION) >= LV("4.0.0"):
+            self.user_runbook.outputs = outputs
 
         # Finally create the runbook service, only for runbook class not action
         if self.__class__ == runbook:

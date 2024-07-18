@@ -19,11 +19,12 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Variable'
-  output_variables:
+  output_variable_list:
     x-calm-dsl-display-name: outputs
+    x-calm-dsl-min-version: 4.0.0
     type: array
     items:
-      type: string
+      $ref: '#/components/schemas/Variable'
 
 {%- endmacro %}
 

@@ -95,7 +95,7 @@ class {{provider_name}}ResourceType(ResourceType):
     @action
     def List(type=RESOURCE_TYPE.ACTION_TYPE.LIST):
         """List Action for {{provider_name}}ResourceType"""
-        outputs = ["resource_ids"]
+        outputs = [CalmVariable.Simple.string(name="resource_ids", value="")]
         CalmTask.SetVariable.escript(
             name="List Resources", variables=['resource_ids'],
             script="print (\"resource_ids = ['resource1', 'resource2']\")"
@@ -104,7 +104,7 @@ class {{provider_name}}ResourceType(ResourceType):
     @action
     def Clone():
         """Clone Action for {{provider_name}}ResourceType"""
-        outputs = ["cloned_resource_id"]
+        outputs = [CalmVariable.Simple.string(name="cloned_resource_id", value="")]
         existing_resource_id = CalmVariable.Simple.string("")
         CalmTask.Exec.powershell(name="PowershellTask", script="dir", cred=WINDOWS_CREDENTIAL, ip=WINDOWS_IP, port=5985, connection_protocol='http')
         CalmTask.SetVariable.escript(

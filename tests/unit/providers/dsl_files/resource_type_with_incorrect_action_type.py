@@ -18,7 +18,7 @@ class DSLResourceTypeWithIncorrectActionType(ResourceType):
     @action
     def List(type="sseedeeded"):
         """List Action for HelloResourceType"""
-        outputs = ["resource_ids"]
+        outputs = [CalmVariable.Simple.string(name="resource_ids", value="")]
         Task.SetVariable.escript(
             name="List Resources",
             variables=["resource_ids"],

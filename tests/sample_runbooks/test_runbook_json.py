@@ -75,5 +75,10 @@ def _test_compare_compile_result(Runbook, json_file):
             if "status_map_list" in task:
                 task.pop("status_map_list")
 
+    known_json["runbook"].pop("output_variables", None)
+    known_json["runbook"].pop("output_variable_list", None)
+    generated_json["runbook"].pop("output_variables", None)
+    generated_json["runbook"].pop("output_variable_list", None)
+
     assert sorted(known_json.items()) == sorted(generated_json.items())
     print("JSON compilation successful for {}".format(Runbook.action_name))

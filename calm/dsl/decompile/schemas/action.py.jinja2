@@ -2,11 +2,17 @@
 @action
 def {{obj.name}}({% if obj.gui_display_name -%}name="{{obj.gui_display_name}}"{%- endif %}{% if obj.type -%}type="{{obj.type}}"{%- endif %}):
     {% if obj.description -%}"""{{obj.description}}"""{%- endif %}
-    {% if obj.outputs %}outputs = {{obj.outputs}}{% endif %}
-{% if obj.variables or obj.tasks %}
+{% if obj.variables or obj.outputs or obj.tasks %}
 {%- for variable in obj.variables %}
 {{variable | indent( width=4, first=True)}}
 {%- endfor %}
+{% if obj.outputs %}
+    outputs=[
+        {%- for output in obj.outputs %}
+            {{output}},
+        {%- endfor %}
+    ]
+{% endif %}
 {%- for task in obj.tasks %}
 {{task | indent( width=4, first=True)}}
 {%- endfor %}

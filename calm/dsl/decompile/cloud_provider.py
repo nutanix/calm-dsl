@@ -2,7 +2,7 @@ from calm.dsl.builtins.models.cloud_provider import CloudProviderType
 
 from calm.dsl.constants import CLOUD_PROVIDER as PROVIDER
 from calm.dsl.decompile.action import render_action_template
-from calm.dsl.decompile.ndb import modify_var_format
+from calm.dsl.decompile.decompile_helpers import modify_var_format
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.decompile.variable import render_variable_template
