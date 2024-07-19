@@ -635,7 +635,7 @@ class ACP:
     }
 
 
-class ACP_4_0_0:
+class ACP_3_8_1:
     class ENTITY_FILTER_EXPRESSION_LIST:
         COMMON = [
             {
