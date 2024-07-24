@@ -142,6 +142,10 @@ def get_runbook_class_from_module(user_runbook_module):
 
 def compile_runbook(runbook_file):
 
+    # Note: Metadata should be constructed before loading runbook module. As metadata
+    # will be used while verifying vm reference in endpoint used withing runbook.
+    metadata_payload = get_metadata_payload(runbook_file)
+
     user_runbook_module = get_runbook_module_from_file(runbook_file)
     UserRunbook = get_runbook_class_from_module(user_runbook_module)
     if UserRunbook is None:
@@ -154,7 +158,6 @@ def compile_runbook(runbook_file):
     ContextObj = get_context()
     project_config = ContextObj.get_project_config()
 
-    metadata_payload = get_metadata_payload(runbook_file)
     if "project_reference" in metadata_payload:
         runbook_payload["metadata"]["project_reference"] = metadata_payload[
             "project_reference"

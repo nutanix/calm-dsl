@@ -137,12 +137,15 @@ def compile_endpoint(endpoint_file):
 
 def compile_endpoint_command(endpoint_file, out):
 
+    # Note: Metadata should be constructed before loading endpoint module.
+    # As metadata will be used while verifying vm reference in endpoint.
+    metadata_payload = get_metadata_payload(endpoint_file)
+
     endpoint_payload = compile_endpoint(endpoint_file)
     if endpoint_payload is None:
         LOG.error("User endpoint not found in {}".format(endpoint_file))
         return
 
-    metadata_payload = get_metadata_payload(endpoint_file)
     project_cache_data = {}
     project_name = ""
     if "project_reference" in metadata_payload:
