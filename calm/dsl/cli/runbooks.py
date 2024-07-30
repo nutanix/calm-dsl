@@ -853,7 +853,9 @@ def watch_runbook(
 
     poll_action(
         poll_function or poll_func,
-        get_completion_func(screen, rerun_on_failure=rerun_on_failure, output_function=output_function),
+        get_completion_func(
+            screen, rerun_on_failure=rerun_on_failure, output_function=output_function
+        ),
         poll_interval=poll_interval,
         task_type_map=task_type_map,
         top_level_tasks=top_level_tasks,

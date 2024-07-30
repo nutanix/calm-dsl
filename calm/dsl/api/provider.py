@@ -105,8 +105,10 @@ class ProviderAPI(ResourceAPI):
 
     def list_runlogs(self, payload=None):
         return self.connection._call(
-            self.RUNLOG_LIST, verify=False,
-            request_json=payload, method=REQUEST.METHOD.POST,
+            self.RUNLOG_LIST,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
         )
 
     def runlog_output(self, provider_uuid, runlog_uuid, child_runlog_uuid):

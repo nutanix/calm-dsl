@@ -763,7 +763,9 @@ def delete_providers(provider_names):
         delete_provider_and_associated_rts_from_cache(name, provider_uuid)
 
 
-def _render_action_execution(client, screen, provider_uuid, runlog_uuid, input_data=None, watch=True):
+def _render_action_execution(
+    client, screen, provider_uuid, runlog_uuid, input_data=None, watch=True
+):
     def poll_runlog_status():
         return client.provider.poll_action_run(provider_uuid, runlog_uuid)
 
@@ -785,7 +787,9 @@ def _render_action_execution(client, screen, provider_uuid, runlog_uuid, input_d
             return client.provider.list_child_runlogs(provider_uuid, runlog_uuid)
 
         def output_func(runlog_uuid, child_runlog_uuid):
-            return client.provider.runlog_output(provider_uuid, runlog_uuid, child_runlog_uuid)
+            return client.provider.runlog_output(
+                provider_uuid, runlog_uuid, child_runlog_uuid
+            )
 
         watch_runbook(
             runlog_uuid,
@@ -799,7 +803,13 @@ def _render_action_execution(client, screen, provider_uuid, runlog_uuid, input_d
 
 
 def run_provider_or_resource_type_action(
-    screen, entity_kind, entity_uuid, action, watch, payload={}, provider_uuid=None,
+    screen,
+    entity_kind,
+    entity_uuid,
+    action,
+    watch,
+    payload={},
+    provider_uuid=None,
 ):
     """Runs action confiugred on the provider or resource_type"""
     client = get_api_client()
@@ -935,6 +945,7 @@ def watch_action_execution(runlog_uuid):
     client = get_api_client()
 
     provider_uuid = get_provider_uuid_from_runlog(client, runlog_uuid)
+
     def render_execution_watch(screen):
         screen.clear()
         screen.refresh()
@@ -953,6 +964,7 @@ def abort_action_execution(runlog_uuid):
     )
 
     provider_uuid = get_provider_uuid_from_runlog(client, runlog_uuid)
+
     def poll_func(runlog_uuid):
         return client.provider.poll_action_run(provider_uuid, runlog_uuid)
 
@@ -1172,6 +1184,7 @@ def _decompile_provider(
         )
     )
 
+
 def get_provider_uuid_from_runlog(client, runlog_uuid):
     """
     Given a runlog_uuid, fetches the provider_uuid corresponding to it
@@ -1195,7 +1208,9 @@ def get_provider_uuid_from_runlog(client, runlog_uuid):
     entities = response_json["entities"]
     if len(entities) != 1:
         LOG.error(
-            "Runlog with UUID '{}' is not a valid provider/RT-Action runlog".format(runlog_uuid)
+            "Runlog with UUID '{}' is not a valid provider/RT-Action runlog".format(
+                runlog_uuid
+            )
         )
         sys.exit(-1)
-    return entities[0]['status']['provider_reference']['uuid']
+    return entities[0]["status"]["provider_reference"]["uuid"]
