@@ -341,7 +341,7 @@ def displayRunLog(screen, obj, pre, fill, line):
     return idx()
 
 
-def get_completion_func(screen, rerun_on_failure=True):
+def get_completion_func(screen, rerun_on_failure=True, output_function=None):
     def is_action_complete(
         response,
         task_type_map=[],
@@ -350,7 +350,6 @@ def get_completion_func(screen, rerun_on_failure=True):
         runlog_uuid=None,
         **kwargs,
     ):
-
         client = get_api_client()
         global input_tasks
         global input_payload
@@ -416,7 +415,8 @@ def get_completion_func(screen, rerun_on_failure=True):
                         and task_type_map[task_id]
                         not in ["INPUT", "CONFIRM", "WHILE_LOOP"]
                     ):
-                        res, err = client.runbook.runlog_output(runlog_uuid, uuid)
+                        output_fn = output_function or client.runbook.runlog_output
+                        res, err = output_fn(runlog_uuid, uuid)
                         if err:
                             raise Exception(
                                 "\n[{}] - {}".format(err["code"], err["error"])

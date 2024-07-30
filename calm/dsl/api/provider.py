@@ -22,7 +22,9 @@ class ProviderAPI(ResourceAPI):
         self.TEST_PROVIDER_VERIFY = self.PREFIX + "/{}/actions/{}/test_run"
         self.ABORT_RUN = self.ITEM + "/runlogs/{}/abort"
         self.POLL_RUN = self.ITEM + "/runlogs/{}"
-        self.RUNLOG_LIST = self.CALM_ROOT + "/runbooks/runlogs/{}/children/list"
+        self.CHILD_RUNLOG_LIST = self.ITEM + "/runlogs/{}/children/list"
+        self.RUNLOG_OUTPUT = self.ITEM + "/runlogs/{}/children/{}/output"
+        self.RUNLOG_LIST = self.CREATE + "/runlogs/list"
         self.CLONE = self.ITEM + "/clone"
         self.IMPORT_JSON = self.PREFIX + "/import_json"
         self.IMPORT_FILE = self.PREFIX + "/import_file"
@@ -93,12 +95,25 @@ class ProviderAPI(ResourceAPI):
             method=REQUEST.METHOD.POST,
         )
 
-    def list_runlogs(self, runlog_uuid):
+    def list_child_runlogs(self, provider_uuid, runlog_uuid):
         return self.connection._call(
-            self.RUNLOG_LIST.format(runlog_uuid),
+            self.CHILD_RUNLOG_LIST.format(provider_uuid, runlog_uuid),
             verify=False,
             request_json={},
             method=REQUEST.METHOD.POST,
+        )
+
+    def list_runlogs(self, payload=None):
+        return self.connection._call(
+            self.RUNLOG_LIST, verify=False,
+            request_json=payload, method=REQUEST.METHOD.POST,
+        )
+
+    def runlog_output(self, provider_uuid, runlog_uuid, child_runlog_uuid):
+        return self.connection._call(
+            self.RUNLOG_OUTPUT.format(provider_uuid, runlog_uuid, child_runlog_uuid),
+            verify=False,
+            method=REQUEST.METHOD.GET,
         )
 
     def poll_action_run(self, uuid, runlog_uuid, payload=None):

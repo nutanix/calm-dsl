@@ -763,16 +763,16 @@ def delete_providers(provider_names):
         delete_provider_and_associated_rts_from_cache(name, provider_uuid)
 
 
-def _render_action_execution(client, screen, runlog_uuid, input_data=None, watch=True):
+def _render_action_execution(client, screen, provider_uuid, runlog_uuid, input_data=None, watch=True):
     def poll_runlog_status():
-        return client.provider.poll_action_run(runlog_uuid)
+        return client.provider.poll_action_run(provider_uuid, runlog_uuid)
 
     screen.refresh()
     should_continue = poll_action(poll_runlog_status, get_runlog_status(screen))
     if not should_continue:
         return
 
-    res, err = client.provider.poll_action_run(runlog_uuid)
+    res, err = client.provider.poll_action_run(provider_uuid, runlog_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -782,7 +782,10 @@ def _render_action_execution(client, screen, runlog_uuid, input_data=None, watch
         screen.refresh()
 
         def poll_func():
-            return client.provider.list_runlogs(runlog_uuid)
+            return client.provider.list_child_runlogs(provider_uuid, runlog_uuid)
+
+        def output_func(runlog_uuid, child_runlog_uuid):
+            return client.provider.runlog_output(provider_uuid, runlog_uuid, child_runlog_uuid)
 
         watch_runbook(
             runlog_uuid,
@@ -791,15 +794,17 @@ def _render_action_execution(client, screen, runlog_uuid, input_data=None, watch
             input_data=input_data,
             poll_function=poll_func,
             rerun_on_failure=False,
+            output_function=output_func,
         )
 
 
 def run_provider_or_resource_type_action(
-    screen, entity_kind, entity_uuid, action, watch, payload={}
+    screen, entity_kind, entity_uuid, action, watch, payload={}, provider_uuid=None,
 ):
     """Runs action confiugred on the provider or resource_type"""
     client = get_api_client()
     if entity_kind == ENTITY.KIND.PROVIDER:
+        provider_uuid = entity_uuid
         run_fn = client.provider.run
     else:
         run_fn = client.resource_types.run
@@ -816,6 +821,7 @@ def run_provider_or_resource_type_action(
     _render_action_execution(
         client,
         screen,
+        provider_uuid,
         runlog_uuid,
         input_data=payload,
         watch=watch,
@@ -928,10 +934,11 @@ def watch_action_execution(runlog_uuid):
     """Watch test execution of a Provider/ResourceType action"""
     client = get_api_client()
 
+    provider_uuid = get_provider_uuid_from_runlog(client, runlog_uuid)
     def render_execution_watch(screen):
         screen.clear()
         screen.refresh()
-        _render_action_execution(client, screen, runlog_uuid)
+        _render_action_execution(client, screen, provider_uuid, runlog_uuid)
         screen.wait_for_input(10.0)
 
     Display.wrapper(render_execution_watch, True)
@@ -944,9 +951,14 @@ def abort_action_execution(runlog_uuid):
     link = "https://{}:{}/console/#page/explore/calm/providers/runlogs/{}".format(
         server_config["pc_ip"], server_config["pc_port"], runlog_uuid
     )
+
+    provider_uuid = get_provider_uuid_from_runlog(client, runlog_uuid)
+    def poll_func(runlog_uuid):
+        return client.provider.poll_action_run(provider_uuid, runlog_uuid)
+
     abort_runbook_execution(
         runlog_uuid,
-        poll_fn=client.provider.poll_action_run,
+        poll_fn=poll_func,
         abort_fn=client.provider.abort,
         link=link,
     )
@@ -994,6 +1006,7 @@ def run_resource_type_action_command(
     resource_type = fetch_resource_type_by_name_and_provider_name(
         resource_type_name, provider_name
     )
+    provider_uuid = resource_type["status"]["resources"]["provider_reference"]["uuid"]
     resource_type_uuid = resource_type["metadata"]["uuid"]
     action_list = resource_type["status"]["action_list"]
     action = None
@@ -1021,6 +1034,7 @@ def run_resource_type_action_command(
             action,
             watch,
             payload=payload,
+            provider_uuid=provider_uuid,
         )
         screen.wait_for_input(10.0)
 
@@ -1157,3 +1171,31 @@ def _decompile_provider(
             get_provider_dir(), os.path.join(get_provider_dir(), "provider.py")
         )
     )
+
+def get_provider_uuid_from_runlog(client, runlog_uuid):
+    """
+    Given a runlog_uuid, fetches the provider_uuid corresponding to it
+
+    Args:
+        client (Object): API Client object
+        runlog_uuid (String): Runlog UUID
+    Returns:
+        (String) Provider UUID if a valid runlog
+    Raises:
+        Exception if runlog_uuid is not a valid provider/RT-action runlog
+    """
+    response, err = client.provider.list_runlogs(
+        payload={"filter": "uuid=={}".format(runlog_uuid)}
+    )
+    if err:
+        LOG.error("Error while fetching runlog info: {}".format(str(err)))
+        sys.exit(-1)
+
+    response_json = response.json()
+    entities = response_json["entities"]
+    if len(entities) != 1:
+        LOG.error(
+            "Runlog with UUID '{}' is not a valid provider/RT-Action runlog".format(runlog_uuid)
+        )
+        sys.exit(-1)
+    return entities[0]['status']['provider_reference']['uuid']
