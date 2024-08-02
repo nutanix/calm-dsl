@@ -211,9 +211,12 @@ def _advanced_variable(
                 + ", is not valid, Expected one of"
                 + " ['HTTP', 'EXEC'], got {}".format(task_type)
             )
+        task_target_endpoint = getattr(task, "exec_target_reference", None)
         task_attrs["type"] = task_type
         kwargs["type_"] = task_type + "_" + type_
         kwargs["options"] = {"type": task_type, "attrs": task_attrs}
+        if task_type == "EXEC" and task_target_endpoint:
+            kwargs["options"]["exec_target_reference"] = task_target_endpoint.get_dict()
     if value_type is not None:
         value_type = value_type.upper()
         if value_type not in VARIABLE_VALUE_TYPES.values():

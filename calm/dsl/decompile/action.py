@@ -81,6 +81,8 @@ def render_action_template(
                 secrets_dict=secrets_dict,
                 credentials_list=credential_list,
                 rendered_credential_list=rendered_credential_list,
+                endpoints=endpoints,
+                ep_list=ep_list,
             )
         )
 

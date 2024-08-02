@@ -1,10 +1,12 @@
 import os
 
 from calm.dsl.decompile.render import render_template
+from calm.dsl.decompile.endpoint import render_endpoint
 from calm.dsl.decompile.task import render_task_template
-from calm.dsl.builtins import VariableType, TaskType
+from calm.dsl.builtins import VariableType, TaskType, CalmEndpoint as Endpoint
 from calm.dsl.decompile.file_handler import get_local_dir
 from calm.dsl.log import get_logging_handle
+from calm.dsl.constants import VARIABLE
 
 LOG = get_logging_handle(__name__)
 SECRET_VAR_FILES = []
@@ -18,11 +20,26 @@ def render_variable_template(
     secrets_dict=[],
     credentials_list=[],
     rendered_credential_list=[],
+    endpoints=[],
+    ep_list=[],
 ):
 
     LOG.debug("Rendering {} variable template".format(cls.__name__))
     if not isinstance(cls, VariableType):
         raise TypeError("{} is not of type {}".format(cls, VariableType))
+
+    if cls.options:
+        options = cls.options.get_dict()
+
+    if cls.type == VARIABLE.TYPE.EXEC_LOCAL:
+        ep = cls.options.get("exec_target_reference", None)
+        if ep:
+            endpoint_name = ep.get("name", "")
+            if endpoint_name not in ep_list:
+                endpoints.append(render_endpoint(Endpoint.use_existing(endpoint_name)))
+                ep_list.append(endpoint_name)
+        else:
+            options.pop("exec_target_reference")
 
     # Updating the context of variables
     entity_context = entity_context + "_" + variable_context + "_" + cls.__name__
@@ -42,7 +59,6 @@ def render_variable_template(
         var_type = "simple"
 
     else:
-        options = cls.options.get_dict()
         choices = options.get("choices", [])
         option_type = options.get("type", "")
 
@@ -112,7 +128,6 @@ def render_variable_template(
 
     else:
         data_type = cls.data_type
-        options = cls.options.get_dict()
         option_type = options.get("type", "PREDEFINED")
 
         if option_type == "PREDEFINED":

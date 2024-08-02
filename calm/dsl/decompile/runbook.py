@@ -99,6 +99,8 @@ def render_runbook_template(
                 entity_context,
                 credentials_list=credentials_list,
                 rendered_credential_list=rendered_credential_list,
+                endpoints=endpoints,
+                ep_list=ep_list,
             )
         )
     secret_files = get_secret_variable_files()
