@@ -209,6 +209,8 @@ def get_task(client, name, all=False):
     params = {"filter": "name=={}".format(name)}
     if not all:
         params["filter"] += ";state!=DELETED"
+    else:
+        params["filter"] += get_states_filter(TASKS.STATES)
 
     res, err = client.task.list(params=params)
     if err:

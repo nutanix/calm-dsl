@@ -584,6 +584,8 @@ def get_runbook(client, name, all=False):
     params = {"filter": "name=={}".format(name)}
     if not all:
         params["filter"] += ";deleted==FALSE"
+    else:
+        params["filter"] += get_states_filter(RUNBOOK.STATES)
 
     res, err = client.runbook.list(params=params)
     if err:

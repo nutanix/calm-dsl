@@ -254,6 +254,8 @@ def get_job(client, name, all=False):
     params = {"filter": "name=={}".format(name)}
     if not all:
         params["filter"] += ";deleted==FALSE"
+    else:
+        params["filter"] += get_states_filter(JOBS.STATES)
 
     res, err = client.job.list(params=params)
     if err:
@@ -593,7 +595,7 @@ def get_job_list_command(name, filter_by, limit, offset, quiet, all_items):
 def get_job_instances_command(job_name, out, filter_by, limit, offset, all_items):
     """Displays job instance data"""
     client = get_api_client()
-    job_get_res = get_job(client, job_name, all=True)
+    job_get_res = get_job(client, job_name, all=all_items)
 
     params = {"length": limit, "offset": offset}
     filter_query = ""

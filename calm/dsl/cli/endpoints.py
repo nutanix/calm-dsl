@@ -188,6 +188,8 @@ def get_endpoint(client, name, all=False):
     params = {"filter": "name=={}".format(name)}
     if not all:
         params["filter"] += ";deleted==FALSE"
+    else:
+        params["filter"] += get_states_filter(ENDPOINT.STATES, state_key="_state")
 
     res, err = client.endpoint.list(params=params)
     if err:

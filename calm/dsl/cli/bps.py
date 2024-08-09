@@ -778,6 +778,8 @@ def get_blueprint_uuid(name, all=False, is_brownfield=False):
     params = {"filter": "name=={}".format(name)}
     if not all:
         params["filter"] += ";state!=DELETED"
+    else:
+        params["filter"] += get_states_filter(BLUEPRINT.STATES)
 
     if is_brownfield:
         params["filter"] += ";type==BROWNFIELD"
