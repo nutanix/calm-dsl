@@ -1188,7 +1188,7 @@ def clone_runbook(original_runbook_name, cloned_runbook_name):
     }
 
     LOG.info("Cloning runbook to '{}'".format(cloned_runbook_name))
-    original_runbook = get_runbook(client, original_runbook_name)
+    original_runbook = get_runbook(client, original_runbook_name, all=True)
     runbook_res, err = client.runbook.clone(
         original_runbook["metadata"]["uuid"], request_spec
     )
