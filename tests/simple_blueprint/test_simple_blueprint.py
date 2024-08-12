@@ -12,9 +12,10 @@ import json
 from calm.dsl.builtins import ref, basic_cred
 from calm.dsl.builtins import SimpleDeployment, SimpleBlueprint
 from calm.dsl.builtins import read_provider_spec, read_spec, read_local_file
-from calm.dsl.builtins import CalmTask as Task
+from calm.dsl.builtins import CalmTask as Task, CalmEndpoint as Endpoint
 from calm.dsl.builtins import CalmVariable as Var
 from calm.dsl.builtins import action, parallel
+
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
@@ -65,6 +66,11 @@ class MySQLDeployment(SimpleDeployment):
         blah = Var("2")  # noqa
         Task.Exec.ssh(name="Task4", script='echo "Hello"')
         Task.Exec.ssh(name="Task5", script='echo "Hello again"')
+        Task.HTTP.get(
+            name="Task11",
+            target_endpoint=ref(Endpoint.use_existing("DND-Http-Endpoint")),
+            status_mapping={200: True},
+        )
 
     @action
     def custom_action_2():

@@ -1431,7 +1431,8 @@ def http_task_delete_on_endpoint(**kwargs):
 
 
 def http_task_get(
-    url,
+    url="",
+    relative_url=None,
     body=None,
     headers=None,
     secret_headers=None,
@@ -1446,6 +1447,7 @@ def http_task_get(
     response_paths=None,
     name=None,
     target=None,
+    target_endpoint=None,
     cred=None,
     tunnel=None,
     status_map_list=[],
@@ -1478,6 +1480,7 @@ def http_task_get(
     return http_task(
         "GET",
         url,
+        relative_url=relative_url,
         body=None,
         headers=headers,
         secret_headers=secret_headers,
@@ -1493,13 +1496,15 @@ def http_task_get(
         response_paths=response_paths,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         tunnel=tunnel,
         status_map_list=status_map_list,
     )
 
 
 def http_task_post(
-    url,
+    url="",
+    relative_url=None,
     body=None,
     headers=None,
     secret_headers=None,
@@ -1514,6 +1519,7 @@ def http_task_post(
     response_paths=None,
     name=None,
     target=None,
+    target_endpoint=None,
     cred=None,
     tunnel=None,
     status_map_list=[],
@@ -1547,6 +1553,7 @@ def http_task_post(
     return http_task(
         "POST",
         url,
+        relative_url=relative_url,
         body=body,
         headers=headers,
         secret_headers=secret_headers,
@@ -1562,13 +1569,15 @@ def http_task_post(
         response_paths=response_paths,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         tunnel=tunnel,
         status_map_list=status_map_list,
     )
 
 
 def http_task_put(
-    url,
+    url="",
+    relative_url=None,
     body=None,
     headers=None,
     secret_headers=None,
@@ -1583,6 +1592,7 @@ def http_task_put(
     response_paths=None,
     name=None,
     target=None,
+    target_endpoint=None,
     cred=None,
     tunnel=None,
     status_map_list=[],
@@ -1616,6 +1626,7 @@ def http_task_put(
     return http_task(
         "PUT",
         url,
+        relative_url=relative_url,
         body=body,
         headers=headers,
         secret_headers=secret_headers,
@@ -1631,13 +1642,15 @@ def http_task_put(
         response_paths=response_paths,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         tunnel=tunnel,
         status_map_list=status_map_list,
     )
 
 
 def http_task_delete(
-    url,
+    url="",
+    relative_url=None,
     body=None,
     headers=None,
     secret_headers=None,
@@ -1652,6 +1665,7 @@ def http_task_delete(
     response_paths=None,
     name=None,
     target=None,
+    target_endpoint=None,
     cred=None,
     tunnel=None,
     status_map_list=[],
@@ -1685,6 +1699,7 @@ def http_task_delete(
     return http_task(
         "DELETE",
         url,
+        relative_url=relative_url,
         body=body,
         headers=headers,
         secret_headers=secret_headers,
@@ -1700,6 +1715,7 @@ def http_task_delete(
         response_paths=response_paths,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         tunnel=tunnel,
         status_map_list=status_map_list,
     )
@@ -1754,6 +1770,7 @@ def http_task(
     response_paths=None,
     name=None,
     target=None,
+    target_endpoint=None,
     tunnel=None,
     status_map_list=[],
     **kwargs,
@@ -1851,6 +1868,9 @@ def http_task(
 
     if target is not None:
         params["target_any_local_reference"] = _get_target_ref(target)
+
+    if target_endpoint is not None:
+        params["exec_target_reference"] = _get_target_ref(target_endpoint)
 
     header_variables = []
     if headers is not None:
@@ -2124,7 +2144,8 @@ class BaseTask:
         def __new__(
             cls,
             method,
-            url,
+            url="",
+            relative_url=None,
             body=None,
             headers=None,
             secret_headers=None,
@@ -2140,12 +2161,14 @@ class BaseTask:
             response_paths=None,
             name=None,
             target=None,
+            target_endpoint=None,
             tunnel=None,
             status_map_list=[],
         ):
             return http_task(
                 method,
                 url,
+                relative_url,
                 body=body,
                 headers=headers,
                 secret_headers=secret_headers,
@@ -2161,6 +2184,7 @@ class BaseTask:
                 response_paths=response_paths,
                 name=name,
                 target=target,
+                target_endpoint=target_endpoint,
                 tunnel=tunnel,
                 status_map_list=status_map_list,
             )

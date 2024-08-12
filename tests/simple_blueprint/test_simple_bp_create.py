@@ -8,6 +8,7 @@ from click.testing import CliRunner
 from calm.dsl.cli import main as cli
 from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins import read_local_file
+from calm.dsl.api import get_api_client
 
 # for tcs
 from calm.dsl.store import Version
@@ -33,15 +34,47 @@ DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
 SUBNET_UUID = NTNX_LOCAL_ACCOUNT["SUBNETS"][0]["UUID"]
 
+# Endpoint file used to create endpoints for runbook used in scheduler test
+DSL_EP_PATH = "tests/cli/endpoints/http_endpoint.py"
+CALM_ENDPOINT_NAME = "DND-Http-Endpoint"
+
 
 class TestSimpleBlueprint:
     def setup_method(self):
         """Method to instantiate to created_bp_list"""
 
+        # Method to create endpoint
+        client = get_api_client()
+        self.endpoint = CALM_ENDPOINT_NAME
+
+        # Check if there is existing endpoint with this name
+        payload = {"filter": "name=={}".format(self.endpoint)}
+        res, _ = client.endpoint.list(payload)
+        res = res.json()
+
+        if res["metadata"]["total_matches"] > 0:
+            return
+
+        # If there is no endpoint, create one
+        LOG.info("Creating Endpoint {}".format(self.endpoint))
+        runner = CliRunner()
+        result = runner.invoke(
+            cli, ["create", "endpoint", "-f", DSL_EP_PATH, "-n", self.endpoint]
+        )
+        assert result.exit_code == 0
+        LOG.info("Successult Created Endoint {}".format(self.endpoint))
+
         self.created_bp_list = []
 
     def teardown_method(self):
         """Method to delete creates bps and apps during tests"""
+
+        # Method to delete endpoint
+
+        LOG.info("Deleting Endpoint {}".format(self.endpoint))
+        runner = CliRunner()
+        result = runner.invoke(cli, ["delete", "endpoint", self.endpoint])
+        assert result.exit_code == 0
 
         for bp_name in self.created_bp_list:
             LOG.info("Deleting Blueprint {}".format(bp_name))

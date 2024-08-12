@@ -35,7 +35,8 @@
                                 "choices": [
                                     "DEV",
                                     "PROD"
-                                ]
+                                ],
+                                "exec_target_reference": {}
                             },
                             "is_hidden": false,
                             "is_mandatory": true
@@ -191,6 +192,16 @@
                                                         "kind": "app_task",
                                                         "name": "Task5"
                                                     }
+                                                },
+                                                {
+                                                    "from_task_reference": {
+                                                        "kind": "app_task",
+                                                        "name": "Task5"
+                                                    },
+                                                    "to_task_reference": {
+                                                        "kind": "app_task",
+                                                        "name": "Task11"
+                                                    }
                                                 }
                                             ]
                                         },
@@ -203,6 +214,10 @@
                                             {
                                                 "kind": "app_task",
                                                 "name": "Task5"
+                                            },
+                                            {
+                                                "kind": "app_task",
+                                                "name": "Task11"
                                             }
                                         ],
                                         "variable_list": [],
@@ -238,6 +253,41 @@
                                         "attrs": {
                                             "script_type": "sh",
                                             "script": "echo \"Hello again\""
+                                        },
+                                        "status_map_list": [],
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "retries": "",
+                                        "timeout_secs": ""
+                                    },
+                                    {
+                                        "name": "Task11",
+                                        "description": "",
+                                        "type": "HTTP",
+                                        "target_any_local_reference": {
+                                            "kind": "app_service",
+                                            "name": "MySQLDeploymentService"
+                                        },
+                                        "exec_target_reference": {
+                                            "kind": "app_endpoint",
+                                            "name": "DND-Http-Endpoint"
+                                        },
+                                        "attrs": {
+                                            "method": "GET",
+                                            "url": "",
+                                            "authentication": {
+                                                "auth_type": "none"
+                                            },
+                                            "connection_timeout": 120,
+                                            "tls_verify": false,
+                                            "retry_count": 1,
+                                            "retry_interval": 10,
+                                            "expected_response_params": [
+                                                {
+                                                    "status": "SUCCESS",
+                                                    "code": 200
+                                                }
+                                            ]
                                         },
                                         "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
