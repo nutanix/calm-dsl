@@ -45,6 +45,7 @@ CLUSTER_UUID2 = NTNX_LOCAL_AZ["SUBNETS"][0]["CLUSTER_UUID"]
 UPDATED_CLUSTER_UUID = [CLUSTER_UUID1, CLUSTER_UUID2]
 
 
+@pytest.mark.quotas
 class TestProjectUpdate:
     def setup_method(self):
         """Method to create a project for testing the update project"""
