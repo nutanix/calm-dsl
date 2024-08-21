@@ -16,12 +16,16 @@ from calm.dsl.builtins.models.helper.common import get_project
 LOG = get_logging_handle(__name__)
 VPC_LINUX_EP_PATH = "tests/tunnel_endpoints/linux_endpoint.py"
 VPC_WINDOWS_EP_PATH = "tests/tunnel_endpoints/windows_endpoint.py"
+HTTP_EP_PATH = "tests/cli/endpoints/http_endpoint.py"
 
 LOCAL_LINUX_ENDPOINT_VPC = os.path.join(
     os.path.expanduser("~"), ".calm", ".local", ".tests", "endpoint_linux_vpc"
 )
 LOCAL_WINDOWS_ENDPOINT_VPC = os.path.join(
     os.path.expanduser("~"), ".calm", ".local", ".tests", "endpoint_windows_vpc"
+)
+LOCAL_HTTP_ENDPOINT = os.path.join(
+    os.path.expanduser("~"), ".calm", ".local", ".tests", "endpoint_http"
 )
 dsl_config_file_location = os.path.expanduser("~/.calm/.local/.tests/config.json")
 VPC_PROJECT_NAME = "test_vpc_project"
@@ -401,6 +405,16 @@ def add_vpc_details(config):
     add_tunnel_details(config)
 
 
+def add_approval_details(config):
+
+    config["IS_POLICY_ENABLED"] = False
+    project_exists = check_project_exists("test_approval_policy")
+    if project_exists:
+        config["IS_POLICY_ENABLED"] = True
+
+    add_project_details(config, "POLICY_PROJECTS", "test_approval_policy")
+
+
 def add_protection_policy_details(config, config_header, project_name):
     """Adds protection policy details of vmware/ahv snapshot projects for tests"""
 
@@ -540,14 +554,38 @@ def add_vpc_endpoints(config):
             f.write(dsl_windows_endpoint)
 
 
-def add_approval_details(config):
+def add_http_endpoint(config):
+    dsl_http_endpoint = "Endpoint_HTTP_{}".format(str(uuid.uuid4()))
 
-    config["IS_POLICY_ENABLED"] = False
-    project_exists = check_project_exists("test_approval_policy")
-    if project_exists:
-        config["IS_POLICY_ENABLED"] = True
+    make_file_dir(LOCAL_HTTP_ENDPOINT)
+    with open(LOCAL_HTTP_ENDPOINT, "w+") as f:
+        f.write(dsl_http_endpoint)
 
-    add_project_details(config, "POLICY_PROJECTS", "test_approval_policy")
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "create",
+            "endpoint",
+            "--file={}".format(HTTP_EP_PATH),
+            "--name={}".format(dsl_http_endpoint),
+            "--description='Test DSL HTTP Endpoint'",
+        ],
+    )
+    LOG.info(result.output)
+    if result.exit_code:
+        cli_res_dict = {
+            "Output": result.output,
+            "Exception": str(result.exception),
+        }
+        LOG.debug(
+            "Cli Response: {}".format(
+                json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+            )
+        )
+        LOG.debug(
+            "Traceback: \n{}".format("".join(traceback.format_tb(result.exc_info[2])))
+        )
 
 
 def add_provider_constants(config):
@@ -586,12 +624,13 @@ add_directory_service_users(config)
 add_directory_service_user_groups(config)
 add_project_details(config)
 add_vpc_details(config)
+add_approval_details(config)
 add_ahv_snapshot_policy(config)
 add_vmw_snapshot_policy(config)
 add_rerun_report_portal(config)
 add_vpc_endpoints(config)
-add_approval_details(config)
 add_provider_constants(config)
+add_http_endpoint(config)
 f = open(dsl_config_file_location, "w")
 f.write(json.dumps(config, indent=4))
 f.close()
