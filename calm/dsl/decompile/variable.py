@@ -31,7 +31,12 @@ def render_variable_template(
     if cls.options:
         options = cls.options.get_dict()
 
-    if cls.type == VARIABLE.TYPE.EXEC_LOCAL:
+    if cls.type in [
+        VARIABLE.TYPE.EXEC_LOCAL,
+        VARIABLE.TYPE.HTTP_LOCAL,
+        VARIABLE.TYPE.EXEC_SECRET,
+        VARIABLE.TYPE.HTTP_SECRET,
+    ]:
         ep = cls.options.get("exec_target_reference", None)
         if ep:
             endpoint_name = ep.get("name", "")
