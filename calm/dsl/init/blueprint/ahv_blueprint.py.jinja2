@@ -192,7 +192,7 @@ class {{bp_name}}Substrate(Substrate):
 
         # Step 1
         Task.Exec.escript(
-            name="Task1", script="print 'Pre Create task runs before VM is created'"
+            name="Task1", script="print('Pre Create task runs before VM is created')"
         )
 
     @action
@@ -200,7 +200,7 @@ class {{bp_name}}Substrate(Substrate):
 
         # Step 1
         Task.Exec.escript(
-            name="Task1", script="print 'Post delete task runs after VM is deleted'"
+            name="Task1", script="print('Post delete task runs after VM is deleted')"
         )
 
 

@@ -3,6 +3,7 @@ import re
 import sys
 import json
 import copy
+import os
 
 from ruamel import yaml
 from distutils.version import LooseVersion as LV
@@ -1771,7 +1772,21 @@ def create_spec(client):
             script["install_type"] = install_type
 
             path.append("unattend_xml")
-            script["unattend_xml"] = get_field(schema, path, option, default="")
+
+            script["unattend_xml"] = ""
+
+            while script["unattend_xml"] == "":
+
+                script["unattend_xml"] = get_field(schema, path, option, default="")
+
+                if script["unattend_xml"][-4:] == ".xml":
+                    click.echo("Loading given XML file data.")
+                    if os.path.exists(script["unattend_xml"]):
+                        with open(script["unattend_xml"], "r") as f:
+                            script["unattend_xml"] = f.read()
+                    else:
+                        click.echo("File not found!!, Enter valid file path.")
+                        script["unattend_xml"] = ""
 
             sysprep_dict = {
                 "unattend_xml": script["unattend_xml"],
@@ -1825,7 +1840,7 @@ def find_schema(schema, path, option):
 
             resDict = None
             for optionDict in schema["anyOf"]:
-                if optionDict["title"] == option[indOpt]:
+                if optionDict.get("title") == option[indOpt]:
                     resDict = optionDict
                     break
 

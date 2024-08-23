@@ -1,6 +1,6 @@
 # Calm-DSL supports VPC & Overlay Subnets across entities:
 
-1. Ability to Create, Delete, List VPC Tunnels through network-group-tunnels commands
+1. Ability to Create, Delete, List and Reset VPC Tunnels through network-group-tunnels commands
 2. Ability to Whitelist Cluster, VPC and Overlay Subnets in Projects & Environments
 3. Ability specify Cluster in VM Spec and Overlay subnets in NICs in Environment
 4. Ability to specify Cluster in VM Spec and Overlay subnets in NICs in Blueprints
@@ -14,12 +14,12 @@
 
 ## VPC Tunnels/Network Group Tunnels
 
-Network Group Tunnels (network-group-tunnels) commands are available to perform Create, Delete and List of VPC Tunnels. VPC Tunnels are refrenced using Tunnel Name.
+Network Group Tunnels (network-group-tunnels) commands are available to perform Create, Delete, List and Reset of VPC Tunnels. VPC Tunnels are refrenced using Tunnel Name.
 
 ### Sample Commands
 
 - calm create network_group_tunnel -f tunnel_file.py; Sample below of tunnel_file
-  
+
     ```
     from calm.dsl.builtins import NetworkGroupTunnel
     from calm.dsl.builtins import Provider, Ref
@@ -36,7 +36,17 @@ Network Group Tunnels (network-group-tunnels) commands are available to perform 
 - calm get network-group-tunnels - List of all VPC/Network Group Tunnels
 - calm describe network-group-tunnel <tunnel-name> - Describes a VPC Tunnel
 - calm delete network-group-tunnel <tunnel-name> - Deletes a VPC Tunnel
+- calm reset network-group-tunnel-vm -f examples/NetworkGroupTunnel/network_group_tunnel.py -n <tunnel-name> - Reset VPC Tunnel.
+  Resetting tunnel will spin up new VPC tunnel VM and delete older tunnel VM. Tunnel reference is not changed. Sample file below:
+    ```
+    from calm.dsl.builtins import NetworkGroupTunnelVMSpec
 
+    class NewNetworkGroupTunnel1(NetworkGroupTunnelVMSpec):
+        """Network group tunnel spec for reset"""
+        cluster = "<cluster-name>"
+        subnet = "<subnet-name>"
+        type = "AHV"
+    ```
 
 ## Project
 - Calm-DSL supports whitelisting Cluster, VPC and Overlay Subnets
@@ -77,7 +87,7 @@ Network Group Tunnels (network-group-tunnels) commands are available to perform 
     class MyVM(AhvVM):
       cluster = Ref.Cluster(name="cluster-name")
   ```
-  
+
  ## Overlay Subnets
  - Can be used in Projects as described above
  - Can be used within AhvVmResources
@@ -94,7 +104,7 @@ Network Group Tunnels (network-group-tunnels) commands are available to perform 
         ),
     ]
   ```
- 
+
  ## VPCs
  - Can be used in Projects & VPC Tunnels/Network Group Tunnels as described above
 

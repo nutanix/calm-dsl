@@ -8,6 +8,11 @@ import json
 from calm.dsl.cli.constants import MARKETPLACE_ITEM
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
+from calm.dsl.api import get_resource_api
+from calm.dsl.log import get_logging_handle
+
+
+LOG = get_logging_handle(__name__)
 
 
 def change_uuids(bp, context):
@@ -83,7 +88,7 @@ def update_endpoints_name(rb, context):
     return rb
 
 
-def upload_runbook(client, rb_name, Runbook):
+def upload_runbook(client, rb_name, Runbook, return_error_response=False):
     """
     This routine uploads the given runbook
     Args:
@@ -130,7 +135,8 @@ def upload_runbook(client, rb_name, Runbook):
         print(">> {} uploaded with creds >>".format(Runbook))
         assert res.ok is True
     else:
-        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        if not return_error_response:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     return res.json()
 
@@ -562,3 +568,72 @@ def update_tunnel_and_project(tunnel_reference, project, endpoint_payload):
     if resources.get("tunnel_reference", {}):
         resources["tunnel_reference"]["uuid"] = tunnel_reference.get("uuid")
         resources["tunnel_reference"]["name"] = tunnel_reference.get("name")
+
+
+def add_account_uuid(endpoint_payload):
+    payload = {"length": 250, "offset": 0}
+    client = get_api_client()
+
+    account_name_uuid_map = client.account.get_name_uuid_map(payload)
+    account_ref = endpoint_payload["spec"]["resources"]["attrs"]["account_reference"]
+
+    if account_ref.get("name", None):
+        account_uuid = account_name_uuid_map.get(account_ref["name"], None)
+        if not account_uuid:
+            err_msg = "Unable to fetch account uuid for {}".format(account_ref["name"])
+            return False, err_msg
+
+        account_ref["uuid"] = account_uuid
+        return True, None
+    else:
+        err_msg = "Unable to fetch account name from given account reference"
+        return False, err_msg
+
+
+def add_vm_reference(vm_references):
+    project_name = "_internal"
+    client = get_api_client()
+
+    if vm_references:
+        payload = {
+            "entity_type": "mh_vm",
+            "query_name": "",
+            "grouping_attribute": " ",
+            "group_count": 20,
+            "group_offset": 0,
+            "group_attributes": [],
+            "group_member_count": 20,
+            "group_member_offset": 0,
+            "group_member_sort_attribute": "vm_name",
+            "group_member_sort_order": "ASCENDING",
+            "group_member_attributes": [{"attribute": "vm_name"}],
+            "filter_criteria": "is_cvm==0;power_state==on;project_name=={}".format(
+                project_name
+            ),
+        }
+        Obj = get_resource_api("groups", client.connection)
+        res, err = Obj.create(payload)
+        if err:
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+
+        response = res.json()
+        group_results = response.get("group_results", [])
+        if group_results:
+            entity_results = group_results[0].get("entity_results", [])
+            if not entity_results:
+                LOG.debug("vm groups call response: {}".format(response))
+                pytest.fail(
+                    "No target vm reference found for project {}".format(project_name)
+                )
+
+            vm_name = entity_results[0]["data"][0]["values"][0]["values"][0]
+            vm_uuid = entity_results[0]["entity_id"]
+
+            vm_references[0]["name"] = vm_name
+            vm_references[0]["uuid"] = vm_uuid
+
+        else:
+            LOG.debug("vm groups call response: {}".format(response))
+            pytest.fail(
+                "No target vm reference found for project {}".format(project_name)
+            )

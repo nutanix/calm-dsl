@@ -21,7 +21,8 @@ from calm.dsl.init import init_bp, init_runbook
 from calm.dsl.providers import get_provider_types
 from calm.dsl.store import Version
 from calm.dsl.constants import POLICY, STRATOS, DSL_CONFIG
-
+from calm.dsl.builtins import file_exists
+from calm.dsl.api.util import get_auth_info
 from .main import init, set
 from calm.dsl.log import get_logging_handle, CustomLogging
 
@@ -119,6 +120,13 @@ DEFAULT_LOG_CONFIG = get_default_log_config()
     default=DEFAULT_CONNECTION_CONFIG["read_timeout"],
     help="Read timeout for api connections",
 )
+@click.option(
+    "--api-key",
+    "-ak",
+    "api_key_location",
+    default=None,
+    help="Path to api key file for authentication",
+)
 def initialize_engine(
     ip,
     port,
@@ -132,6 +140,7 @@ def initialize_engine(
     retries_enabled,
     connection_timeout,
     read_timeout,
+    api_key_location,
 ):
     """
     \b
@@ -148,6 +157,11 @@ def initialize_engine(
         viii.) CALM_DSL_DB_LOCATION: Default internal dsl db location
 
     """
+    if api_key_location:
+        api_key_location = os.path.expanduser(api_key_location)
+        if not file_exists(api_key_location):
+            LOG.error("{} not found".format(api_key_location))
+            sys.exit(-1)
 
     set_server_details(
         ip=ip,
@@ -162,6 +176,7 @@ def initialize_engine(
         retries_enabled=retries_enabled,
         connection_timeout=connection_timeout,
         read_timeout=read_timeout,
+        api_key_location=api_key_location,
     )
     init_db()
     sync_cache()
@@ -191,23 +206,38 @@ def set_server_details(
     retries_enabled,
     connection_timeout,
     read_timeout,
+    api_key_location,
 ):
 
     if not (ip and port and username and password and project_name):
         click.echo("Please provide Calm DSL settings:\n")
 
     host = ip or click.prompt("Prism Central IP", default="")
-    port = port or click.prompt("Port", default="9440")
-    username = username or click.prompt("Username", default="admin")
-    password = password or click.prompt("Password", default="", hide_input=True)
+
+    if api_key_location:
+        cred = get_auth_info(api_key_location)
+        username = cred.get("username")
+        password = cred.get("password")
+        port = DSL_CONFIG.SAAS_PORT
+    else:
+        port = port or click.prompt("Port", default="9440")
+        username = username or click.prompt("Username", default="admin")
+        password = password or click.prompt("Password", default="", hide_input=True)
+
     project_name = project_name or click.prompt(
-        "Project", default=DSL_CONFIG.EMPTY_PROJECT_NAME
+        "Project", default=DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME
     )
 
     # Do not prompt for init config variables, Take default values for init.ini file
     config_file = config_file or get_default_config_file()
     local_dir = local_dir or get_default_local_dir()
     db_file = db_file or get_default_db_file()
+
+    if port == DSL_CONFIG.SAAS_PORT:
+        if api_key_location:
+            LOG.info("Authenticating with username: {}".format(username))
+        else:
+            LOG.warning(DSL_CONFIG.SAAS_LOGIN_WARN)
 
     LOG.info("Checking if Calm is enabled on Server")
 
@@ -285,7 +315,8 @@ def set_server_details(
     else:
         LOG.debug("Stratos is not supported")
         stratos_status = False
-    if project_name != DSL_CONFIG.EMPTY_PROJECT_NAME:
+
+    if project_name != DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME:
         LOG.info("Verifying the project details")
         project_name_uuid_map = client.project.get_name_uuid_map(
             params={"filter": "name=={}".format(project_name)}
@@ -295,12 +326,17 @@ def set_server_details(
             sys.exit(-1)
         LOG.info("Project '{}' verified successfully".format(project_name))
 
+    if api_key_location:
+        username = DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME
+        password = DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME
+
     # Writing configuration to file
     set_dsl_config(
         host=host,
         port=port,
         username=username,
         password=password,
+        api_key_location=api_key_location or DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME,
         project_name=project_name,
         log_level=log_level,
         config_file=config_file,
@@ -459,6 +495,13 @@ def init_dsl_runbook(runbook_name, dir_name):
     type=int,
     help="read timeout",
 )
+@click.option(
+    "--api-key",
+    "-ak",
+    "api_key_location",
+    default=None,
+    help="Path to api key file for authentication",
+)
 @click.argument("config_file", required=False)
 def _set_config(
     host,
@@ -473,6 +516,7 @@ def _set_config(
     retries_enabled,
     connection_timeout,
     read_timeout,
+    api_key_location,
 ):
     """writes the configuration to config files i.e. config.ini and init.ini
 
@@ -488,12 +532,34 @@ def _set_config(
     # Update cache if there is change in host ip
     update_cache = host != server_config["pc_ip"] if host else False
     host = host or server_config["pc_ip"]
-    username = username or server_config["pc_username"]
-    port = port or server_config["pc_port"]
-    password = password or server_config["pc_password"]
 
+    # Reading api key location and port from config if not provided
+    api_key_location = api_key_location or server_config.get(
+        "api_key_location", DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME
+    )
+
+    # Resetting stored location of api key (for PC login case)
+    if api_key_location != DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME:
+        api_key_location = os.path.expanduser(api_key_location)
+    else:
+        api_key_location = None
+
+    port = port or server_config["pc_port"]
+
+    cred = get_auth_info(api_key_location)
+    stored_username = cred.get("username")
+    stored_password = cred.get("password")
+
+    username = username or stored_username
+    password = password or stored_password
     project_config = ContextObj.get_project_config()
     project_name = project_name or project_config.get("name")
+
+    if port == DSL_CONFIG.SAAS_PORT:
+        if api_key_location:
+            LOG.info("Authenticating with username: {}".format(username))
+        else:
+            LOG.warning(DSL_CONFIG.SAAS_LOGIN_WARN)
 
     LOG.info("Checking if Calm is enabled on Server")
 
@@ -571,7 +637,7 @@ def _set_config(
         LOG.debug("Stratos is not supported")
         stratos_status = False
 
-    if project_name != DSL_CONFIG.EMPTY_PROJECT_NAME:
+    if project_name != DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME:
         LOG.info("Verifying the project details")
         project_name_uuid_map = client.project.get_name_uuid_map(
             params={"filter": "name=={}".format(project_name)}
@@ -599,12 +665,17 @@ def _set_config(
     connection_timeout = connection_timeout or connection_config["connection_timeout"]
     read_timeout = read_timeout or connection_config["read_timeout"]
 
+    if api_key_location:
+        username = DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME
+        password = DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME
+
     # Set the dsl configuration
     set_dsl_config(
         host=host,
         port=port,
         username=username,
         password=password,
+        api_key_location=api_key_location or DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME,
         project_name=project_name,
         db_location=db_location,
         log_level=log_level,

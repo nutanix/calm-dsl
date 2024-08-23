@@ -2,6 +2,8 @@ import sys
 import uuid
 import json
 
+from distutils.version import LooseVersion as LV
+
 from calm.dsl.db.table_config import AhvSubnetsCache
 from calm.dsl.builtins.models.constants import NutanixDB as NutanixDBConst
 
@@ -12,13 +14,15 @@ from .helper import common as common_helper
 from .ahv_vm_cluster import AhvCluster
 from .ahv_vm_vpc import AhvVpc
 
-from calm.dsl.store import Cache
+from calm.dsl.store import Cache, Version
 from calm.dsl.constants import CACHE
 from calm.dsl.api.handle import get_api_client
 from calm.dsl.log import get_logging_handle
 
 
 LOG = get_logging_handle(__name__)
+
+CALM_VERSION = Version.get_version("Calm")
 
 
 # CalmRef
@@ -464,6 +468,8 @@ class Ref:
             account_uuid = ""
             try:
                 account_ref = cls.__parent__.attrs.get("account_reference", {})
+                if isinstance(account_ref, CalmRefType):
+                    account_ref = account_ref.get_dict()
                 account_uuid = account_ref.get("uuid", "")
             except Exception as exp:
                 pass
@@ -472,6 +478,9 @@ class Ref:
 
             if name:
                 params = {"filter": "name=={}".format(name), "length": 250}
+                if LV(CALM_VERSION) >= LV("3.8.1"):
+                    project_cache_data = common_helper.get_cur_context_project()
+                    params["project_uuid"] = project_cache_data.get("uuid")
                 res, err = client.account.vms_list(account_uuid, params)
                 if err:
                     LOG.error(err)

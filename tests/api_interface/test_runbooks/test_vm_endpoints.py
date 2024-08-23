@@ -1,11 +1,22 @@
 import pytest
 import os
+import json
 from distutils.version import LooseVersion as LV
 
 from calm.dsl.store import Version
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import ENDPOINT
-from utils import read_test_config, change_uuids
+from tests.api_interface.test_runbooks.utils import (
+    read_test_config,
+    change_uuids,
+    add_account_uuid,
+    add_vm_reference,
+)
+from calm.dsl.builtins import read_local_file
+from calm.dsl.log import get_logging_handle
+
+
+LOG = get_logging_handle(__name__)
 
 LinuxVMStaticAHVEpPayload = read_test_config(
     file_name="linux_vm_static_ahv_ep_payload.json"
@@ -19,6 +30,8 @@ WindowsVMStaticAHVEpPayload = read_test_config(
 WindowsVMDynamicAHVEpPayload = read_test_config(
     file_name="windows_vm_dynamic_ahv_ep_payload.json"
 )
+
+AHV_LINUX_ID = read_local_file(".tests/runbook_tests/ahv_linux_id")
 
 # calm_version
 CALM_VERSION = Version.get_version("Calm")
@@ -43,7 +56,35 @@ class TestVMEndpoints:
     def test_vm_endpoint_static_crud(self, EndpointPayload):
         """Endpoint for VM crud"""
         client = get_api_client()
-        endpoint = change_uuids(EndpointPayload, {})
+        vm_references = EndpointPayload["spec"]["resources"]["attrs"].get(
+            "vm_references", []
+        )
+        context = {}
+
+        if len(vm_references) > 0:
+            vm_references[0] = {
+                "uuid": AHV_LINUX_ID,
+            }
+            context[AHV_LINUX_ID] = AHV_LINUX_ID
+        endpoint = change_uuids(EndpointPayload, context)
+        res, err = add_account_uuid(EndpointPayload)
+
+        if not res:
+            pytest.fail(err)
+
+        project_list_params = {"filter": "name=={}".format("default")}
+        res, err = client.project.list(params=project_list_params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        default_project_uuid = response["entities"][0]["metadata"]["uuid"]
+        print(">> Default project uuid: {}".format(default_project_uuid))
+
+        endpoint["metadata"]["project_reference"] = {
+            "uuid": default_project_uuid,
+            "name": "default",
+            "kind": "project",
+        }
 
         # Endpoint Create
         print(">> Creating endpoint")
@@ -112,7 +153,7 @@ class TestVMEndpoints:
         res, err = client.endpoint.import_file(
             file_path,
             ep_name + "-uploaded",
-            ep["metadata"].get("project_reference", {}).get("uuid", ""),
+            default_project_uuid,
             passphrase="test_passphrase",
         )
         if err:
@@ -155,6 +196,9 @@ class TestVMEndpoints:
         """Endpoint for VM crud"""
         client = get_api_client()
         endpoint = change_uuids(EndpointPayload, {})
+        res, err = add_account_uuid(EndpointPayload)
+        if not res:
+            pytest.fail(err)
 
         # Endpoint Create
         print(">> Creating endpoint")
@@ -218,12 +262,20 @@ class TestVMEndpoints:
         print(">> Downloading endpoint (uuid={})".format(ep_uuid))
         file_path = client.endpoint.export_file(ep_uuid, passphrase="test_passphrase")
 
+        project_list_params = {"filter": "name=={}".format("default")}
+        res, err = client.project.list(params=project_list_params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        default_project_uuid = response["entities"][0]["metadata"]["uuid"]
+        print(">> Default project uuid: {}".format(default_project_uuid))
+
         # upload the endpoint
         print(">> Uploading endpoint (uuid={})".format(ep_uuid))
         res, err = client.endpoint.import_file(
             file_path,
             ep_name + "-uploaded",
-            ep["metadata"].get("project_reference", {}).get("uuid", ""),
+            default_project_uuid,
             passphrase="test_passphrase",
         )
         if err:

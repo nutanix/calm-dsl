@@ -9,7 +9,7 @@ dev:
 	# Setup our python3 based virtualenv
 	# This step assumes python3 is installed on your dev machine
 	[ -f venv/bin/python3 ] || (python3 -m venv venv && \
-		venv/bin/pip3 install --upgrade pip setuptools)
+		venv/bin/pip3 install --upgrade pip "setuptools<=70.3.0")
 	venv/bin/pip3 install --no-cache -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop
 
@@ -39,6 +39,7 @@ clean:
 		docker ps -aq --no-trunc --filter "status=exited" | xargs -I {} docker rm {} && \
 		docker image prune -f
 	rm -rf venv/ && mkdir venv/ && touch venv/.empty
+	rm -rf ~/.calm/dsl.db
 
 test-verbose: dev
 	venv/bin/py.test -s -vv

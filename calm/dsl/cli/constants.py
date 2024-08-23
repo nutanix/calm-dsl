@@ -761,3 +761,14 @@ class ACP_BEFORE_3_8_0:
             },
         },
     ]
+
+
+class TEST_SCRIPTS:
+    class STATUS:
+        SUCCESS = "SUCCESS"
+        PENDING = "PENDING"
+        RUNNING = "RUNNING"
+        ERROR = "ERROR"
+
+    TERMINAL_STATES = [STATUS.SUCCESS, STATUS.ERROR]
+    TYPE = ["escript", "shell", "powershell", "python"]

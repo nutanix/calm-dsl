@@ -46,6 +46,14 @@ class TestVMEndpointsFailureScenarios:
         client = get_api_client()
         rb_name = "test_warning_vm_endpoint_" + str(uuid.uuid4())[-10:]
 
+        if Runbook == VMEndpointWithIncorrectID:
+            # For VMEndpointWithIncorrectID, since the VM ID is incorrect, the runbook upload should fail as endpoint can't be created
+            res_json = upload_runbook(
+                client, rb_name, Runbook, return_error_response=True
+            )
+            assert res_json["code"] == 403
+            assert res_json["message_list"][0]["reason"] == "ACCESS_DENIED"
+            return
         rb = upload_runbook(client, rb_name, Runbook)
         rb_state = rb["status"]["state"]
         rb_uuid = rb["metadata"]["uuid"]
@@ -139,6 +147,20 @@ class TestVMEndpointsFailureScenarios:
 
         client = get_api_client()
         rb_name = "test_warning_vm_endpoint_" + str(uuid.uuid4())[-10:]
+
+        if Runbook == VMEndpointWithIncorrectID:
+            # For VMEndpointWithIncorrectID, since the VM ID is incorrect, the runbook upload should fail as endpoint can't be created
+            res_json = upload_runbook(
+                client, rb_name, Runbook, return_error_response=True
+            )
+            assert res_json["code"] == 403
+            assert res_json["message_list"][0]["reason"] == "ACCESS_DENIED"
+            return
+
+        # TODO: Cleanup the below code
+        # As part of CALM-45554, Endpoint Creation will be blocked if incorrect unauthorized VM ID is provided
+        # Because of this Runbook Upload will fail for VMEndpointWithIncorrectID.
+        # Since the only param for this test is VMEndpointWithIncorrectID, the below code won't be executed
 
         rb = upload_runbook(client, rb_name, Runbook)
         rb_state = rb["status"]["state"]

@@ -29,9 +29,9 @@
             "uuid": "63d922fd-f9e1-4c68-b355-dc3570ae17c1"
         },
         "account_reference": {
-            "kind": "account",
-            "name": "Vmware 1"
-        },
+          "kind": "account",
+          "name": "NTNX_LOCAL_AZ"
+      },
         "filter_type": "dynamic",
         "filter": "name==vm*",
         "subnet": "10.0.0.0/8"

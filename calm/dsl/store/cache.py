@@ -9,6 +9,7 @@ from .version import Version
 from calm.dsl.db import get_db_handle, init_db_handle
 from calm.dsl.log import get_logging_handle
 from calm.dsl.api import get_client_handle_obj
+from calm.dsl.api.util import get_auth_info
 
 LOG = get_logging_handle(__name__)
 
@@ -30,10 +31,14 @@ class Cache:
         calm_version = Version.get_version("Calm")
         if sync_version or (not calm_version):
             server_config = context.get_server_config()
+            api_key_location = server_config.get("api_key_location", None)
+            cred = get_auth_info(api_key_location)
+            username = cred.get("username")
+            password = cred.get("password")
             client = get_client_handle_obj(
                 server_config["pc_ip"],
                 server_config["pc_port"],
-                auth=(server_config["pc_username"], server_config["pc_password"]),
+                auth=(username, password),
             )
             res, err = client.version.get_calm_version()
             if err:

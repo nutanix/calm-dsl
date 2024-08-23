@@ -24,6 +24,7 @@ from .click_options import simple_verbosity_option, show_trace_option
 from .utils import FeatureFlagGroup, highlight_text
 from calm.dsl.store import Version
 from calm.dsl.config.init_config import get_init_config_handle
+from calm.dsl.cli.run_script import *
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -50,7 +51,7 @@ LOG = get_logging_handle(__name__)
     default=False,
     help="Update cache before running command",
 )
-@click.version_option("3.8.0")
+@click.version_option("3.8.1")
 @click.pass_context
 def main(ctx, config_file, sync):
     """Calm CLI
@@ -115,7 +116,7 @@ def main(ctx, config_file, sync):
     project_config = ContextObj.get_project_config()
     project_name = project_config.get("name")
 
-    if project_name == DSL_CONFIG.EMPTY_PROJECT_NAME:
+    if project_name == DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME:
         LOG.warning(DSL_CONFIG.EMPTY_PROJECT_MESSAGE)
 
     if sync:
@@ -587,3 +588,52 @@ def sync():
 def verify():
     """Verify an account"""
     pass
+
+
+@main.command("run-script")
+@click.option(
+    "--type",
+    "-t",
+    "script_type",
+    type=click.Choice(test_scripts_type()),
+    default="escript",
+    help="Type of script that need to be tested.",
+)
+@click.option(
+    "--file",
+    "-f",
+    "script_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="File path of script that need to be tested",
+)
+@click.option(
+    "--project",
+    "-p",
+    "project_name",
+    help="Project used by test scripts",
+)
+@click.option(
+    "--endpoint",
+    "-e",
+    "endpoint_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Endpoint to be used while testing shell scripts, powershell scripts and python remote tasks",
+)
+def run_script(script_type, script_file, project_name, endpoint_file):
+    """Tests escripts/shell_scripts/powershell/python scripts for syntactical errors"""
+    if script_type == "escript":
+        test_escript(script_file, project_name)
+
+    elif script_type == "shell":
+        test_shell_script(script_file, endpoint_file, project_name)
+
+    elif script_type == "powershell":
+        test_powershell_script(script_file, endpoint_file, project_name)
+
+    elif script_type == "python":
+        test_python_script(script_file, endpoint_file, project_name)
+
+    else:
+        LOG.error("Invalid script type {}. Use one of {}".format(test_scripts_type()))
+        sys.exit(-1)

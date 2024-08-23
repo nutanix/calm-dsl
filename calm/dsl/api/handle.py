@@ -38,6 +38,7 @@ from .approval import ApprovalAPI
 from .approval_request import ApprovalRequestAPI
 from .provider import ProviderAPI
 from .quotas import QuotasAPI
+from .util import get_auth_info
 
 
 class ClientHandle:
@@ -132,8 +133,10 @@ def get_api_client():
 
         pc_ip = server_config.get("pc_ip")
         pc_port = server_config.get("pc_port")
-        username = server_config.get("pc_username")
-        password = server_config.get("pc_password")
+        api_key_location = server_config.get("api_key_location", None)
+        cred = get_auth_info(api_key_location)
+        username = cred.get("username")
+        password = cred.get("password")
 
         update_api_client(host=pc_ip, port=pc_port, auth=(username, password))
 

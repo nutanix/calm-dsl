@@ -16,7 +16,7 @@ input:
 - "137"   # Publisher = Canonical
 - "19"    # Image Offer = UbuntuServer
 - "18"    # Image Sku = 18.04-LTS
-- "27"    # Image Version = 18.04.201903121
+- "27"    # Image Version = 18.04.202401161
 - "os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk"   # OS Disk Name
 - "n"   # Want to add storage type
 - "1"   # Cache type = None
@@ -36,7 +36,7 @@ spec_assertions:
 - "calmrg"    # Resource group
 - "Canonical"   # Publisher
 - "18.04-LTS"   # Image Sku
-- "18.04.201903121"   # Image Version
+- "18.04.202401161"   # Image Version
 - "Attach"    # Os disk create option
 - "UbuntuServer"  # Image offer
 - "data_disk_list: []"   # Data disks = No
@@ -50,5 +50,5 @@ dependencies:
 - [4, accounts/azure_primary/resource_groups/calmrg/index]
 - [13, accounts/azure_primary/locations/East US 2/publishers/Canonical/index]
 - [15, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/UbuntuServer/image_skus/18.04-LTS/index]
-- [16, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/UbuntuServer/image_skus/18.04-LTS/image_versions/18.04.201903121/index]
+- [16, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/UbuntuServer/image_skus/18.04-LTS/image_versions/18.04.202401161/index]
 - [14, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/UbuntuServer/index]

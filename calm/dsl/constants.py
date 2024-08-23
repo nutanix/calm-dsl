@@ -214,8 +214,10 @@ class ENTITY:
 
 
 class DSL_CONFIG:
-    EMPTY_PROJECT_NAME = "-"
+    EMPTY_CONFIG_ENTITY_NAME = "-"
     EMPTY_PROJECT_MESSAGE = "Project configuration not available. Use command `calm set config -pj <project_name>` to set it."
+    SAAS_PORT = "443"
+    SAAS_LOGIN_WARN = "Seems like you are trying to authenticate saas instance. Please provide API key location."
 
 
 class SUBSTRATE:
