@@ -10,4 +10,4 @@ configuration.api_key={"authorization":"Bearer "+ aToken}
 k8client.Configuration.set_default(configuration)
 v1=k8client.CoreV1Api()
 nodes=v1.list_node(watch=False)
-print(nodes.items[0].metadata.name == "master0")
+print(nodes.items[0].metadata.name == "localhost")
