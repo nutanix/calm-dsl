@@ -10,11 +10,14 @@ from calm.dsl.cli.constants import RUNLOG, APPLICATION
 from tests.api_interface.entity_spec.existing_vm_bp import (
     ExistingVMBlueprint as Blueprint,
 )
+from tests.utils import Application as ApplicationHelper
 
 LOG = get_logging_handle(__name__)
 
 
 class TestApps:
+    app_helper = ApplicationHelper()
+
     def test_apps_list(self):
 
         client = get_api_client()
@@ -194,7 +197,7 @@ class TestApps:
                     "action {} is not completed in 5 minutes".format(action_name)
                 )
         # let's wait for few seconds before delete
-        time.sleep(5)
+        self.app_helper._wait_for_non_busy_state(app_name)
         LOG.info("Deleting application {}".format(app_name))
         res, err = client.application.delete(app_uuid)
         if err:
