@@ -968,10 +968,13 @@ def abort_action_execution(runlog_uuid):
     def poll_func(runlog_uuid):
         return client.provider.poll_action_run(provider_uuid, runlog_uuid)
 
+    def abort_func(runlog_uuid):
+        return client.provider.abort(provider_uuid, runlog_uuid)
+
     abort_runbook_execution(
         runlog_uuid,
         poll_fn=poll_func,
-        abort_fn=client.provider.abort,
+        abort_fn=abort_func,
         link=link,
     )
 
