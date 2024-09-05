@@ -50,5 +50,11 @@ def render_ahv_vm_resources(cls, boot_config, vm_name_prefix=""):
     if user_attrs.get("boot_config", {}):
         user_attrs["boot_type"] = user_attrs["boot_config"].get("boot_type", None)
 
+    user_attrs["vtpm_enabled"] = False  # default vtpm enabled is False
+    if user_attrs.get("vtpm_config", {}):
+        user_attrs["vtpm_enabled"] = user_attrs["vtpm_config"].get(
+            "vtpm_enabled", False
+        )
+
     text = render_template(schema_file="ahv_vm_resources.py.jinja2", obj=user_attrs)
     return text.strip()

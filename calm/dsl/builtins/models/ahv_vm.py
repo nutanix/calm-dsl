@@ -1,9 +1,12 @@
 import sys
 
+from distutils.version import LooseVersion as LV
+
 from .calm_ref import Ref
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .provider_spec import ProviderSpecType
+from calm.dsl.store.version import Version
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -55,6 +58,12 @@ class AhvVmResourcesType(EntityType):
 
         if not cdict["boot_config"]:
             cdict.pop("boot_config", None)
+
+        # Merging vtpm_enabled to vtpm_config
+        calm_version = Version.get_version("Calm")
+        if LV(calm_version) > LV("4.0.0"):
+            vtpm_config = {"vtpm_enabled": cdict.pop("vtpm_enabled", False)}
+            cdict["vtpm_config"] = vtpm_config
 
         serial_port_list = []
         if cdict.get("serial_port_list"):
