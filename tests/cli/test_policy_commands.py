@@ -50,6 +50,7 @@ DSL_DAY2_BP = "tests/blueprint_example/test_bp_dayTwo/blueprint.py"
     reason="Approval policy is supported from 3.5.0",
 )
 @pytest.mark.parallel_executable
+@pytest.mark.approval_policy
 class TestPolicyCommands:
     @classmethod
     def setup_class(cls):
