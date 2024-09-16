@@ -1076,6 +1076,15 @@ def publish_bp_as_existing_marketplace_bp(
             )
             sys.exit(-1)
 
+    CALM_VERSION = Version.get_version("Calm")
+
+    # adding icon, projects in accordance with latest existing MPI (CALM-34004)
+    if LV(CALM_VERSION) >= LV("4.0.0"):
+        latest_mpi_data = get_latest_mpi_data(entity_results)
+        icon_name, projects = set_latest_mpi_data(
+            latest_mpi_data, projects=projects, icon_name=icon_name
+        )
+
     publish_bp_to_marketplace_manager(
         bp_name=bp_name,
         marketplace_bp_name=marketplace_bp_name,
@@ -1935,6 +1944,15 @@ def publish_runbook_as_existing_marketplace_item(
             )
             sys.exit(-1)
 
+    CALM_VERSION = Version.get_version("Calm")
+
+    # adding icon, projects in accordance with latest existing MPI (CALM-34004)
+    if LV(CALM_VERSION) >= LV("4.0.0"):
+        latest_mpi_data = get_latest_mpi_data(entity_results)
+        icon_name, projects = set_latest_mpi_data(
+            latest_mpi_data, projects=projects, icon_name=icon_name
+        )
+
     publish_runbook_to_marketplace_manager(
         runbook_name=runbook_name,
         marketplace_item_name=marketplace_item_name,
@@ -2207,3 +2225,53 @@ def patch_runbook_runtime_editables(client, mpi_data, payload):
 
     payload["spec"]["resources"]["args"] = args
     return payload
+
+
+def get_latest_mpi_data(entities):
+    latest_version_data = []
+    latest_version = None
+    for entity in entities:
+        for _data in entity.get("data", []):
+            if _data.get("name", "") != "version":
+                continue
+
+            # version is expected to be of format x.y.z following guide: https://semver.org/
+            _version = _data["values"][0]["values"][0]
+
+            # assigning first version as latest version
+            if latest_version is None:
+                latest_version = _version
+
+            # check if subsequently fetched version is greater than latest version
+            if LV(_version) >= LV(latest_version):
+                latest_version_data = entity["data"]
+
+    # store latest existing mpi data in a map for access of values
+    latest_existing_mpi_data_map = {}
+    for data in latest_version_data:
+        value = data.get("values", [])
+        if value:
+            latest_existing_mpi_data_map[data["name"]] = value[0].get("values", [])
+
+    return latest_existing_mpi_data_map
+
+
+def set_latest_mpi_data(latest_existing_mpi_data_map, **kwargs):
+    projects = kwargs.get("projects", [])
+    icon_name = kwargs.get("icon_name", None)
+
+    client = get_api_client()
+
+    # if project is already supplied then don't assign it from latest existing mpi data
+    if not projects:
+        projects = latest_existing_mpi_data_map.get("project_names", [])
+
+    # if icon_name is already supplied then don't assign it from latest existing mpi data
+    if not icon_name:
+        icon_list = latest_existing_mpi_data_map.get("icon_list", [])
+        app_icon_name_uuid_map = client.app_icon.get_uuid_name_map()
+        if icon_list:
+            icon_uuid = json.loads(icon_list[0]).get("icon_uuid")
+            icon_name = app_icon_name_uuid_map[icon_uuid] if icon_uuid else None
+
+    return icon_name, projects
