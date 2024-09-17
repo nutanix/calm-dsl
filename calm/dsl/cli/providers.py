@@ -3,10 +3,12 @@ import click
 import copy
 import json
 import os
+import pathlib
 import sys
 import time
 import uuid
 
+from black import format_file_in_place, WriteBack, FileMode
 from prettytable import PrettyTable
 from ruamel import yaml
 
@@ -631,7 +633,7 @@ def compile_provider_command(provider_file, out):
         LOG.error("Unknown output format {} given".format(out))
 
 
-def get_providers(name, filter_by, limit, offset, quiet, all_items):
+def get_providers(name, filter_by, limit, offset, quiet, all_items, out=None):
     """Get the providers, optionally filtered by a string"""
 
     client = get_api_client()
@@ -671,6 +673,10 @@ def get_providers(name, filter_by, limit, offset, quiet, all_items):
                 limit, total_matches
             )
         )
+
+    if out == "json":
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
+        return
 
     json_rows = res["entities"]
     if not json_rows:
@@ -1217,3 +1223,18 @@ def get_provider_uuid_from_runlog(client, runlog_uuid):
         )
         sys.exit(-1)
     return entities[0]["status"]["provider_reference"]["uuid"]
+
+
+def format_provider_file(provider_file):
+    path = pathlib.Path(provider_file)
+    LOG.debug("Formatting provider {} using black".format(path))
+    if format_file_in_place(
+        path, fast=False, mode=FileMode(), write_back=WriteBack.DIFF
+    ):
+        LOG.info("Patching above diff to provider - {}".format(path))
+        format_file_in_place(
+            path, fast=False, mode=FileMode(), write_back=WriteBack.YES
+        )
+        LOG.info("All done!")
+    else:
+        LOG.info("Provider {} left unchanged.".format(path))

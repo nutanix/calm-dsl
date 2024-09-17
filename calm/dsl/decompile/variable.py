@@ -22,6 +22,7 @@ def render_variable_template(
     rendered_credential_list=[],
     endpoints=[],
     ep_list=[],
+    ignore_cred_dereference_error=False,
 ):
 
     LOG.debug("Rendering {} variable template".format(cls.__name__))
@@ -184,6 +185,7 @@ def render_variable_template(
                 credentials_list=credentials_list,
                 rendered_credential_list=rendered_credential_list,
                 use_calm_var_task=True,
+                ignore_cred_dereference_error=ignore_cred_dereference_error,
             )
 
             if data_type == "BASE":

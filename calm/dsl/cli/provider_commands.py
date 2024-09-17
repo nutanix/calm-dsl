@@ -5,7 +5,18 @@ import sys
 from calm.dsl.log import get_logging_handle
 from calm.dsl.config import get_context
 
-from .main import describe, get, create, compile, delete, test, watch, abort, decompile
+from .main import (
+    describe,
+    get,
+    create,
+    compile,
+    delete,
+    test,
+    watch,
+    abort,
+    decompile,
+    format,
+)
 from .providers import (
     describe_provider,
     create_provider_from_dsl,
@@ -17,6 +28,7 @@ from .providers import (
     abort_action_execution,
     run_resource_type_action_command,
     decompile_provider,
+    format_provider_file,
 )
 
 LOG = get_logging_handle(__name__)
@@ -53,10 +65,18 @@ def _describe_provider(provider_name, out):
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
 )
-def _get_providers(name, filter_by, limit, offset, quiet, all_items):
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format",
+)
+def _get_providers(name, filter_by, limit, offset, quiet, all_items, out):
     """Get providers, optionally filtered by a string"""
 
-    get_providers(name, filter_by, limit, offset, quiet, all_items)
+    get_providers(name, filter_by, limit, offset, quiet, all_items, out=out)
 
 
 @create.command("provider", feature_min_version="4.0.0", experimental=True)
@@ -365,3 +385,18 @@ def _decompile_provider(
     decompile_provider(
         name, provider_file, with_secrets, prefix, provider_dir, passphrase
     )
+
+
+@format.command("provider", feature_min_version="4.0.0", experimental=True)
+@click.option(
+    "--file",
+    "-f",
+    "provider_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of Provider file to format",
+)
+def _format_provider_command(provider_file):
+    """Formats Provider DSL file using black"""
+
+    format_provider_file(provider_file)

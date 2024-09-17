@@ -427,6 +427,7 @@ def get_schema_file_and_user_attrs_for_rtop_task(
             "Task_" + task_name,
             credentials_list=credentials_list,
             rendered_credential_list=rendered_credential_list,
+            ignore_cred_dereference_error=True,  # CALM-47256
         )
         input_variables.append(modify_var_format(var_template))
 

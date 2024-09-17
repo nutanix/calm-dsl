@@ -35,6 +35,7 @@ def render_task_template(
     credentials_list=[],
     rendered_credential_list=[],
     use_calm_var_task=False,
+    ignore_cred_dereference_error=False,
 ):
     LOG.debug("Rendering {} task template".format(cls.name))
     if not isinstance(cls, TaskType):
@@ -57,9 +58,15 @@ def render_task_template(
 
     cred = cls.attrs.get("login_credential_local_reference", None)
     if cred:
-        user_attrs["cred"] = "ref({})".format(
-            get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
-        )
+        try:
+            user_attrs["cred"] = "ref({})".format(
+                get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
+            )
+        except ValueError as ve:
+            if ignore_cred_dereference_error:
+                LOG.debug("Ignoring cred not found error for RTOpTask")
+            else:
+                raise Exception(ve)
     status_map_list = getattr(cls, "status_map_list", [])
     if status_map_list:
         user_attrs["status_map_list"] = status_map_list
@@ -163,11 +170,17 @@ def render_task_template(
         if auth_type == "basic_with_cred":
             auth_cred = auth_obj.get("credential_local_reference", None)
             if auth_cred:
-                user_attrs["cred"] = "ref({})".format(
-                    get_cred_var_name(
-                        getattr(auth_cred, "name", "") or auth_cred.__name__
+                try:
+                    user_attrs["cred"] = "ref({})".format(
+                        get_cred_var_name(
+                            getattr(auth_cred, "name", "") or auth_cred.__name__
+                        )
                     )
-                )
+                except ValueError as ve:
+                    if ignore_cred_dereference_error:
+                        LOG.debug("Ignoring cred not found error for RTOpTask")
+                    else:
+                        raise Exception(ve)
         elif auth_type == "basic":
             cred_dict = {
                 "username": auth_obj["username"],
