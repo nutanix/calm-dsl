@@ -459,6 +459,9 @@
                                 "adapter_type": "SCSI"
                             }
                         }
+                    },
+                    "vtpm_config": {
+                        "vtpm_enabled": false
                     }
                 }
             },

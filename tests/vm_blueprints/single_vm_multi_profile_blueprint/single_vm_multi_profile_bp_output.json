@@ -473,6 +473,9 @@
                         }
                     },
                     "serial_port_list": [],
+                    "vtpm_config": {
+                        "vtpm_enabled": false
+                    },
                     "boot_config": {
                         "boot_device": {
                             "disk_address": {
@@ -613,6 +616,9 @@
                         }
                     },
                     "serial_port_list": [],
+                    "vtpm_config": {
+                        "vtpm_enabled": false
+                    },
                     "boot_config": {
                         "boot_device": {
                             "disk_address": {
