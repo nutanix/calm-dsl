@@ -7,11 +7,11 @@
 
 # Improvements
 
-- Adds support to provide xml file path for guest customization while creating provider spec for AHV using `calm create provider spec --type AHV_VM`
+- Adds support to provide xml file path for guest customization while creating provider spec for AHV using `calm create provider_spec --type AHV_VM`
 - Endpoints of VM type will only be created if referenced VM is in current context project i.e VM is authorized for a given project. Similarly, only authorized VM can be used as target endpoint in runbook/blueprint.
 
 # Bug Fixes
 
 - Fixes `calm get marketplace bps` command failure in Calm-VM 3.8.0 for objects MPI.
 - Fixes `calm update app-migratable-bp` command failure for multi-profile multi-VM blueprint.
-- Fixes failure while providing guest customization for AHV using command `calm create provider spec --type AHV_VM`
+- Fixes failure while providing guest customization for AHV using command `calm create provider_spec --type AHV_VM`
