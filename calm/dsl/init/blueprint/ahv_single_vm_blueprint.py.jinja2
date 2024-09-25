@@ -71,7 +71,7 @@ class {{bp_name}}VmResources(AhvVmResources):
         AhvVmDisk.Disk.Scsi.cloneFromImageService("{{vm_image}}", bootable=True),
     ]
     {% if vpc_name != "" %}nics = [AhvVmNic.NormalNic.ingress(subnet="{{subnet_name}}", vpc="{{vpc_name}}")]
-    {% else %}nics = [AhvVmNic.DirectNic.ingress(subnet="{{subnet_name}}", cluster="{{cluster_name}}")]
+    {% else %}nics = [AhvVmNic.NormalNic.ingress(subnet="{{subnet_name}}", cluster="{{cluster_name}}")]
     {% endif %}
 
     guest_customization = AhvVmGC.CloudInit(

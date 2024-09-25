@@ -156,7 +156,7 @@ class {{bp_name}}VmResources(AhvVmResources):
         AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(CentosPackage, bootable=True),
     ]
     {% if vpc_name != "" %}nics = [AhvVmNic.NormalNic.ingress(subnet="{{subnet_name}}", vpc="{{vpc_name}}")]
-    {% else %}nics = [AhvVmNic.DirectNic.ingress(subnet="{{subnet_name}}", cluster="{{cluster_name}}")]
+    {% else %}nics = [AhvVmNic.NormalNic.ingress(subnet="{{subnet_name}}", cluster="{{cluster_name}}")]
     {% endif %}
 
 
