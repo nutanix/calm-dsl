@@ -1706,6 +1706,28 @@ def launch_blueprint_simple(
         }
     }
 
+    # (CALM-39565) Block bp launch if:
+    # 1. Snapshot config present in bp but protection policy/rule not specified
+    # 2. And launching via ignoring runtime editables.
+    if runtime_editables and not patch_editables:
+        for _config in runtime_editables.get("snapshot_config_list", []):
+            for _attrs in _config.get("value", {}).get("attrs_list", []):
+                if not _attrs.get("app_protection_policy_reference"):
+                    LOG.error(
+                        "Protection policy not specified in blueprint {}".format(
+                            blueprint_name
+                        )
+                    )
+                    sys.exit("Protection policy not specified in blueprint")
+
+                if not _attrs.get("app_protection_rule_reference"):
+                    LOG.error(
+                        "Protection rule not specified in blueprint {}".format(
+                            blueprint_name
+                        )
+                    )
+                    sys.exit("Protection rule not specified in blueprint")
+
     if runtime_editables and patch_editables:
         runtime_editables_json = json.dumps(
             runtime_editables, indent=4, separators=(",", ": ")
