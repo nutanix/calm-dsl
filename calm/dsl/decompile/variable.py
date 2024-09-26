@@ -215,7 +215,7 @@ def render_variable_template(
                 elif var_val_type == "DATE_TIME":
                     schema_file = "var_with_options_fromTask_array_datetime.py.jinja2"
                 elif var_val_type == "MULTILINE_STRING":
-                    if user_attrs["default_value"]:
+                    if user_attrs.get("default_value"):
                         user_attrs["default_value"] = repr(user_attrs["default_value"])
                     schema_file = "var_with_options_fromTask_array_multiline.py.jinja2"
 
