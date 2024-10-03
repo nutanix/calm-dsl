@@ -28,6 +28,7 @@ from .marketplace import (
     unpublish_marketplace_bp,
 )
 from .constants import MARKETPLACE_ITEM
+from .utils import FeatureDslOption
 
 APP_STATES = [
     MARKETPLACE_ITEM.STATES.PENDING,
@@ -353,6 +354,15 @@ def _decompile_marketplace_bp(
     default=False,
     help="Publishes bp to all projects",
 )
+@click.option(
+    "--without-platform-data",
+    "-wp",
+    "publish_without_platform_data",
+    is_flag=True,
+    default=False,
+    type=FeatureDslOption(feature_min_version="3.8.0"),
+    help="Publishes bp without platform fields.",
+)
 def publish_bp(
     bp_name,
     name,
@@ -367,6 +377,7 @@ def publish_bp(
     icon_name=False,
     icon_file=None,
     all_projects=False,
+    publish_without_platform_data=False,
 ):
     """Publish a blueprint to marketplace manager"""
 
@@ -388,6 +399,7 @@ def publish_bp(
             icon_name=icon_name,
             icon_file=icon_file,
             all_projects=all_projects,
+            publish_without_platform_data=publish_without_platform_data,
         )
 
     else:
@@ -404,6 +416,7 @@ def publish_bp(
             icon_name=icon_name,
             icon_file=icon_file,
             all_projects=all_projects,
+            publish_without_platform_data=publish_without_platform_data,
         )
 
 

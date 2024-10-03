@@ -25,6 +25,7 @@ from .environments import get_project_environment
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Version
 from .constants import MARKETPLACE_ITEM, TASKS
+from calm.dsl.constants import PROVIDER
 
 LOG = get_logging_handle(__name__)
 APP_STATES = [
@@ -830,6 +831,7 @@ def publish_bp_to_marketplace_manager(
     icon_file=None,
     projects=[],
     all_projects=False,
+    publish_without_platform_data=False,
 ):
 
     client = get_api_client()
@@ -859,6 +861,12 @@ def publish_bp_to_marketplace_manager(
             )
         )
         sys.exit(-1)
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV("3.8.0"):
+        if publish_without_platform_data:
+            LOG.info("Removing platform dependent fields from blueprint")
+            _remove_platform_spec_data(bp_spec=bp_data["spec"])
 
     bp_template = {
         "spec": {
@@ -951,6 +959,7 @@ def publish_bp_as_new_marketplace_bp(
     icon_name=None,
     icon_file=None,
     all_projects=False,
+    publish_without_platform_data=False,
 ):
 
     # Search whether this marketplace item exists or not
@@ -985,6 +994,7 @@ def publish_bp_as_new_marketplace_bp(
         icon_file=icon_file,
         projects=projects,
         all_projects=all_projects,
+        publish_without_platform_data=publish_without_platform_data,
     )
 
     if publish_to_marketplace or auto_approve:
@@ -1022,6 +1032,7 @@ def publish_bp_as_existing_marketplace_bp(
     icon_name=None,
     icon_file=None,
     all_projects=False,
+    publish_without_platform_data=False,
 ):
 
     LOG.info(
@@ -1096,6 +1107,7 @@ def publish_bp_as_existing_marketplace_bp(
         icon_file=icon_file,
         projects=projects,
         all_projects=all_projects,
+        publish_without_platform_data=publish_without_platform_data,
     )
 
     if publish_to_marketplace or auto_approve:
@@ -2225,6 +2237,143 @@ def patch_runbook_runtime_editables(client, mpi_data, payload):
 
     payload["spec"]["resources"]["args"] = args
     return payload
+
+
+def set_field_to_null(data, key_to_set_null):
+    """
+    Sets the specified key in the given json dict to it's equivalent null value.
+    Performs a recursive traversal in nested json dict to set the key to null.
+
+    Equivalent null value for different types are:
+        - dict: {}
+        - list: []
+        - int: None
+        - str: ""
+        - bool: None
+        - Nonetype values: None
+
+    Args:
+        data (dict): Nested json dict.
+        key_to_set_null (str): The key whose value should be set to it's corresponding null equivalence.
+
+    Returns:
+        None
+    """
+    EQUIVALENCE_NULL = {
+        dict: {},
+        list: [],
+        int: None,
+        str: "",
+        bool: None,
+        type(None): None,
+    }
+
+    try:
+        if isinstance(data, dict):
+
+            # If key is found in dict, set it to equivalent null value.
+            if key_to_set_null in data:
+                LOG.debug(
+                    "Setting equivalence null value to {}".format(key_to_set_null)
+                )
+                data[key_to_set_null] = EQUIVALENCE_NULL[type(data[key_to_set_null])]
+
+            # If key is not found in dict then recursively call same function for each key in dict.
+            for item in data:
+                if item == "metadata":  # ignore any modification in metadata
+                    continue
+                set_field_to_null(data[item], key_to_set_null)
+
+        elif isinstance(data, list):
+
+            for _, item in enumerate(data):
+
+                # If key is found in list, set it to equivalent null value.
+                if key_to_set_null == item:
+                    LOG.debug(
+                        "Setting equivalence null value to {}".format(key_to_set_null)
+                    )
+                    item = EQUIVALENCE_NULL[type(item)]
+
+                # If key is not found in list then recursively call same function for each item.
+                else:
+                    set_field_to_null(item, key_to_set_null)
+
+        else:
+            LOG.debug("Data is not of type dict or list".format(data))
+            return
+
+    except Exception as e:
+        LOG.debug(
+            "Error while setting equivalence null value to {}".format(key_to_set_null)
+        )
+        LOG.debug(e)
+        return
+
+
+def _remove_platform_spec_data(bp_spec):
+    """
+    Removes platform spec data from blueprint spec before publishing to marketplace manager.
+
+    Args:
+        bp_spec (dict): Blueprint spec data
+
+    Returns:
+        None
+    """
+
+    VALID_SUBSTRATE_TYPES = [
+        PROVIDER.TYPE.AHV,
+        PROVIDER.TYPE.VMWARE,
+        PROVIDER.TYPE.AWS,
+        PROVIDER.TYPE.AZURE,
+        PROVIDER.TYPE.GCP,
+    ]
+
+    client = get_api_client()
+    substrate_types = []
+    if not bp_spec.get("resources", {}):
+        LOG.debug("No resources found in blueprint spec".format(bp_spec))
+        return
+
+    substrates = bp_spec["resources"].get("substrate_definition_list", [])
+
+    # storing all substrate types present in blueprint
+    for substrate in substrates:
+        if substrate.get("type"):
+            substrate_types.append(substrate["type"])
+
+    # creating api client object to get platform dependent fields
+    Obj = get_resource_api(
+        "platform_dependent_fields", client.connection, calm_api=True
+    )
+    payload = {"filters": {"cloud_providers": substrate_types}}
+    res, err = Obj.list(payload)
+
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    platform_dependent_fields = res.json() or {}
+
+    if not platform_dependent_fields:
+        LOG.warning("There are no platform dependent fields to remove")
+        return
+
+    for substrate_type, fields in platform_dependent_fields.items():
+        if substrate_type not in VALID_SUBSTRATE_TYPES:
+            LOG.warning(
+                "Platform dependent fields removal for '{}' is not supported".format(
+                    substrate_type
+                )
+            )
+            continue
+
+        substrates = bp_spec["resources"].get("substrate_definition_list", [])
+
+        for substrate in substrates:
+            if substrate.get("type") == substrate_type:
+                for field in fields:
+                    set_field_to_null(substrate.get("create_spec"), field)
 
 
 def get_latest_mpi_data(entities):
