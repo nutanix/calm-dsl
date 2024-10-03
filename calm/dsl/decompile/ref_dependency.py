@@ -8,6 +8,7 @@ PACKAGE_NAME_MAP = {}
 DEPLOYMENT_NAME_MAP = {}
 POWER_ACTION_SUBSTRATE_MAP = {}
 RESOURCE_TYPE_NAME_MAP = {}
+ENDPOINT_NAME_MAP = {}
 
 
 def get_service_name(name):
@@ -75,8 +76,14 @@ def update_package_name(ui_name, dsl_name):
     PACKAGE_NAME_MAP[ui_name] = dsl_name
 
 
+def update_endpoint_name(ui_name, dsl_name):
+    global ENDPOINT_NAME_MAP
+    ENDPOINT_NAME_MAP[ui_name] = dsl_name
+
+
 def get_endpoint_name(name):
-    return process_variable_name(name)
+    global ENDPOINT_NAME_MAP
+    return ENDPOINT_NAME_MAP.get(name, None)
 
 
 def get_deployment_name(name):
@@ -115,7 +122,7 @@ def update_power_action_target_substrate(runbook_name, substrate_name):
 
 def init_ref_dependency_globals():
 
-    global SERVICE_NAME_MAP, PROFILE_NAME_MAP, ENTITY_GUI_DSL_NAME_MAP
+    global SERVICE_NAME_MAP, PROFILE_NAME_MAP, ENTITY_GUI_DSL_NAME_MAP, ENDPOINT_NAME_MAP
     global PACKAGE_NAME_MAP, DEPLOYMENT_NAME_MAP, POWER_ACTION_SUBSTRATE_MAP, RESOURCE_TYPE_NAME_MAP
 
     SERVICE_NAME_MAP = {}
@@ -125,3 +132,4 @@ def init_ref_dependency_globals():
     DEPLOYMENT_NAME_MAP = {}
     POWER_ACTION_SUBSTRATE_MAP = {}
     RESOURCE_TYPE_NAME_MAP = {}
+    ENDPOINT_NAME_MAP = {}
