@@ -51,7 +51,10 @@ class TestVMEndpointsFailureScenarios:
             res_json = upload_runbook(
                 client, rb_name, Runbook, return_error_response=True
             )
-            assert res_json["code"] == 403
+            if LV(CALM_VERSION) >= LV("4.0.0"):
+                assert res_json["code"] == 422
+            else:
+                assert res_json["code"] == 403
             assert res_json["message_list"][0]["reason"] == "ACCESS_DENIED"
             return
         rb = upload_runbook(client, rb_name, Runbook)
@@ -159,7 +162,10 @@ class TestVMEndpointsFailureScenarios:
             res_json = upload_runbook(
                 client, rb_name, Runbook, return_error_response=True
             )
-            assert res_json["code"] == 403
+            if LV(CALM_VERSION) >= LV("4.0.0"):
+                assert res_json["code"] == 422
+            else:
+                assert res_json["code"] == 403
             assert res_json["message_list"][0]["reason"] == "ACCESS_DENIED"
             return
 
