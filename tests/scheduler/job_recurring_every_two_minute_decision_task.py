@@ -12,7 +12,7 @@ expiry_date = (
     str(expiry_date.strftime("%Y-%m-%dT%H:%M:%SZ")).replace("T", " ").replace("Z", "")
 )
 
-time_zone = "Asia/Kolkata"
+time_zone = "UTC"
 
 RUNBOOK_NAME = "job_recurring_every_two_minute_decision_task"
 

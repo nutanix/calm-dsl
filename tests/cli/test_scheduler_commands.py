@@ -87,6 +87,10 @@ class TestSchedulerCommands:
         # Launch Blueprint
         bps.launch_blueprint_simple(bp_name, app_name=app_name, patch_editables=False)
 
+        # wait for app to provision completely
+        # TODO: add helper for app to be in provisioning state
+        time.sleep(180)
+
         jobname = "test_job_scheduler" + suffix()
         file_replace(
             dsl_file,
@@ -364,7 +368,7 @@ class TestSchedulerCommands:
         assert result.get("resources").get("state") == "ACTIVE"
 
         client = get_api_client()
-        job_get_res = scheduler.get_job(client, job_name, all=True)
+        job_get_res = scheduler.get_job(client, job_name)
         res, err = client.job.read(job_get_res["metadata"]["uuid"])
         job_response = res.json()
         LOG.info(job_response)
@@ -464,8 +468,9 @@ class TestSchedulerCommands:
         result = scheduler.create_job_command(dsl_file, jobname, None, False)
         assert result.get("resources").get("state") == "ACTIVE"
 
+        time.sleep(10)
         client = get_api_client()
-        job_get_res = scheduler.get_job(client, jobname, all=True)
+        job_get_res = scheduler.get_job(client, jobname)
         res, err = client.job.read(job_get_res["metadata"]["uuid"])
         job_response = res.json()
         LOG.info(job_response)
@@ -501,6 +506,10 @@ class TestSchedulerCommands:
         # Launch Blueprint
         bps.launch_blueprint_simple(bp_name, app_name=app_name, patch_editables=False)
 
+        # wait for app to provision completely
+        # TODO: add helper for app to be in provisioning state
+        time.sleep(180)
+
         jobname = "test_job_scheduler" + suffix()
         file_replace(
             dsl_file,
@@ -510,8 +519,9 @@ class TestSchedulerCommands:
         result = scheduler.create_job_command(dsl_file, jobname, None, False)
         assert result.get("resources").get("state") == "ACTIVE"
 
+        time.sleep(10)
         client = get_api_client()
-        job_get_res = scheduler.get_job(client, jobname, all=True)
+        job_get_res = scheduler.get_job(client, jobname)
         res, err = client.job.read(job_get_res["metadata"]["uuid"])
         job_response = res.json()
         LOG.info(job_response)

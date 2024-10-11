@@ -2,12 +2,12 @@ from datetime import datetime, timedelta
 
 from calm.dsl.builtins import Job, JobScheduler
 
-start_date = datetime.now() + timedelta(seconds=10)
+start_date = datetime.now() + timedelta(seconds=120)
 start_date = (
     str(start_date.strftime("%Y-%m-%dT%H:%M:%SZ")).replace("T", " ").replace("Z", "")
 )
 cron = "50 23 * * *"
-time_zone = "Asia/Calcutta"
+time_zone = "UTC"
 
 RUNBOOK_NAME = "job_recurring_no_expiration_runbook"
 

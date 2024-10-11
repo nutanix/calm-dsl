@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from calm.dsl.builtins import Job, JobScheduler
 
-start_date = datetime.now() + timedelta(seconds=30)
+start_date = datetime.now() + timedelta(seconds=120)
 start_date = (
     str(start_date.strftime("%Y-%m-%dT%H:%M:%SZ")).replace("T", " ").replace("Z", "")
 )
@@ -12,7 +12,7 @@ expiry_date = (
     str(expiry_date.strftime("%Y-%m-%dT%H:%M:%SZ")).replace("T", " ").replace("Z", "")
 )
 
-time_zone = "Asia/Kolkata"
+time_zone = "UTC"
 
 APP_NAME = "job_app_action_recc"
 
