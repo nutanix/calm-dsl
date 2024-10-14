@@ -7,8 +7,8 @@ The top-level folder contains the following files:
 HelloBlueprint/
 ├── .local
 │   └── keys
-│       ├── centos
-│       └── centos_pub
+│       ├── ssh_key
+│       └── ssh_key_pub
 ├── blueprint.py
 └── scripts
     ├── pkg_install_task.sh
@@ -16,7 +16,7 @@ HelloBlueprint/
 
 On launch, this blueprint does the following:
   1. Creates AHV VM (2 vCPUs, 4G Mem, 1 core)
-  2. Installs {{vm_image}} image on vm.
+  2. Creates placeholder (VM_DISK_IMAGE) to supply VM Disk Image
   3. Injects SSH public key in the VM using cloud init.
   4. Creates calm credential using the SSH private key to run tasks on the VM.
 
@@ -38,6 +38,10 @@ Useful commands (execute from top-level directory):
   8. calm delete app <app_name>
   9. calm delete bp <blueprint_name>
 
+Remark: 
+1. Provided SSH Creds in this blueprint works only with VM Disk Images supporting cloud init guest customization. 
+2. For all other VM Disk Images, supply valid creds for blueprint to work properly.
+
 """
 
 import os
@@ -54,12 +58,14 @@ from calm.dsl.builtins import Ref
 
 
 # SSH Credentials
-CENTOS_USER = "centos"
-CENTOS_KEY = read_local_file(os.path.join("keys", "centos"))
-CENTOS_PUBLIC_KEY = read_local_file(os.path.join("keys", "centos_pub"))
-CentosCred = basic_cred(
-    CENTOS_USER, CENTOS_KEY, name="Centos", type="KEY", default=True,
+USERNAME = "admin"
+PRIVATE_KEY = read_local_file(os.path.join("keys", "ssh_key"))
+PUBLIC_KEY = read_local_file(os.path.join("keys", "ssh_key_pub"))
+CredObject = basic_cred(
+    USERNAME, PRIVATE_KEY, name="admin", type="KEY", default=True,
 )
+
+VM_DISK_IMAGE = "" # Add VM Disk Image name here
 
 
 class {{bp_name}}VmResources(AhvVmResources):
@@ -68,7 +74,7 @@ class {{bp_name}}VmResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromImageService("{{vm_image}}", bootable=True),
+        AhvVmDisk.Disk.Scsi.cloneFromImageService(VM_DISK_IMAGE, bootable=True),
     ]
     {% if vpc_name != "" %}nics = [AhvVmNic.NormalNic.ingress(subnet="{{subnet_name}}", vpc="{{vpc_name}}")]
     {% else %}nics = [AhvVmNic.NormalNic.ingress(subnet="{{subnet_name}}", cluster="{{cluster_name}}")]
@@ -78,8 +84,8 @@ class {{bp_name}}VmResources(AhvVmResources):
         config={
             "users": [
                 {
-                    "name": CENTOS_USER,
-                    "ssh-authorized-keys": [CENTOS_PUBLIC_KEY],
+                    "name": USERNAME,
+                    "ssh-authorized-keys": [PUBLIC_KEY],
                     "sudo": ["ALL=(ALL) NOPASSWD:ALL"],
                 }
             ]
@@ -140,7 +146,7 @@ class {{bp_name}}Profile(VmProfile):
 class {{bp_name}}(VmBlueprint):
 
     # Credentials for blueprint
-    credentials = [CentosCred]
+    credentials = [CredObject]
 
     profiles = [{{bp_name}}Profile]
 
