@@ -60,7 +60,6 @@ LOG = get_logging_handle(__name__)
     default="text",
     help="output format",
 )
-
 def _get_runbook_list(name, filter_by, limit, offset, quiet, all_items, out):
     """Get the runbooks, optionally filtered by a string"""
 
