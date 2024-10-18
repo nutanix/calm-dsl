@@ -15,7 +15,7 @@ from anytree import NodeMixin, RenderTree
 
 from calm.dsl.api import get_api_client
 from calm.dsl.config import get_context
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import PROVIDER, PROJECT
 
 from .utils import get_name_query, get_states_filter, highlight_text, Display
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
@@ -1015,11 +1015,21 @@ def watch_app(app_name, screen, app=None, poll_interval=10):
     poll_runnnable(poll_func, is_complete, poll_interval=poll_interval)
 
 
-def delete_app(app_names, soft=False):
+def delete_app(app_names, soft=False, delete_system_app=False):
     client = get_api_client()
 
     for app_name in app_names:
         app = _get_app(client, app_name)
+        app_project = app["metadata"].get("project_reference", {})
+
+        # Delete system apps only if --all-items/-a flag is passed.
+        if (not delete_system_app) and app_project:
+            if app_project.get("name", "") == PROJECT.INTERNAL:
+                LOG.warning(
+                    "System Apps can't be deleted. To explicitly delete them pass --all-items/-a flag."
+                )
+                continue
+
         app_id = app["metadata"]["uuid"]
         action_label = "Soft Delete" if soft else "Delete"
         LOG.info("Triggering {}".format(action_label))

@@ -299,10 +299,17 @@ def _download_runlog(runlog_uuid, app_name, file_name):
 @delete.command("app")
 @click.argument("app_names", nargs=-1)
 @click.option("--soft", "-s", is_flag=True, default=False, help="Soft delete app")
-def _delete_app(app_names, soft):
+@click.option(
+    "--all-items",
+    "-a",
+    is_flag=True,
+    default=False,
+    help="Delete all kind of apps including system apps.",
+)
+def _delete_app(app_names, soft, all_items):
     """Deletes an application"""
 
-    delete_app(app_names, soft)
+    delete_app(app_names, soft, delete_system_app=all_items)
 
 
 @main.group(cls=FeatureFlagGroup)

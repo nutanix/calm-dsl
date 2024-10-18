@@ -437,3 +437,7 @@ class CONFIG_TYPE:
         "VMWARE_VM_restore": RESTORE.VMWARE,
         "patch": "PATCH",
     }
+
+
+class PROJECT:
+    INTERNAL = "_internal"
