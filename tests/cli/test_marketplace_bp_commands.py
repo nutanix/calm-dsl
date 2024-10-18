@@ -518,7 +518,7 @@ class TestMarketplaceBPCommands:
             self.mpi2_version,
             "--name",
             self.marketplace_bp_name,
-            "--existing_markeplace_bp",
+            "--existing_marketplace_bp",
         ]
         runner = CliRunner()
 
@@ -551,7 +551,7 @@ class TestMarketplaceBPCommands:
             self.mpi3_with_secrets_version,
             "--name",
             self.marketplace_bp_name,
-            "--existing_markeplace_bp",
+            "--existing_marketplace_bp",
             "--with_secrets",
         ]
 
@@ -586,7 +586,7 @@ class TestMarketplaceBPCommands:
             self.mpi2_version,
             "--name",
             self.marketplace_bp_name,
-            "--existing_markeplace_bp",
+            "--existing_marketplace_bp",
         ]
 
         result = runner.invoke(cli, command)

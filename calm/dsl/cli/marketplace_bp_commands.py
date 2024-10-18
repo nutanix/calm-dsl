@@ -303,7 +303,7 @@ def _decompile_marketplace_bp(
     help="Preserve secrets while publishing blueprints to marketpalce",
 )
 @click.option(
-    "--existing_markeplace_bp",
+    "--existing_marketplace_bp",
     "-e",
     is_flag=True,
     default=False,
@@ -369,7 +369,7 @@ def publish_bp(
     version,
     description,
     with_secrets,
-    existing_markeplace_bp,
+    existing_marketplace_bp,
     publish_to_marketplace,
     projects=[],
     category=None,
@@ -385,7 +385,7 @@ def publish_bp(
         # Using blueprint name as the marketplace bp name if no name provided
         name = bp_name
 
-    if not existing_markeplace_bp:
+    if not existing_marketplace_bp:
         publish_bp_as_new_marketplace_bp(
             bp_name=bp_name,
             marketplace_bp_name=name,
