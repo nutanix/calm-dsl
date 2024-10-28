@@ -186,6 +186,12 @@ class TestOverlaySubnetBlueprint:
         if LV(CALM_VERSION) < LV("3.9.0"):
             remove_status_map_from_bp(known_json)
 
+        # remove vtpm config for version less than master
+        if LV(CALM_VERSION) < LV("4.1.0"):
+            known_json["resources"]["substrate_definition_list"][0]["create_spec"][
+                "resources"
+            ].pop("vtpm_config", None)
+
         remove_output_variables_from_bp(known_json)
         remove_output_variables_from_bp(generated_json)
 

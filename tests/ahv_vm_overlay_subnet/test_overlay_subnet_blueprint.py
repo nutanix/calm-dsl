@@ -15,6 +15,7 @@ from tests.utils import get_vpc_project, get_local_az_overlay_details_from_dsl_c
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 VPC_PROJECT = get_vpc_project(DSL_CONFIG)
 
+ACCOUNT_NAME = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]["NAME"]
 NETWORK1, VPC1, CLUSTER1 = get_local_az_overlay_details_from_dsl_config(DSL_CONFIG)
 
 # SSH Credentials
@@ -97,6 +98,7 @@ class HelloSubstrate(Substrate):
 
     provider_type = "AHV_VM"
     provider_spec = HelloVm
+    account = Ref.Account(name=ACCOUNT_NAME)
 
     # Substrate Actions
     @action

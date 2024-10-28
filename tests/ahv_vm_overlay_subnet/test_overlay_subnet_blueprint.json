@@ -448,6 +448,7 @@
                             "num_vcpus_per_socket": 1,
                             "num_sockets": 2,
                             "memory_size_mib": 4096,
+                            "vtpm_config": {"vtpm_enabled": false},
                             "power_state": "ON",
                             "account_uuid": "e653631b-2880-4a07-8321-f0527f671de5",
                             "gpu_list": [],
