@@ -184,10 +184,13 @@ def initialize_engine(
     click.echo("\nHINT: To get started, follow the 3 steps below:")
     click.echo("1. Initialize an example blueprint DSL: calm init bp")
     click.echo(
-        "2. Create and validate the blueprint: calm create bp --file HelloBlueprint/blueprint.py"
+        "2. Add vm image details according to your use in generated HelloBlueprint/blueprint.py"
     )
     click.echo(
-        "3. Start an application using the blueprint: calm launch bp Hello --app_name HelloApp01 -i"
+        "3. Create and validate the blueprint: calm create bp --file HelloBlueprint/blueprint.py"
+    )
+    click.echo(
+        "4. Start an application using the blueprint: calm launch bp Hello --app_name HelloApp01 -i"
     )
 
     click.echo("\nKeep Calm and DSL On!\n")
