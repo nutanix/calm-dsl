@@ -1,0 +1,1 @@
+print("@@{power_status}@@")
