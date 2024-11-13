@@ -244,14 +244,16 @@ def _delete_provider(provider_names):
 def _run_provider_verify_command(
     provider_name, watch, ignore_input_variables, input_file=None
 ):
-    """Execute the verify action of Provider specified by name or provider file. All input variables will be prompted by default. When passing the 'ignore_input_variables' flag, no variables will be prompted and all default values will be used. The default values can be overridden by passing a Python file via 'input_file'. When passing a Python file, no variables will be prompted.
+    """Execute the verify action of Provider specified by name. All input variables will be prompted by default. When passing the 'ignore_input_variables' flag, no variables will be prompted and all default values will be used. The default values can be overridden by passing a Python file via 'input_file'. When passing a Python file, no variables will be prompted.
 
     \b
     >: input_file: Python file consisting of variables 'variable_list'
-    Ex: variable_list = {
-        "value": {"value": <Variable Value>},
-        "name": "<Variable Name>"
-    }"""
+    Ex: variable_list = [
+        {
+            "value": "<Variable Value>",
+            "name": "<Variable Name>"
+        }
+    ]"""
     run_provider_verify_command(
         provider_name, watch, ignore_input_variables, input_file=input_file
     )
@@ -307,10 +309,12 @@ def _run_resource_type_action_command(
 
     \b
     >: input_file: Python file consisting of variables 'variable_list'
-    Ex: variable_list = {
-        "value": {"value": <Variable Value>},
-        "name": "<Variable Name>"
-    }"""
+    Ex: variable_list = [
+        {
+            "value": "<Variable Value>",
+            "name": "<Variable Name>"
+        }
+    ]"""
     run_resource_type_action_command(
         provider_name,
         resource_type_name,

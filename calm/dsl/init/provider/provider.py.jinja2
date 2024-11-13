@@ -13,9 +13,10 @@ On run, this provider does the following:
   1. Creates variables for Provider's authentication schema
   2. Creates variables for Provider's endpoint schema
   3. Creates variables for Provider attributes
-  4. Creates an action which contains the script to verify accounts created for the current provider
-  5. Creates a test account which can be used for performing test executions on provider actions
-  6. Creates Resource types that can be managed as part of the Provider
+  4. Creates credentials that can be leveraged in shell & powershell tasks
+  5. Creates an action which contains the script to verify accounts created for the current provider
+  6. Creates a test account which can be used for performing test executions on provider actions
+  7. Creates Resource types that can be managed as part of the Provider
 
 Useful commands (execute from top-level directory):
   1. calm compile provider --file {{provider_name}}Provider/provider.py
@@ -34,7 +35,7 @@ Useful commands (execute from top-level directory):
 from calm.dsl.builtins import (
     CalmVariable, CloudProvider, action, ResourceType,
     ProviderEndpointSchema, ProviderTestAccount,
-    basic_cred, read_local_file, CalmTask,
+    basic_cred, read_local_file,
 )
 from calm.dsl.builtins.models.task import ProviderTask as CalmTask
 from calm.dsl.constants import CLOUD_PROVIDER as PROVIDER, RESOURCE_TYPE
@@ -141,7 +142,7 @@ class {{provider_name}}Provider(CloudProvider):
 
     # Defining variables for Provider attributes
     variables = [
-        CalmVariable.Simple.string(name="provider_var", value="provider_val"),
+        CalmVariable.Simple.string(name="provider_var", value="provider_val", runtime=True),
         CalmVariable.WithOptions.FromTask.string(
             CalmTask.Exec.ssh(script="echo option1,option2,option3", cred=LINUX_CREDENTIAL, ip=LINUX_IP, port=22),
             name="provider_dynamic_var", label="Dynamic Var",
