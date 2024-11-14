@@ -48,11 +48,14 @@ EXIT_CONDITION_MAP = {
 def http_response_code_map(status, code_ranges, code):
     if code:
         if LV(CALM_VERSION) >= LV("3.9.0"):
-            response_code_status_map = {
-                "status": status,
-                "code_range_list": code_ranges,
-                "code": code,
-            }
+            if code_ranges:
+                response_code_status_map = {
+                    "status": status,
+                    "code_range_list": code_ranges,
+                    "code": code,
+                }
+            else:
+                response_code_status_map = {"status": status, "code": code}
         else:
             response_code_status_map = {"status": status, "code": code}
     else:
