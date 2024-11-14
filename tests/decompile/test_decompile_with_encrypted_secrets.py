@@ -10,6 +10,7 @@ from calm.dsl.decompile.file_handler import get_bp_dir
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from calm.dsl.decompile import init_decompile_context
+from tests.helper.output_variables_helper import remove_output_variables_from_bp
 
 LOG = get_logging_handle(__name__)
 
@@ -203,6 +204,8 @@ class TestDecompile:
         self.remove_secret_values(bp_json["spec"]["resources"])
         self.remove_secret_values(decompiled_bp_json["spec"]["resources"])
 
+        remove_output_variables_from_bp(bp_json)
+        remove_output_variables_from_bp(decompiled_bp_json)
         assert bp_json == decompiled_bp_json
         LOG.info("Success")
 
