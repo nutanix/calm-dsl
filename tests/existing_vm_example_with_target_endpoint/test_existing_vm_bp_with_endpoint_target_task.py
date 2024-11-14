@@ -532,6 +532,13 @@ def test_json():
     if LV(CALM_VERSION) < LV("3.9.0"):
         remove_status_map_from_bp(known_json)
 
+    # remove exec_target_reference from options introduced in DSL 4.0.0
+    if LV(CALM_VERSION) < LV("4.0.0"):
+        for profile in known_json.get("app_profile_list", []):
+            for variable in profile.get("variable_list", []):
+                if variable.get("options"):
+                    variable["options"].pop("exec_target_reference", None)
+
     remove_output_variables_from_bp(known_json)
     remove_output_variables_from_bp(generated_json)
 

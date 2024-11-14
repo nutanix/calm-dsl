@@ -1246,7 +1246,8 @@
                         "choices": [
                             "var13_val1",
                             "var13_val2"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1272,7 +1273,8 @@
                         "choices": [
                             "0",
                             "1"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1298,7 +1300,8 @@
                         "choices": [
                             "30/02/2019",
                             "31/06/2019"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1324,7 +1327,8 @@
                         "choices": [
                             "22:35:00",
                             "10:35:00"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1350,7 +1354,8 @@
                         "choices": [
                             "30/02/2019 - 22:35:00",
                             "31/06/2019 - 10:35:00"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1372,7 +1377,8 @@
                         "choices": [
                             "x\ny",
                             "a\nb"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1398,7 +1404,8 @@
                         "choices": [
                             "var19_val1",
                             "var19_val2"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1424,7 +1431,8 @@
                         "choices": [
                             "0",
                             "1"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1450,7 +1458,8 @@
                         "choices": [
                             "30/02/2019",
                             "31/06/2019"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1476,7 +1485,8 @@
                         "choices": [
                             "22:35:00",
                             "10:35:00"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1502,7 +1512,8 @@
                         "choices": [
                             "30/02/2019 - 22:35:00",
                             "31/06/2019 - 10:35:00"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1524,7 +1535,8 @@
                         "choices": [
                             "x\ny",
                             "a\nb"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1564,7 +1576,8 @@
                                 "var25": "$.title"
                             },
                             "type": "HTTP"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1591,7 +1604,8 @@
                             "script_type": "static_py3",
                             "script": "print ('0')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1618,7 +1632,8 @@
                             "script_type": "static_py3",
                             "script": "print ('30/02/2019')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1645,7 +1660,8 @@
                             "script_type": "static_py3",
                             "script": "print ('22:35:00')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1672,7 +1688,8 @@
                             "script_type": "static_py3",
                             "script": "print ('30/02/2019 - 22:35:00')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1695,7 +1712,8 @@
                             "script_type": "static_py3",
                             "script": "print ('x\ny')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1735,7 +1753,8 @@
                                 "var31": "$.title"
                             },
                             "type": "HTTP"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1762,7 +1781,8 @@
                             "script_type": "static_py3",
                             "script": "print ('0,1')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1789,7 +1809,8 @@
                             "script_type": "static_py3",
                             "script": "print ('30/02/2019,31/06/2019')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1816,7 +1837,8 @@
                             "script_type": "static_py3",
                             "script": "print ('22:35:00,10:35:00')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1843,7 +1865,8 @@
                             "script_type": "static_py3",
                             "script": "print ('30/02/2019 - 22:35:00,31/06/2019 - 10:35:00')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1866,7 +1889,8 @@
                             "script_type": "static_py3",
                             "script": "print ('var36=x\ny,a\nb')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
