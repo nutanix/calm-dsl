@@ -142,7 +142,7 @@ class {{provider_name}}Provider(CloudProvider):
 
     # Defining variables for Provider attributes
     variables = [
-        CalmVariable.Simple.string(name="provider_var", value="provider_val", runtime=True),
+        CalmVariable.Simple.string(name="provider_var", value="provider_val"),
         CalmVariable.WithOptions.FromTask.string(
             CalmTask.Exec.ssh(script="echo option1,option2,option3", cred=LINUX_CREDENTIAL, ip=LINUX_IP, port=22),
             name="provider_dynamic_var", label="Dynamic Var",
