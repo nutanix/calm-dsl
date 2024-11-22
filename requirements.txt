@@ -17,7 +17,7 @@ anytree==2.8.0
 asciimatics>=1.13.0
 peewee==3.10.0
 pycryptodome==3.15.0    # version greater than this will require python >= 3.7
-scrypt==0.8.20
+# scrypt==0.8.20
 schema==0.7.1
 colorlog==5.0.1
 black==22.6.0
