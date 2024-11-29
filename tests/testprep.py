@@ -561,6 +561,9 @@ def add_http_endpoint(config):
     with open(LOCAL_HTTP_ENDPOINT, "w+") as f:
         f.write(dsl_http_endpoint)
 
+    ContextObj = get_context()
+    ContextObj.update_project_context("default")
+
     runner = CliRunner()
     result = runner.invoke(
         cli,
