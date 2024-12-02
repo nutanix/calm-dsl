@@ -575,16 +575,17 @@ def launch_marketplace_bp(
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
-    launch_blueprint_simple(
+    app_launch_state = launch_blueprint_simple(
         patch_editables=patch_editables,
         profile_name=profile_name,
         app_name=app_name,
         blueprint=bp_payload,
         launch_params=launch_params,
     )
-    LOG.info("App {} creation is successful".format(app_name))
 
-    if watch:
+    # if app_launch_state=True that is if blueprint launch is successful then only we will enter in watch mode
+    if app_launch_state and watch:
+        LOG.info("App {} creation is successful".format(app_name))
 
         def display_action(screen):
             watch_app(app_name, screen, poll_interval=poll_interval)
@@ -703,16 +704,17 @@ def launch_marketplace_item(
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
-    launch_blueprint_simple(
+    app_launch_state = launch_blueprint_simple(
         patch_editables=patch_editables,
         profile_name=profile_name,
         app_name=app_name,
         blueprint=bp_payload,
         launch_params=launch_params,
     )
-    LOG.info("App {} creation is successful".format(app_name))
 
-    if watch:
+    # if app_launch_state=True that is if blueprint launch is successful then only we will enter in watch mode
+    if app_launch_state and watch:
+        LOG.info("App {} creation is successful".format(app_name))
 
         def display_action(screen):
             watch_app(app_name, screen, poll_interval=poll_interval)
