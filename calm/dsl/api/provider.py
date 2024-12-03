@@ -128,7 +128,9 @@ class ProviderAPI(ResourceAPI):
             )
         else:
             return self.connection._call(
-                self.POLL_RUN.format(uuid, runlog_uuid), verify=False, method=REQUEST.METHOD.GET
+                self.POLL_RUN.format(uuid, runlog_uuid),
+                verify=False,
+                method=REQUEST.METHOD.GET,
             )
 
     def abort(self, uuid, runlog_uuid):
