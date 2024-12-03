@@ -15,6 +15,7 @@ from anytree import NodeMixin, RenderTree
 
 from calm.dsl.api import get_api_client
 from calm.dsl.config import get_context
+from calm.dsl.constants import PROVIDER
 
 from .utils import get_name_query, get_states_filter, highlight_text, Display
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
@@ -171,9 +172,19 @@ def _get_app(client, app_name, screen=Display(), all=False):
     return app
 
 
+def echo_formatted(label, value, is_title=False):
+    if is_title:
+        click.echo(f"\t \t \t {label}{highlight_text(value)}")
+    else:
+        click.echo(f"\t \t \t \t {label:<15} : {highlight_text(value)}")
+
+
 def describe_app(app_name, out):
     client = get_api_client()
     app = _get_app(client, app_name, all=True)
+    status = app.get("status", {})
+    resources = status.get("resources", {})
+    metadata = app.get("metadata", {})
 
     if out == "json":
         click.echo(json.dumps(app, indent=4, separators=(",", ": ")))
@@ -188,20 +199,40 @@ def describe_app(app_name, out):
         + highlight_text(app["metadata"]["uuid"])
         + ")"
     )
-    click.echo("Status: " + highlight_text(app["status"]["state"]))
-    click.echo(
-        "Owner: " + highlight_text(app["metadata"]["owner_reference"]["name"]), nl=False
-    )
-    click.echo(
-        " Project: " + highlight_text(app["metadata"]["project_reference"]["name"])
-    )
+    click.echo("Status: " + highlight_text(status.get("state", "N/A")))
 
     click.echo(
         "Blueprint: "
-        + highlight_text(app["status"]["resources"]["app_blueprint_reference"]["name"])
+        + highlight_text(
+            resources.get("app_blueprint_reference", {}).get("name", "N/A")
+        )
     )
 
-    created_on = int(app["metadata"]["creation_time"]) // 1000000
+    click.echo(
+        "Application Profile: "
+        + highlight_text(
+            resources.get("app_profile_config_reference", {}).get("name", "N/A")
+        )
+    )
+
+    deployment_list = resources.get("deployment_list", [])
+    if deployment_list:
+        substrate_configuration = deployment_list[0].get("substrate_configuration", {})
+        click.echo(
+            "Provider: " + highlight_text(substrate_configuration.get("type", "N/A"))
+        )
+
+    click.echo(
+        "Project: "
+        + highlight_text(metadata.get("project_reference", {}).get("name", "N/A"))
+    )
+
+    click.echo(
+        "Owner: "
+        + highlight_text(metadata.get("owner_reference", {}).get("name", "N/A"))
+    )
+
+    created_on = int(metadata.get("creation_time", 0)) // 1000000
     past = arrow.get(created_on).humanize()
     click.echo(
         "Created: {} ({})".format(
@@ -209,14 +240,7 @@ def describe_app(app_name, out):
         )
     )
 
-    click.echo(
-        "Application Profile: "
-        + highlight_text(
-            app["status"]["resources"]["app_profile_config_reference"]["name"]
-        )
-    )
-
-    deployment_list = app["status"]["resources"]["deployment_list"]
+    deployment_list = resources.get("deployment_list", [])
     click.echo("Deployments [{}]:".format(highlight_text((len(deployment_list)))))
 
     for deployment in deployment_list:
@@ -229,7 +253,11 @@ def describe_app(app_name, out):
             if num_services > 1:
                 exta_suffix = "[" + str(i) + "]"
 
-            temp_var = "[" + str(deployment["state"][i]) + "]"
+            temp_var = (
+                "["
+                + str(deployment["service_list"][0]["element_list"][i]["state"])
+                + "]"
+            )
             click.echo(
                 "\t Service : {}{} {}".format(
                     highlight_text(deployment["service_list"][0]["name"]),
@@ -237,185 +265,344 @@ def describe_app(app_name, out):
                     highlight_text(temp_var),
                 )
             )
-            click.echo("\t \t VM Details")
-            click.echo("\t \t \t Configuration")
-            click.echo(
-                "\t \t \t \t {:<15} : {}".format(
-                    "Name",
-                    highlight_text(deployment["substrate_configuration"]["name"]),
-                )
-            )
-            click.echo(
-                "\t \t \t \t {:<15} : {}".format(
-                    "IP Address",
-                    highlight_text(
-                        deployment["substrate_configuration"]["element_list"][i][
-                            "address"
-                        ]
-                    ),
-                )
-            )
-            click.echo(
-                "\t \t \t \t {:<15} : {}".format(
-                    "vCPUs",
-                    highlight_text(
-                        deployment["substrate_configuration"]["element_list"][i][
-                            "create_spec"
-                        ]["resources"]["num_vcpus_per_socket"]
-                    ),
-                )
-            )
-            click.echo(
-                "\t \t \t \t {:<15} : {}".format(
-                    "Cores",
-                    highlight_text(
-                        deployment["substrate_configuration"]["element_list"][i][
-                            "create_spec"
-                        ]["resources"]["num_sockets"]
-                    ),
-                )
-            )
-            click.echo(
-                "\t \t \t \t {:<15} : {} {}".format(
-                    "Memory",
-                    highlight_text(
-                        deployment["substrate_configuration"]["element_list"][i][
-                            "create_spec"
-                        ]["resources"]["memory_size_mib"]
-                        / 1024.0
-                    ),
-                    highlight_text("GB"),
-                )
-            )
-            click.echo(
-                "\t \t \t \t {:<15} : {}".format(
-                    "VM UUID",
-                    highlight_text(
-                        deployment["substrate_configuration"]["element_list"][i][
-                            "instance_id"
-                        ]
-                    ),
-                )
-            )
-            click.echo(
-                "\t \t \t \t {:<15} : {}".format(
-                    "Image",
-                    highlight_text(
-                        deployment["substrate_configuration"]["create_spec"][
-                            "resources"
-                        ]["disk_list"][0]["data_source_reference"]["uuid"]
-                    ),
-                )
-            )
 
-            click.echo("\t \t \t Network Adapters (NICs)")
             if (
-                len(
-                    deployment["substrate_configuration"]["element_list"][i][
-                        "create_spec"
-                    ]["resources"]["nic_list"]
-                )
-                > 0
+                deployment.get("substrate_configuration", {}).get("type", "")
+                == PROVIDER.TYPE.AHV
             ):
-                for nic in deployment["substrate_configuration"]["element_list"][i][
-                    "create_spec"
-                ]["resources"]["nic_list"]:
-                    click.echo(
-                        "\t \t \t \t {:<15} : {}".format(
-                            "Type", highlight_text(nic["nic_type"])
+                if (
+                    len(
+                        deployment.get("substrate_configuration", {}).get(
+                            "element_list", []
                         )
                     )
+                    <= i
+                ):
+                    continue
                 for variable in deployment["substrate_configuration"]["element_list"][
                     i
-                ]["variable_list"]:
-                    if variable["name"] == "mac_address":
-                        click.echo(
-                            "\t \t \t \t {:<15} : {}".format(
-                                "MAC Address", highlight_text(variable["value"])
-                            )
-                        )
-                for nic in deployment["substrate_configuration"]["element_list"][i][
-                    "create_spec"
-                ]["resources"]["nic_list"]:
-                    click.echo(
-                        "\t \t \t \t {:<15} : {}".format(
-                            "Subnet", highlight_text(nic["subnet_reference"]["name"])
-                        )
-                    )
-            else:
-                click.echo("\t \t \t \t {:<15} : ".format("Type"))
-                click.echo("\t \t \t \t {:<15} : ".format("MAC Address"))
-                click.echo("\t \t \t \t {:<15} : ".format("Subnet"))
+                ].get("variable_list", []):
+                    if variable.get("name") == "platform_data":
+                        click.echo("\t \t VM Details")
+                        echo_formatted("Configuration", "", True)
+                        value_dict = json.loads(variable.get("value", "{}"))
+                        status = value_dict.get("status", {})
+                        resources = status.get("resources", {})
+                        metadata = value_dict.get("metadata", {})
 
-            if (
-                deployment["substrate_configuration"]["element_list"][i]["create_spec"][
-                    "cluster_reference"
-                ]
-                != None
+                        echo_formatted(
+                            "Name", value_dict.get("spec", {}).get("name", "")
+                        )
+                        echo_formatted(
+                            "IP Address",
+                            resources.get("nic_list", [{}])[0]
+                            .get("ip_endpoint_list", [{}])[0]
+                            .get("ip", ""),
+                        )
+                        echo_formatted("vCPUs", resources.get("num_sockets", ""))
+                        echo_formatted(
+                            "Cores", resources.get("num_vcpus_per_socket", "")
+                        )
+                        echo_formatted(
+                            "Memory",
+                            f"{resources.get('memory_size_mib', 0) / 1024.0} GB",
+                        )
+                        echo_formatted("VM UUID", metadata.get("uuid", ""))
+                        echo_formatted(
+                            "Image",
+                            deployment["substrate_configuration"]["create_spec"][
+                                "resources"
+                            ]["disk_list"][0]["data_source_reference"].get("uuid", ""),
+                        )
+
+                        if resources.get("nic_list"):
+                            echo_formatted("Network Adapters (NICs)", "", True)
+                            for nic_dict in resources["nic_list"]:
+                                echo_formatted("Type", nic_dict.get("nic_type", ""))
+                                echo_formatted(
+                                    "MAC Address", nic_dict.get("mac_address", "")
+                                )
+                                echo_formatted(
+                                    "Subnet",
+                                    nic_dict.get("subnet_reference", {}).get(
+                                        "name", ""
+                                    ),
+                                )
+
+                        cluster_ref = status.get("cluster_reference", {})
+                        if cluster_ref:
+                            echo_formatted("Cluster Information", "", True)
+                            echo_formatted("Cluster UUID", cluster_ref.get("uuid", ""))
+                            echo_formatted("Cluster Name", cluster_ref.get("name", ""))
+
+                        if metadata.get("categories"):
+                            echo_formatted("Categories", "", True)
+                            for key, value in metadata["categories"].items():
+                                echo_formatted(key, value)
+
+            elif (
+                deployment.get("substrate_configuration", {}).get("type", "")
+                == PROVIDER.TYPE.VMWARE
             ):
-                click.echo("\t \t \t Cluster Information")
-                click.echo(
-                    "\t \t \t \t {:<15} : {}".format(
-                        "Cluster UUID",
-                        highlight_text(
-                            deployment["substrate_configuration"]["element_list"][i][
-                                "create_spec"
-                            ]["cluster_reference"]["uuid"]
-                        ),
+                if (
+                    len(
+                        deployment.get("substrate_configuration", {}).get(
+                            "element_list", []
+                        )
                     )
-                )
-                click.echo(
-                    "\t \t \t \t {:<15} : {}".format(
-                        "Cluster Name",
-                        highlight_text(
-                            deployment["substrate_configuration"]["element_list"][i][
-                                "create_spec"
-                            ]["cluster_reference"]["name"]
-                        ),
-                    )
-                )
-            else:
-                click.echo("\t \t \t Cluster Information")
-                click.echo("\t \t \t \t {:<15} : ".format("Cluster UUID"))
-                click.echo("\t \t \t \t {:<15} : ".format("Cluster Name"))
+                    <= i
+                ):
+                    continue
+                for variable in deployment["substrate_configuration"]["element_list"][
+                    i
+                ].get("variable_list", []):
+                    if variable["name"] == "platform_data":
+                        click.echo("\t \t VM Details")
+                        echo_formatted("Configuration", "", True)
+                        value_dict = json.loads(variable.get("value", "{}"))
 
-            categories = deployment["substrate_configuration"]["element_list"][i][
-                "create_spec"
-            ]["categories"]
-            if len(categories) > 0:
-                click.echo("\t \t \t Categories")
-                for key, value in categories.items():
-                    click.echo(
-                        "\t \t \t \t {:<15} : {}".format(key, highlight_text(value))
-                    )
+                        echo_formatted("Type", value_dict.get("instance_name", ""))
+                        echo_formatted(
+                            "IP Address",
+                            value_dict.get("guest_info", {}).get("guest_ipaddress", ""),
+                        )
+                        echo_formatted(
+                            "Host",
+                            value_dict.get("guest_info", {}).get("guest_hostname", ""),
+                        )
+                        echo_formatted(
+                            "Guest OS State",
+                            value_dict.get("guest_info", {}).get("guest_state", ""),
+                        )
+                        echo_formatted(
+                            "Guest OS",
+                            value_dict.get("guest_info", {}).get("guest_family", ""),
+                        )
+                        echo_formatted("vCPUs", value_dict.get("num_sockets", ""))
+                        echo_formatted(
+                            "Cores Per Socket",
+                            value_dict.get("num_vcpus_per_socket", ""),
+                        )
+                        # if int(value_dict.get("num_vcpus_per_socket", "0"))>0 and int(value_dict.get("num_sockets", "0"))>0:
+                        #     echo_formatted("Sockets", int(value_dict.get("num_vcpus_per_socket")) / int(value_dict.get("num_sockets")))
+                        echo_formatted("Sockets", value_dict.get("num_sockets", ""))
+                        if (
+                            len(
+                                deployment.get("substrate_configuration", {}).get(
+                                    "element_list", [{}]
+                                )
+                            )
+                            > i
+                        ):
+                            echo_formatted(
+                                "Memory",
+                                f"{deployment.get('substrate_configuration', {}).get('element_list', [{}])[i].get('create_spec', {}).get('resources', {}).get('memory_size_mib', 0) / 1024.0} GB",
+                            )
+                        echo_formatted(
+                            "Power State", value_dict.get("runtime.powerState", "")
+                        )
+                        echo_formatted("VM Location", value_dict.get("folder", ""))
 
-            if (
-                len(deployment["service_list"]) > 0
-                and len(
-                    deployment["service_list"][0]["element_list"][i]["variable_list"]
-                )
-                > 0
+            elif (
+                deployment.get("substrate_configuration", {}).get("type", "")
+                == PROVIDER.TYPE.AWS
             ):
-                click.echo("\t \t Variables")
-                for variable in deployment["service_list"][0]["element_list"][i][
-                    "variable_list"
-                ]:
-                    if (
-                        variable["type"] == "LOCAL" or variable["type"] == "HTTP_LOCAL"
-                    ) and variable["value"] != "":
-                        click.echo(
-                            "\t \t \t \t {:<15} : {}".format(
-                                variable["name"], highlight_text(variable["value"])
-                            )
+                if (
+                    len(
+                        deployment.get("substrate_configuration", {}).get(
+                            "element_list", []
                         )
-                    elif variable["type"] == "SECRET":
-                        click.echo(
-                            "\t \t \t \t {:<15} : {}".format(
-                                variable["name"], highlight_text("********")
-                            )
+                    )
+                    <= i
+                ):
+                    continue
+                for variable in deployment["substrate_configuration"]["element_list"][
+                    i
+                ].get("variable_list", []):
+                    if variable["name"] == "platform_data":
+                        click.echo("\t \t VM Details")
+                        echo_formatted("Configuration", "", True)
+
+                        value_dict = json.loads(variable.get("value", "{}"))
+                        resources_dict = json.loads(variable["value"])["status"][
+                            "resources"
+                        ]
+                        echo_formatted(
+                            "Name", value_dict.get("status", {}).get("name", "")
                         )
-                    else:
-                        click.echo("\t \t \t \t {:<15}".format(variable["name"]))
+                        echo_formatted(
+                            "IP Address", resources_dict.get("public_ip_address", "")
+                        )
+                        echo_formatted("Region", resources_dict.get("region", ""))
+                        echo_formatted(
+                            "Availability Zone",
+                            resources_dict.get("availability_zone", ""),
+                        )
+                        echo_formatted("Image ID", resources_dict.get("image_id", ""))
+                        echo_formatted(
+                            "Public DNS Name", resources_dict.get("public_dns_name", "")
+                        )
+                        echo_formatted(
+                            "Private IP Address",
+                            resources_dict.get("private_ip_address", ""),
+                        )
+                        echo_formatted(
+                            "Private DNS Name",
+                            resources_dict.get("private_dns_name", ""),
+                        )
+                        echo_formatted(
+                            "Root Device Type",
+                            resources_dict.get("root_device_type", ""),
+                        )
+                        echo_formatted(
+                            "Launch Time", resources_dict.get("launch_time", "")
+                        )
+                        echo_formatted("State", resources_dict.get("state", ""))
+                        security_group_list = resources_dict.get(
+                            "security_group_list", []
+                        )
+                        if security_group_list:
+                            echo_formatted(
+                                "Security Group List",
+                                security_group_list[0].get("security_group_id", ""),
+                            )
+                        echo_formatted(
+                            "IAM Role", resources_dict.get("instance_profile_name", "")
+                        )
+                        echo_formatted(
+                            "Shutdown Behavior",
+                            resources_dict.get(
+                                "instance_initiated_shutdown_behavior", ""
+                            ),
+                        )
+                        tag_list = resources_dict.get("tag_list", [])
+                        echo_formatted("TAGS ", f"({len(tag_list)})", True)
+                        for tag in tag_list:
+                            echo_formatted(tag.get("key", ""), tag.get("value", ""))
+
+            elif (
+                deployment.get("substrate_configuration", {}).get("type", "")
+                == PROVIDER.TYPE.AZURE
+            ):
+                if (
+                    len(
+                        deployment.get("substrate_configuration", {}).get(
+                            "element_list", []
+                        )
+                    )
+                    <= i
+                ):
+                    continue
+                for variable in deployment["substrate_configuration"]["element_list"][
+                    i
+                ].get("variable_list", []):
+                    if variable["name"] == "platform_data":
+                        click.echo("\t \t VM Details")
+                        echo_formatted("Configuration", "", True)
+
+                        value_dict = json.loads(variable.get("value", "{}"))
+                        azure_data = value_dict.get("azureData", {})
+                        properties = azure_data.get("properties", {})
+                        storage_profile = properties.get("storageProfile", {})
+                        os_disk = storage_profile.get("osDisk", {})
+
+                        echo_formatted("Name", azure_data.get("name", ""))
+                        echo_formatted("Location", azure_data.get("location", ""))
+                        echo_formatted("VM Id", properties.get("vmId", ""))
+                        echo_formatted("OS Type", os_disk.get("osType", ""))
+                        echo_formatted("Size", str(os_disk.get("diskSizeGB", "")))
+                        echo_formatted(
+                            "Hardware Profile",
+                            properties.get("hardwareProfile", {}).get("vmSize", ""),
+                        )
+                        echo_formatted(
+                            "Public IP", value_dict.get("publicIPAddress", "")
+                        )
+                        echo_formatted(
+                            "Private IP", value_dict.get("privateIPAddress", "")
+                        )
+
+                        echo_formatted("Network Profile", "", True)
+                        nic_list = value_dict.get("nicList", "").split(",")
+                        for index, nic in enumerate(nic_list):
+                            echo_formatted(f"NIC-{index}", nic)
+
+                        echo_formatted("Data Disks", "", True)
+                        for data_disk_dict in storage_profile.get("dataDisks", []):
+                            echo_formatted("Disk Name", data_disk_dict.get("name", ""))
+
+                        tags = azure_data.get("tags", {})
+                        echo_formatted("TAGS ", f"({len(tags)})", True)
+                        for key, value in tags.items():
+                            echo_formatted(key, value)
+
+            elif (
+                deployment.get("substrate_configuration", {}).get("type", "")
+                == PROVIDER.TYPE.GCP
+            ):
+                if (
+                    len(
+                        deployment.get("substrate_configuration", {}).get(
+                            "element_list", []
+                        )
+                    )
+                    <= i
+                ):
+                    continue
+                for variable in deployment["substrate_configuration"]["element_list"][
+                    i
+                ].get("variable_list", []):
+                    if variable["name"] == "platform_data":
+                        click.echo("\t \t VM Details")
+                        echo_formatted("Configuration", "", True)
+
+                        value_dict = json.loads(variable.get("value", "{}"))
+
+                        echo_formatted("Name", value_dict.get("name", ""))
+                        echo_formatted(
+                            "IP Address",
+                            value_dict.get("networkInterfaces", [{}])[0]
+                            .get("accessConfigs", [{}])[0]
+                            .get("natIP", ""),
+                        )
+                        echo_formatted(
+                            "Zone", value_dict.get("zone", "").split("/")[-1]
+                        )
+                        echo_formatted(
+                            "Machine Type",
+                            value_dict.get("machineType", "").split("/")[-1],
+                        )
+                        echo_formatted("Status", value_dict.get("status", ""))
+                        echo_formatted(
+                            "Creation Time", value_dict.get("creationTimestamp", "")
+                        )
+                        echo_formatted(
+                            "Network Tags",
+                            ", ".join(value_dict.get("tags", {}).get("items", [])),
+                        )
+
+                        labels = value_dict.get("labels", {})
+                        echo_formatted("TAGS ", f"({len(labels)})", True)
+                        for key, value in labels.items():
+                            echo_formatted(key, value)
+
+            else:
+                pass
+
+            service_list = deployment.get("service_list", [])
+            if len(service_list) > 0:
+                element_list = service_list[0].get("element_list", [])
+                if i < len(element_list):
+                    variable_list = element_list[i].get("variable_list", [])
+                    if len(variable_list) > 0:
+                        click.echo("\t \t Variables")
+                        for variable in variable_list:
+                            var_value = variable.get("value", "")
+                            var_name = variable.get("name", "")
+                            if variable.get("attrs", {}).get("type", "") == "SECRET":
+                                var_value = "********"
+                            echo_formatted(var_name, var_value)
+
             click.echo(" ")
 
     action_list = app["status"]["resources"]["action_list"]

@@ -1,0 +1,93 @@
+{
+    "spec": {
+        "name": "DslProviderWithCustomEPSchema",
+        "resources": {
+            "type": "CUSTOM",
+            "infra_type": "cloud",
+            "auth_schema_list": [
+                {
+                    "name": "username",
+                    "description": "",
+                    "type": "LOCAL",
+                    "label": "",
+                    "attrs": {},
+                    "val_type": "STRING",
+                    "value": "",
+                    "data_type": "BASE",
+                    "is_hidden": false,
+                    "is_mandatory": false
+                },
+                {
+                    "name": "password",
+                    "description": "",
+                    "type": "SECRET",
+                    "label": "",
+                    "attrs": {
+                        "is_secret_modified": true,
+                        "type": "SECRET"
+                    },
+                    "val_type": "STRING",
+                    "value": "",
+                    "data_type": "BASE",
+                    "is_hidden": false,
+                    "is_mandatory": false
+                }
+            ],
+            "endpoint_schema": {
+                "type": "CUSTOM",
+                "variable_list": [
+                    {
+                        "name": "server_ip",
+                        "description": "",
+                        "type": "LOCAL",
+                        "label": "",
+                        "attrs": {},
+                        "val_type": "STRING",
+                        "value": "1.1.1.1",
+                        "data_type": "BASE",
+                        "is_hidden": false,
+                        "is_mandatory": false
+                    },
+                    {
+                        "name": "port_number",
+                        "description": "",
+                        "type": "LOCAL",
+                        "label": "",
+                        "attrs": {},
+                        "val_type": "INT",
+                        "value": "443",
+                        "data_type": "BASE",
+                        "regex": {
+                            "value": "^[\\d]*$",
+                            "should_validate": false
+                        },
+                        "is_hidden": false,
+                        "is_mandatory": false
+                    }
+                ]
+            },
+            "variable_list": [
+                {
+                    "name": "provider_var",
+                    "description": "",
+                    "type": "LOCAL",
+                    "label": "",
+                    "attrs": {},
+                    "val_type": "STRING",
+                    "value": "provider_val",
+                    "data_type": "BASE",
+                    "is_hidden": false,
+                    "is_mandatory": false
+                }
+            ],
+            "resource_type_list": [],
+            "action_list": [],
+            "credential_definition_list": []
+        },
+        "description": "Sample provider with authentication schema, variables & custom endpoint schema configured"
+    },
+    "metadata": {
+        "kind": "provider",
+        "name": "DslProviderWithCustomEPSchema"
+    }
+}

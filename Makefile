@@ -13,6 +13,15 @@ dev:
 	venv/bin/pip3 install --no-cache -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop
 
+windev:
+	# Setup our python3 based virtualenv in windows machine
+	# This step assumes python3 is installed on your dev machine
+	[ -f venv/Scripts/python3 ] || python -m venv venv
+	venv/Scripts/python -m pip install --upgrade pip
+	venv/Scripts/pip install setuptools --upgrade --ignore-installed
+	venv/Scripts/pip install --no-cache -r requirements.txt -r dev-requirements.txt
+	venv/Scripts/python setup.py develop
+
 test-bed: dev
 	venv/bin/python3 tests/testprep.py
 

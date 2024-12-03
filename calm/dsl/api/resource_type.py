@@ -6,9 +6,11 @@ class ResourceTypeAPI(ResourceAPI):
     def __init__(self, connection):
         super().__init__(connection, resource_type="resource_types", calm_api=True)
         self.CREATE = self.PREFIX
+        self.LIST = self.PREFIX + "/list"
         self.TEST_RUNBOOK = self.PREFIX + "/{}/test_runbook/{}/run"
         self.PLATFORM_LIST = self.PREFIX + "/platform_list"
         self.UPDATE = self.PREFIX + "/{}"
+        self.TEST_EXECUTE = self.PREFIX + "/{}/actions/{}/test_run"
 
     def create(self, resource_type_payload):
         return self.connection._call(
@@ -19,12 +21,30 @@ class ResourceTypeAPI(ResourceAPI):
             timeout=(5, 300),
         )
 
+    def list(self, payload={}):
+        if not payload.get("length"):
+            payload["length"] = 20
+        return self.connection._call(
+            self.LIST,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
     def update(self, uuid, resource_type_payload):
         return self.connection._call(
             self.UPDATE.format(uuid),
             verify=False,
             request_json=resource_type_payload,
             method=REQUEST.METHOD.PUT,
+        )
+
+    def run(self, resource_type_uuid, action_uuid, payload):
+        return self.connection._call(
+            self.TEST_EXECUTE.format(resource_type_uuid, action_uuid),
+            request_json=payload,
+            verify=False,
+            method=REQUEST.METHOD.POST,
         )
 
     def run_test_runbook(self, resource_type_id, action_id, payload):

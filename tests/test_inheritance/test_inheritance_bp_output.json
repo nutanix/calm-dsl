@@ -59,13 +59,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -92,13 +94,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -125,13 +129,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -158,13 +164,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -191,13 +199,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -224,13 +234,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -257,6 +269,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -279,13 +292,15 @@
                                     "script_type": "sh",
                                     "script": "echo @@{sound}@@"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -366,13 +381,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -399,13 +416,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -432,13 +451,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -465,13 +486,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -498,13 +521,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -531,13 +556,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -564,6 +591,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -586,13 +614,15 @@
                                     "script_type": "sh",
                                     "script": "echo @@{sound}@@"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -619,6 +649,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -641,13 +672,15 @@
                                     "script_type": "sh",
                                     "script": "echo @@{dog_prop}@@"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -716,13 +749,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -749,13 +784,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -782,13 +819,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -815,13 +854,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -848,13 +889,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -881,13 +924,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -914,6 +959,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -936,13 +982,15 @@
                                     "script_type": "sh",
                                     "script": "echo @@{sound}@@"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -1035,13 +1083,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1068,13 +1118,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1101,13 +1153,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1134,13 +1188,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1167,13 +1223,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1200,13 +1258,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1233,6 +1293,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -1255,13 +1316,15 @@
                                     "script_type": "sh",
                                     "script": "echo @@{sound}@@"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1288,6 +1351,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -1310,13 +1374,15 @@
                                     "script_type": "sh",
                                     "script": "echo @@{dog_prop}@@"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -1343,6 +1409,7 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -1365,13 +1432,15 @@
                                     "script_type": "sh",
                                     "script": "echo @@{husky_prop}@@"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -1426,6 +1495,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [
                                 {
                                     "kind": "app_task",
@@ -1448,13 +1518,15 @@
                                 "script_type": "sh",
                                 "script": "#!/bin/bash\n\nset -ex\n\necho \"Package installation steps go here ...\"\n"
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "AnimalPackage___uninstall___runbook",
@@ -1475,6 +1547,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [
                                 {
                                     "kind": "app_task",
@@ -1497,13 +1570,15 @@
                                 "script_type": "sh",
                                 "script": "#!/bin/bash\n\nset -ex\n\necho \"Package uninstallation steps go here ...\"\n"
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -1539,6 +1614,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [
                                 {
                                     "kind": "app_task",
@@ -1561,13 +1637,15 @@
                                 "script_type": "sh",
                                 "script": "#!/bin/bash\n\nset -ex\n\necho \"Package installation steps go here ...\"\n"
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "DogPackage___uninstall___runbook",
@@ -1588,6 +1666,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [
                                 {
                                     "kind": "app_task",
@@ -1610,13 +1689,15 @@
                                 "script_type": "sh",
                                 "script": "#!/bin/bash\n\nset -ex\n\necho \"Package uninstallation steps go here ...\"\n"
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -1652,6 +1733,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [
                                 {
                                     "kind": "app_task",
@@ -1674,13 +1756,15 @@
                                 "script_type": "sh",
                                 "script": "#!/bin/bash\n\nset -ex\n\necho \"Package installation steps go here ...\"\n"
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "CatPackage___uninstall___runbook",
@@ -1701,6 +1785,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [
                                 {
                                     "kind": "app_task",
@@ -1723,13 +1808,15 @@
                                 "script_type": "sh",
                                 "script": "#!/bin/bash\n\nset -ex\n\necho \"Package uninstallation steps go here ...\"\n"
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -1765,6 +1852,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [
                                 {
                                     "kind": "app_task",
@@ -1787,13 +1875,15 @@
                                 "script_type": "sh",
                                 "script": "#!/bin/bash\n\nset -ex\n\necho \"Package installation steps go here ...\"\n"
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "HuskyPackage___uninstall___runbook",
@@ -1814,6 +1904,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [
                                 {
                                     "kind": "app_task",
@@ -1836,13 +1927,15 @@
                                 "script_type": "sh",
                                 "script": "#!/bin/bash\n\nset -ex\n\necho \"Package uninstallation steps go here ...\"\n"
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -2327,6 +2420,7 @@
                                         }
                                     ]
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -2363,6 +2457,7 @@
                                         "name": "AnimalService_get_sound_runbook"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2382,6 +2477,7 @@
                                         "name": "DogService_get_sound_runbook"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2401,6 +2497,7 @@
                                         "name": "HuskyService_get_sound_runbook"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2420,13 +2517,15 @@
                                         "name": "CatService_get_sound_runbook"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ]

@@ -297,26 +297,27 @@ def create_bp_file(dir_name, bp_name, provider_type, bp_type):
     bp_path = os.path.join(dir_name, "blueprint.py")
 
     LOG.info("Writing bp file to {}".format(bp_path))
+    LOG.warning("Please fill required vm disk image in bp before using.")
     with open(bp_path, "w") as fd:
         fd.write(bp_text)
 
 
 def create_cred_keys(dir_name):
 
-    # Will create key via name centos/centos_pub
+    # Will create key via name ssh_key/ssh_key_pub
 
     key = RSA.generate(2048)
 
     # Write private key
     private_key = key.export_key("PEM")
-    private_key_filename = os.path.join(dir_name, "centos")
+    private_key_filename = os.path.join(dir_name, "ssh_key")
     with open(private_key_filename, "wb") as fd:
         fd.write(private_key)
     os.chmod(private_key_filename, 0o600)
 
     # Write public key
     public_key = key.publickey().export_key("OpenSSH")
-    public_key_filename = os.path.join(dir_name, "centos_pub")
+    public_key_filename = os.path.join(dir_name, "ssh_key_pub")
     with open(public_key_filename, "wb") as fd:
         fd.write(public_key)
     os.chmod(public_key_filename, 0o600)
@@ -362,6 +363,9 @@ def init_bp(bp_name, dir_name, provider_type, bp_type):
 
     # Creating keys
     LOG.info("Generating keys for credentials")
+    LOG.info(
+        "These keys are valid for VM Disk Image supporting cloud-init guest customization"
+    )
     create_cred_keys(key_dir)
 
     # create scripts

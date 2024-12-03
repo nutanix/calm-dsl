@@ -33,6 +33,7 @@ AWS_ACCOUNT_NAME = AWS_ACCOUNT["NAME"]
 CALM_VERSION = Version.get_version("Calm")
 
 
+@pytest.mark.quotas
 class TestProjectCommands:
     def setup_method(self):
         """ "Reset the context changes"""

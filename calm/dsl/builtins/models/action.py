@@ -5,7 +5,12 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .task import create_call_rb, _get_target_ref
 from .runbook import runbook, runbook_create
-from calm.dsl.constants import SUBSTRATE
+from calm.dsl.constants import (
+    SUBSTRATE,
+    ACTION,
+    RESOURCE_TYPE,
+    CLOUD_PROVIDER as PROVIDER,
+)
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -154,7 +159,18 @@ class action(runbook):
         # System action names
         action_name = self.action_name
 
-        ACTION_TYPE = "user"
+        ACTION_TYPE = ACTION.TYPE.USER
+        subclasses = EntityType.get_entity_types()
+        if isinstance(cls, subclasses[PROVIDER.ENTITY_NAME]):
+            ACTION_TYPE = ACTION.TYPE.PROVIDER  # Default for provider actions
+        elif isinstance(cls, subclasses[RESOURCE_TYPE.ENTITY_NAME]):
+            ACTION_TYPE = (
+                RESOURCE_TYPE.ACTION_TYPE.GENERIC
+            )  # Default for resource_type actions
+
+        sig = inspect.signature(self.user_func)
+        if sig.parameters.get("type", None):
+            ACTION_TYPE = sig.parameters["type"].default
         func_name = self.user_func.__name__.lower()
         if func_name.startswith("__") and func_name.endswith("__"):
             SYSTEM = getattr(cls, "ALLOWED_SYSTEM_ACTIONS", {})
@@ -172,7 +188,6 @@ class action(runbook):
 
         else:
             # `name` argument is only supported in non-system actions
-            sig = inspect.signature(self.user_func)
             gui_display_name = sig.parameters.get("name", None)
             if gui_display_name and gui_display_name.default != action_name:
                 action_name = gui_display_name.default

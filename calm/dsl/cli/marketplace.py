@@ -18,12 +18,14 @@ from .bps import launch_blueprint_simple, get_blueprint
 from .runbooks import get_runbook, poll_action, watch_runbook
 from .apps import watch_app
 from .runlog import get_runlog_status
+from .accounts import get_account
 from .endpoints import get_endpoint
 from calm.dsl.builtins.models.helper.common import get_project
 from .environments import get_project_environment
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Version
-from .constants import MARKETPLACE_ITEM
+from .constants import MARKETPLACE_ITEM, TASKS
+from calm.dsl.constants import PROVIDER
 
 LOG = get_logging_handle(__name__)
 APP_STATES = [
@@ -573,16 +575,17 @@ def launch_marketplace_bp(
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
-    launch_blueprint_simple(
+    app_launch_state = launch_blueprint_simple(
         patch_editables=patch_editables,
         profile_name=profile_name,
         app_name=app_name,
         blueprint=bp_payload,
         launch_params=launch_params,
     )
-    LOG.info("App {} creation is successful".format(app_name))
 
-    if watch:
+    # if app_launch_state=True that is if blueprint launch is successful then only we will enter in watch mode
+    if app_launch_state and watch:
+        LOG.info("App {} creation is successful".format(app_name))
 
         def display_action(screen):
             watch_app(app_name, screen, poll_interval=poll_interval)
@@ -701,16 +704,17 @@ def launch_marketplace_item(
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
-    launch_blueprint_simple(
+    app_launch_state = launch_blueprint_simple(
         patch_editables=patch_editables,
         profile_name=profile_name,
         app_name=app_name,
         blueprint=bp_payload,
         launch_params=launch_params,
     )
-    LOG.info("App {} creation is successful".format(app_name))
 
-    if watch:
+    # if app_launch_state=True that is if blueprint launch is successful then only we will enter in watch mode
+    if app_launch_state and watch:
+        LOG.info("App {} creation is successful".format(app_name))
 
         def display_action(screen):
             watch_app(app_name, screen, poll_interval=poll_interval)
@@ -829,6 +833,7 @@ def publish_bp_to_marketplace_manager(
     icon_file=None,
     projects=[],
     all_projects=False,
+    publish_without_platform_data=False,
 ):
 
     client = get_api_client()
@@ -858,6 +863,12 @@ def publish_bp_to_marketplace_manager(
             )
         )
         sys.exit(-1)
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV("3.8.0"):
+        if publish_without_platform_data:
+            LOG.info("Removing platform dependent fields from blueprint")
+            _remove_platform_spec_data(bp_spec=bp_data["spec"])
 
     bp_template = {
         "spec": {
@@ -950,6 +961,7 @@ def publish_bp_as_new_marketplace_bp(
     icon_name=None,
     icon_file=None,
     all_projects=False,
+    publish_without_platform_data=False,
 ):
 
     # Search whether this marketplace item exists or not
@@ -984,6 +996,7 @@ def publish_bp_as_new_marketplace_bp(
         icon_file=icon_file,
         projects=projects,
         all_projects=all_projects,
+        publish_without_platform_data=publish_without_platform_data,
     )
 
     if publish_to_marketplace or auto_approve:
@@ -1021,6 +1034,7 @@ def publish_bp_as_existing_marketplace_bp(
     icon_name=None,
     icon_file=None,
     all_projects=False,
+    publish_without_platform_data=False,
 ):
 
     LOG.info(
@@ -1075,6 +1089,15 @@ def publish_bp_as_existing_marketplace_bp(
             )
             sys.exit(-1)
 
+    CALM_VERSION = Version.get_version("Calm")
+
+    # adding icon, projects in accordance with latest existing MPI (CALM-34004)
+    if LV(CALM_VERSION) >= LV("4.0.0"):
+        latest_mpi_data = get_latest_mpi_data(entity_results)
+        icon_name, projects = set_latest_mpi_data(
+            latest_mpi_data, projects=projects, icon_name=icon_name
+        )
+
     publish_bp_to_marketplace_manager(
         bp_name=bp_name,
         marketplace_bp_name=marketplace_bp_name,
@@ -1086,6 +1109,7 @@ def publish_bp_as_existing_marketplace_bp(
         icon_file=icon_file,
         projects=projects,
         all_projects=all_projects,
+        publish_without_platform_data=publish_without_platform_data,
     )
 
     if publish_to_marketplace or auto_approve:
@@ -1934,6 +1958,15 @@ def publish_runbook_as_existing_marketplace_item(
             )
             sys.exit(-1)
 
+    CALM_VERSION = Version.get_version("Calm")
+
+    # adding icon, projects in accordance with latest existing MPI (CALM-34004)
+    if LV(CALM_VERSION) >= LV("4.0.0"):
+        latest_mpi_data = get_latest_mpi_data(entity_results)
+        icon_name, projects = set_latest_mpi_data(
+            latest_mpi_data, projects=projects, icon_name=icon_name
+        )
+
     publish_runbook_to_marketplace_manager(
         runbook_name=runbook_name,
         marketplace_item_name=marketplace_item_name,
@@ -2049,7 +2082,7 @@ def execute_marketplace_runbook(
         },
     }
 
-    patch_runbook_endpoints(client, mpi_data, payload)
+    patch_rb_endpoints_and_accounts(client, mpi_data, payload)
     if not ignore_runtime_variables:
         patch_runbook_runtime_editables(client, mpi_data, payload)
 
@@ -2105,7 +2138,7 @@ def execute_marketplace_runbook_renderer(screen, client, watch, payload={}):
     screen.refresh()
 
 
-def patch_runbook_endpoints(client, mpi_data, payload):
+def patch_rb_endpoints_and_accounts(client, mpi_data, payload):
     template_info = mpi_data["status"]["resources"].get("runbook_template_info", {})
     runbook = template_info.get("runbook_template", {})
 
@@ -2126,10 +2159,19 @@ def patch_runbook_endpoints(client, mpi_data, payload):
 
     tasks = runbook["spec"]["resources"]["runbook"]["task_definition_list"]
     used_endpoints = []
+    used_accounts = []
     for task in tasks:
         target_name = task.get("target_any_local_reference", {}).get("name", "")
         if target_name:
             used_endpoints.append(target_name)
+
+        # TODO: Check if NDB tasks need to be skipped
+        if task.get("type") == TASKS.TASK_TYPES.RT_OPERATION:
+            account_name = (
+                task.get("attrs", {}).get("account_reference", {}).get("name")
+            )
+            if account_name:
+                used_accounts.append(account_name)
 
     endpoints_description_map = {}
     for ep_info in runbook["spec"]["resources"].get("endpoints_information", []):
@@ -2152,7 +2194,22 @@ def patch_runbook_endpoints(client, mpi_data, payload):
             endpoint_id = endpoint.get("metadata", {}).get("uuid", "")
             endpoints_mapping[used_endpoint] = endpoint_id
 
+    if used_accounts:
+        LOG.info(
+            "Please select an account belonging to the selected project for every account used in the marketplace item."
+        )
+        used_accounts = list(set(used_accounts))
+    accounts_mapping = {}
+    for used_account in used_accounts:
+        selected_account = input("{}:".format(used_account))
+        if selected_account:
+            account = get_account(client, selected_account)
+            account_uuid = account.get("metadata", {}).get("uuid", "")
+            accounts_mapping[used_account] = account_uuid
+
     payload["spec"]["resources"]["endpoints_mapping"] = endpoints_mapping
+    payload["spec"]["resources"]["accounts_mapping"] = accounts_mapping
+    LOG.debug("Payload with mapped endpoints & accounts: {}".format(payload))
 
 
 def patch_runbook_runtime_editables(client, mpi_data, payload):
@@ -2182,3 +2239,190 @@ def patch_runbook_runtime_editables(client, mpi_data, payload):
 
     payload["spec"]["resources"]["args"] = args
     return payload
+
+
+def set_field_to_null(data, key_to_set_null):
+    """
+    Sets the specified key in the given json dict to it's equivalent null value.
+    Performs a recursive traversal in nested json dict to set the key to null.
+
+    Equivalent null value for different types are:
+        - dict: {}
+        - list: []
+        - int: None
+        - str: ""
+        - bool: None
+        - Nonetype values: None
+
+    Args:
+        data (dict): Nested json dict.
+        key_to_set_null (str): The key whose value should be set to it's corresponding null equivalence.
+
+    Returns:
+        None
+    """
+    EQUIVALENCE_NULL = {
+        dict: {},
+        list: [],
+        int: None,
+        str: "",
+        bool: None,
+        type(None): None,
+    }
+
+    try:
+        if isinstance(data, dict):
+
+            # If key is found in dict, set it to equivalent null value.
+            if key_to_set_null in data:
+                LOG.debug(
+                    "Setting equivalence null value to {}".format(key_to_set_null)
+                )
+                data[key_to_set_null] = EQUIVALENCE_NULL[type(data[key_to_set_null])]
+
+            # If key is not found in dict then recursively call same function for each key in dict.
+            for item in data:
+                if item == "metadata":  # ignore any modification in metadata
+                    continue
+                set_field_to_null(data[item], key_to_set_null)
+
+        elif isinstance(data, list):
+
+            for _, item in enumerate(data):
+
+                # If key is found in list, set it to equivalent null value.
+                if key_to_set_null == item:
+                    LOG.debug(
+                        "Setting equivalence null value to {}".format(key_to_set_null)
+                    )
+                    item = EQUIVALENCE_NULL[type(item)]
+
+                # If key is not found in list then recursively call same function for each item.
+                else:
+                    set_field_to_null(item, key_to_set_null)
+
+        else:
+            LOG.debug("Data is not of type dict or list".format(data))
+            return
+
+    except Exception as e:
+        LOG.debug(
+            "Error while setting equivalence null value to {}".format(key_to_set_null)
+        )
+        LOG.debug(e)
+        return
+
+
+def _remove_platform_spec_data(bp_spec):
+    """
+    Removes platform spec data from blueprint spec before publishing to marketplace manager.
+
+    Args:
+        bp_spec (dict): Blueprint spec data
+
+    Returns:
+        None
+    """
+
+    VALID_SUBSTRATE_TYPES = [
+        PROVIDER.TYPE.AHV,
+        PROVIDER.TYPE.VMWARE,
+        PROVIDER.TYPE.AWS,
+        PROVIDER.TYPE.AZURE,
+        PROVIDER.TYPE.GCP,
+    ]
+
+    client = get_api_client()
+    substrate_types = []
+    if not bp_spec.get("resources", {}):
+        LOG.debug("No resources found in blueprint spec".format(bp_spec))
+        return
+
+    substrates = bp_spec["resources"].get("substrate_definition_list", [])
+
+    # storing all substrate types present in blueprint
+    for substrate in substrates:
+        if substrate.get("type"):
+            substrate_types.append(substrate["type"])
+
+    # creating api client object to get platform dependent fields
+    Obj = get_resource_api(
+        "platform_dependent_fields", client.connection, calm_api=True
+    )
+    payload = {"filters": {"cloud_providers": substrate_types}}
+    res, err = Obj.list(payload)
+
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    platform_dependent_fields = res.json() or {}
+
+    if not platform_dependent_fields:
+        LOG.warning("There are no platform dependent fields to remove")
+        return
+
+    for substrate_type, fields in platform_dependent_fields.items():
+        if substrate_type not in VALID_SUBSTRATE_TYPES:
+            LOG.warning(
+                "Platform dependent fields removal for '{}' is not supported".format(
+                    substrate_type
+                )
+            )
+            continue
+
+        substrates = bp_spec["resources"].get("substrate_definition_list", [])
+
+        for substrate in substrates:
+            if substrate.get("type") == substrate_type:
+                for field in fields:
+                    set_field_to_null(substrate.get("create_spec"), field)
+
+
+def get_latest_mpi_data(entities):
+    latest_version_data = []
+    latest_version = None
+    for entity in entities:
+        for _data in entity.get("data", []):
+            if _data.get("name", "") != "version":
+                continue
+
+            # version is expected to be of format x.y.z following guide: https://semver.org/
+            _version = _data["values"][0]["values"][0]
+
+            # assigning first version as latest version
+            if latest_version is None:
+                latest_version = _version
+
+            # check if subsequently fetched version is greater than latest version
+            if LV(_version) >= LV(latest_version):
+                latest_version_data = entity["data"]
+
+    # store latest existing mpi data in a map for access of values
+    latest_existing_mpi_data_map = {}
+    for data in latest_version_data:
+        value = data.get("values", [])
+        if value:
+            latest_existing_mpi_data_map[data["name"]] = value[0].get("values", [])
+
+    return latest_existing_mpi_data_map
+
+
+def set_latest_mpi_data(latest_existing_mpi_data_map, **kwargs):
+    projects = kwargs.get("projects", [])
+    icon_name = kwargs.get("icon_name", None)
+
+    client = get_api_client()
+
+    # if project is already supplied then don't assign it from latest existing mpi data
+    if not projects:
+        projects = latest_existing_mpi_data_map.get("project_names", [])
+
+    # if icon_name is already supplied then don't assign it from latest existing mpi data
+    if not icon_name:
+        icon_list = latest_existing_mpi_data_map.get("icon_list", [])
+        app_icon_name_uuid_map = client.app_icon.get_uuid_name_map()
+        if icon_list:
+            icon_uuid = json.loads(icon_list[0]).get("icon_uuid")
+            icon_name = app_icon_name_uuid_map[icon_uuid] if icon_uuid else None
+
+    return icon_name, projects

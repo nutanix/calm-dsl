@@ -69,7 +69,7 @@ class AccountsAPI(ResourceAPI):
             return None, err
 
         response = res.json()
-        entities = response.get("entitites", None)
+        entities = response.get("entities", None)
         if entities:
             if len(entities) > 0:
                 if not force_create:

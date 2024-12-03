@@ -71,13 +71,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -104,13 +106,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -137,13 +141,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -170,13 +176,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -203,13 +211,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -236,13 +246,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -286,13 +298,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -319,13 +333,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -352,13 +368,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -385,13 +403,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -418,13 +438,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -451,13 +473,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -495,6 +519,7 @@
                                         }
                                     ]
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -521,6 +546,7 @@
                                     "script_type": "sh",
                                     "script": "echo \"Hello\"; sleep 10"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -542,6 +568,7 @@
                                         "name": "default cred"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -573,7 +600,8 @@
                                 "is_hidden": false,
                                 "is_mandatory": false
                             }
-                        ]
+                        ],
+                        "output_variables": []
                     }
                 }
             ],
@@ -605,6 +633,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [
                                 {
                                     "kind": "app_task",
@@ -631,13 +660,15 @@
                                     "name": "default cred"
                                 }
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "Runbook_for_Package_MySQLPackage_action_uninstall",
@@ -658,13 +689,15 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -716,6 +749,7 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [
                                 {
                                     "kind": "app_task",
@@ -738,13 +772,15 @@
                                 "script_type": "sh",
                                 "script": "echo @@{foo}@@"
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "Runbook_for_Package_PHPPackage_action_uninstall",
@@ -765,13 +801,15 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -845,6 +883,7 @@
                                         }
                                     ]
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -871,6 +910,7 @@
                                     "script_type": "static_py3",
                                     "script": "print ('Hello!')"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -892,13 +932,15 @@
                                     "script_type": "sh",
                                     "script": "echo \"Hello\"\nsleep 10\n"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -931,6 +973,7 @@
                 },
                 "value": "password"
             },
+            "cred_class": "static",
             "editables": {}
         }
     ],
@@ -1203,7 +1246,8 @@
                         "choices": [
                             "var13_val1",
                             "var13_val2"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1229,7 +1273,8 @@
                         "choices": [
                             "0",
                             "1"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1255,7 +1300,8 @@
                         "choices": [
                             "30/02/2019",
                             "31/06/2019"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1281,7 +1327,8 @@
                         "choices": [
                             "22:35:00",
                             "10:35:00"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1307,7 +1354,8 @@
                         "choices": [
                             "30/02/2019 - 22:35:00",
                             "31/06/2019 - 10:35:00"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1329,7 +1377,8 @@
                         "choices": [
                             "x\ny",
                             "a\nb"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1355,7 +1404,8 @@
                         "choices": [
                             "var19_val1",
                             "var19_val2"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1381,7 +1431,8 @@
                         "choices": [
                             "0",
                             "1"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1407,7 +1458,8 @@
                         "choices": [
                             "30/02/2019",
                             "31/06/2019"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1433,7 +1485,8 @@
                         "choices": [
                             "22:35:00",
                             "10:35:00"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1459,7 +1512,8 @@
                         "choices": [
                             "30/02/2019 - 22:35:00",
                             "31/06/2019 - 10:35:00"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1481,7 +1535,8 @@
                         "choices": [
                             "x\ny",
                             "a\nb"
-                        ]
+                        ],
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1521,7 +1576,8 @@
                                 "var25": "$.title"
                             },
                             "type": "HTTP"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1548,7 +1604,8 @@
                             "script_type": "static_py3",
                             "script": "print ('0')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1575,7 +1632,8 @@
                             "script_type": "static_py3",
                             "script": "print ('30/02/2019')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1602,7 +1660,8 @@
                             "script_type": "static_py3",
                             "script": "print ('22:35:00')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1629,7 +1688,8 @@
                             "script_type": "static_py3",
                             "script": "print ('30/02/2019 - 22:35:00')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1652,7 +1712,8 @@
                             "script_type": "static_py3",
                             "script": "print ('x\ny')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1692,7 +1753,8 @@
                                 "var31": "$.title"
                             },
                             "type": "HTTP"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1719,7 +1781,8 @@
                             "script_type": "static_py3",
                             "script": "print ('0,1')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1746,7 +1809,8 @@
                             "script_type": "static_py3",
                             "script": "print ('30/02/2019,31/06/2019')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1773,7 +1837,8 @@
                             "script_type": "static_py3",
                             "script": "print ('22:35:00,10:35:00')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1800,7 +1865,8 @@
                             "script_type": "static_py3",
                             "script": "print ('30/02/2019 - 22:35:00,31/06/2019 - 10:35:00')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1823,7 +1889,8 @@
                             "script_type": "static_py3",
                             "script": "print ('var36=x\ny,a\nb')",
                             "type": "EXEC"
-                        }
+                        },
+                        "exec_target_reference": {}
                     },
                     "is_hidden": false,
                     "is_mandatory": false
@@ -1991,6 +2058,7 @@
                                         }
                                     ]
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [
                                     {
                                         "kind": "app_task",
@@ -2061,6 +2129,7 @@
                                     "script_type": "sh",
                                     "script": "echo \"Hello\"\nsleep 10\n"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2080,6 +2149,7 @@
                                         "name": "PHPService_test_action_runbook"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2149,6 +2219,7 @@
                                         "foo_title": "$.title"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2202,6 +2273,7 @@
                                         "foo_title": "$.title"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2251,6 +2323,7 @@
                                         "foo_title": "$.title"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2296,6 +2369,7 @@
                                         }
                                     ]
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2345,6 +2419,7 @@
                                         "foo_title": "$.title"
                                     }
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2362,6 +2437,7 @@
                                     "script_type": "static_py3",
                                     "script": "print ('Hello World!')"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2382,6 +2458,7 @@
                                         "var1"
                                     ]
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2402,6 +2479,7 @@
                                         "var2"
                                     ]
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2419,6 +2497,7 @@
                                     "scaling_type": "SCALEOUT",
                                     "scaling_count": "1"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2435,6 +2514,7 @@
                                 "attrs": {
                                     "interval_secs": 60
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2452,6 +2532,7 @@
                                     "scaling_type": "SCALEIN",
                                     "scaling_count": "1"
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
@@ -2494,7 +2575,8 @@
                                 "is_hidden": true,
                                 "is_mandatory": true
                             }
-                        ]
+                        ],
+                        "output_variables": []
                     }
                 }
             ]

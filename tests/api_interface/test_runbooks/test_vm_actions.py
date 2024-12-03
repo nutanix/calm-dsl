@@ -66,7 +66,10 @@ class TestVMActions:
         )
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
-        assert state == RUNLOG.STATUS.ERROR
+        if LV(CALM_VERSION) >= LV("4.0.0"):
+            assert state == RUNLOG.STATUS.FAILURE
+        else:
+            assert state == RUNLOG.STATUS.ERROR
 
         res, err = client.runbook.list_runlogs(runlog_uuid)
         if err:
@@ -83,7 +86,10 @@ class TestVMActions:
                 for reason in entity["status"]["reason_list"]:
                     reasons += reason
                 assert warning_msg in reasons
-                assert entity["status"]["state"] == RUNLOG.STATUS.ERROR
+                if LV(CALM_VERSION) >= LV("4.0.0"):
+                    assert entity["status"]["state"] == RUNLOG.STATUS.FAILURE
+                else:
+                    assert entity["status"]["state"] == RUNLOG.STATUS.ERROR
             elif entity["status"]["type"] == "task_runlog" and runlog_uuid in entity[
                 "status"
             ].get("machine_name", ""):

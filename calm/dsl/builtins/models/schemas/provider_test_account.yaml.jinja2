@@ -1,0 +1,31 @@
+{% import "ref.yaml.jinja2" as ref %}
+
+{% macro ProviderTestAccount() -%}
+
+title: Provider Test Account
+description: Account Schema of the provider used for performing test executions
+x-calm-dsl-type: provider_test_account
+type: object
+properties:
+    name:
+        type: string
+        description: "Name of the account. Example: my_test_account"
+    description:
+        type: string
+        description: "Notes of account"
+    variable_list:
+        type: array
+        description: List of variables
+        items:
+            $ref: '#/components/schemas/Variable'
+        x-calm-dsl-display-name: variables
+
+{%- endmacro %}
+
+
+{% macro ProviderTestAccountDefinition() -%}
+
+ProviderTestAccount:
+    {{ ProviderTestAccount()|indent(4) }}
+
+{%- endmacro %}

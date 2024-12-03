@@ -1,11 +1,12 @@
 from calm.dsl.decompile.render import render_template
-from calm.dsl.builtins import RefType
+from calm.dsl.builtins import RefType, get_valid_identifier
 from calm.dsl.log import get_logging_handle
 from calm.dsl.decompile.ref_dependency import (
     get_service_name,
     get_endpoint_name,
     get_profile_name,
     get_entity_gui_dsl_name,
+    update_endpoint_name,
 )
 from calm.dsl.decompile.ref_dependency import get_package_name, get_deployment_name
 
@@ -47,12 +48,16 @@ def render_ref_template(cls):
         if cls_name:
             user_attrs["name"] = cls_name
     elif kind == "app_endpoint":
+        gui_display_name = user_attrs["name"]
+        update_endpoint_name(gui_display_name, get_valid_identifier(user_attrs["name"]))
         cls_name = get_endpoint_name(user_attrs["name"])
         if cls_name:
             user_attrs["name"] = cls_name
 
     # Updating name attribute of class
-    cls.name = user_attrs["name"]
+    # Skip updating endpoint name as already existing endpoint names should be used as it is.
+    if kind != "app_endpoint":
+        cls.name = user_attrs["name"]
 
     text = render_template(schema_file=schema_file, obj=user_attrs)
     return text.strip()

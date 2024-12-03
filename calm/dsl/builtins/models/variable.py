@@ -211,9 +211,12 @@ def _advanced_variable(
                 + ", is not valid, Expected one of"
                 + " ['HTTP', 'EXEC'], got {}".format(task_type)
             )
+        task_target_endpoint = getattr(task, "exec_target_reference", None)
         task_attrs["type"] = task_type
         kwargs["type_"] = task_type + "_" + type_
         kwargs["options"] = {"type": task_type, "attrs": task_attrs}
+        if task_type == "EXEC" and task_target_endpoint:
+            kwargs["options"]["exec_target_reference"] = task_target_endpoint.get_dict()
     if value_type is not None:
         value_type = value_type.upper()
         if value_type not in VARIABLE_VALUE_TYPES.values():
@@ -1039,6 +1042,7 @@ def variable_string_with_options_from_task(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1053,6 +1057,7 @@ def variable_string_with_options_from_task(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1065,6 +1070,7 @@ def variable_int_with_options_from_task(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1079,6 +1085,7 @@ def variable_int_with_options_from_task(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1091,6 +1098,7 @@ def variable_date_with_options_from_task(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1105,6 +1113,7 @@ def variable_date_with_options_from_task(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1117,6 +1126,7 @@ def variable_time_with_options_from_task(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1131,6 +1141,7 @@ def variable_time_with_options_from_task(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1143,6 +1154,7 @@ def variable_datetime_with_options_from_task(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1157,6 +1169,7 @@ def variable_datetime_with_options_from_task(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1169,6 +1182,7 @@ def variable_multiline_with_options_from_task(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1183,6 +1197,7 @@ def variable_multiline_with_options_from_task(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1195,6 +1210,7 @@ def variable_string_with_options_from_task_array(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1209,6 +1225,7 @@ def variable_string_with_options_from_task_array(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1221,6 +1238,7 @@ def variable_int_with_options_from_task_array(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1235,6 +1253,7 @@ def variable_int_with_options_from_task_array(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1247,6 +1266,7 @@ def variable_date_with_options_from_task_array(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1261,6 +1281,7 @@ def variable_date_with_options_from_task_array(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1273,6 +1294,7 @@ def variable_time_with_options_from_task_array(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1287,6 +1309,7 @@ def variable_time_with_options_from_task_array(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1299,6 +1322,7 @@ def variable_datetime_with_options_from_task_array(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1313,6 +1337,7 @@ def variable_datetime_with_options_from_task_array(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1325,6 +1350,7 @@ def variable_multiline_with_options_from_task_array(
     is_hidden=False,
     is_mandatory=False,
     description="",
+    value="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1339,6 +1365,7 @@ def variable_multiline_with_options_from_task_array(
         is_mandatory=is_mandatory,
         runtime=True,
         description=description,
+        value=value,
     )
 
 
@@ -1541,6 +1568,7 @@ class CalmVariable:
                 is_hidden=False,
                 is_mandatory=False,
                 description="",
+                value="",
             ):
                 return variable_string_with_options_from_task(
                     task,
@@ -1551,6 +1579,7 @@ class CalmVariable:
                     is_hidden=is_hidden,
                     is_mandatory=is_mandatory,
                     description=description,
+                    value=value,
                 )
 
             string = variable_string_with_options_from_task
@@ -1571,6 +1600,7 @@ class CalmVariable:
                     is_hidden=False,
                     is_mandatory=False,
                     description="",
+                    value="",
                 ):
                     return variable_string_with_options_from_task_array(
                         task,
@@ -1581,6 +1611,7 @@ class CalmVariable:
                         is_hidden=is_hidden,
                         is_mandatory=is_mandatory,
                         description=description,
+                        value=value,
                     )
 
                 string = variable_string_with_options_from_task_array

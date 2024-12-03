@@ -1,732 +1,748 @@
 {
-  "type": "USER",
-  "service_definition_list": [
-    {
-      "name": "AhvService",
-      "description": "Sample mysql service",
-      "port_list": [],
-      "singleton": false,
-      "tier": "",
-      "depends_on_list": [],
-      "variable_list": [
+    "type": "USER",
+    "service_definition_list": [
         {
-          "name": "ENV",
-          "description": "",
-          "type": "LOCAL",
-          "label": "",
-          "attrs": {},
-          "val_type": "STRING",
-          "value": "DEV",
-          "data_type": "BASE",
-          "is_hidden": false,
-          "is_mandatory": false
-        }
-      ],
-      "action_list": [
-        {
-          "name": "action_create",
-          "description": "",
-          "type": "system",
-          "critical": true,
-          "runbook": {
-            "name": "AhvService___create___runbook",
-            "description": "",
-            "main_task_local_reference": {
-              "kind": "app_task",
-              "name": "AhvService___create___dag"
-            },
-            "task_definition_list": [
-              {
-                "name": "AhvService___create___dag",
-                "description": "",
-                "type": "DAG",
-                "target_any_local_reference": {
-                  "kind": "app_service",
-                  "name": "AhvService"
-                },
-                "attrs": {
-                  "edges": []
-                },
-                "child_tasks_local_reference_list": [],
-                "variable_list": [],
-                "retries": "",
-                "timeout_secs": ""
-              }
-            ],
-            "variable_list": []
-          }
-        },
-        {
-          "name": "action_start",
-          "description": "",
-          "type": "system",
-          "critical": true,
-          "runbook": {
-            "name": "AhvService___start___runbook",
-            "description": "",
-            "main_task_local_reference": {
-              "kind": "app_task",
-              "name": "AhvService___start___dag"
-            },
-            "task_definition_list": [
-              {
-                "name": "AhvService___start___dag",
-                "description": "",
-                "type": "DAG",
-                "target_any_local_reference": {
-                  "kind": "app_service",
-                  "name": "AhvService"
-                },
-                "attrs": {
-                  "edges": []
-                },
-                "child_tasks_local_reference_list": [],
-                "variable_list": [],
-                "retries": "",
-                "timeout_secs": ""
-              }
-            ],
-            "variable_list": []
-          }
-        },
-        {
-          "name": "action_stop",
-          "description": "",
-          "type": "system",
-          "critical": true,
-          "runbook": {
-            "name": "AhvService___stop___runbook",
-            "description": "",
-            "main_task_local_reference": {
-              "kind": "app_task",
-              "name": "AhvService___stop___dag"
-            },
-            "task_definition_list": [
-              {
-                "name": "AhvService___stop___dag",
-                "description": "",
-                "type": "DAG",
-                "target_any_local_reference": {
-                  "kind": "app_service",
-                  "name": "AhvService"
-                },
-                "attrs": {
-                  "edges": []
-                },
-                "child_tasks_local_reference_list": [],
-                "variable_list": [],
-                "retries": "",
-                "timeout_secs": ""
-              }
-            ],
-            "variable_list": []
-          }
-        },
-        {
-          "name": "action_delete",
-          "description": "",
-          "type": "system",
-          "critical": true,
-          "runbook": {
-            "name": "AhvService___delete___runbook",
-            "description": "",
-            "main_task_local_reference": {
-              "kind": "app_task",
-              "name": "AhvService___delete___dag"
-            },
-            "task_definition_list": [
-              {
-                "name": "AhvService___delete___dag",
-                "description": "",
-                "type": "DAG",
-                "target_any_local_reference": {
-                  "kind": "app_service",
-                  "name": "AhvService"
-                },
-                "attrs": {
-                  "edges": []
-                },
-                "child_tasks_local_reference_list": [],
-                "variable_list": [],
-                "retries": "",
-                "timeout_secs": ""
-              }
-            ],
-            "variable_list": []
-          }
-        },
-        {
-          "name": "action_restart",
-          "description": "",
-          "type": "system",
-          "critical": true,
-          "runbook": {
-            "name": "AhvService___restart___runbook",
-            "description": "",
-            "main_task_local_reference": {
-              "kind": "app_task",
-              "name": "AhvService___restart___dag"
-            },
-            "task_definition_list": [
-              {
-                "name": "AhvService___restart___dag",
-                "description": "",
-                "type": "DAG",
-                "target_any_local_reference": {
-                  "kind": "app_service",
-                  "name": "AhvService"
-                },
-                "attrs": {
-                  "edges": []
-                },
-                "child_tasks_local_reference_list": [],
-                "variable_list": [],
-                "retries": "",
-                "timeout_secs": ""
-              }
-            ],
-            "variable_list": []
-          }
-        },
-        {
-          "name": "action_soft_delete",
-          "description": "",
-          "type": "system",
-          "critical": true,
-          "runbook": {
-            "name": "AhvService___soft_delete___runbook",
-            "description": "",
-            "main_task_local_reference": {
-              "kind": "app_task",
-              "name": "AhvService___soft_delete___dag"
-            },
-            "task_definition_list": [
-              {
-                "name": "AhvService___soft_delete___dag",
-                "description": "",
-                "type": "DAG",
-                "target_any_local_reference": {
-                  "kind": "app_service",
-                  "name": "AhvService"
-                },
-                "attrs": {
-                  "edges": []
-                },
-                "child_tasks_local_reference_list": [],
-                "variable_list": [],
-                "retries": "",
-                "timeout_secs": ""
-              }
-            ],
-            "variable_list": []
-          }
-        }
-      ],
-      "container_spec": {}
-    }
-  ],
-  "package_definition_list": [
-    {
-      "name": "AhvPackage",
-      "description": "Example package with variables, install tasks and link to service",
-      "type": "CUSTOM",
-      "options": {
-        "install_runbook": {
-          "name": "Runbook_for_Package_AhvPackage_action_install",
-          "description": "",
-          "main_task_local_reference": {
-            "kind": "app_task",
-            "name": "DAG_Task_for_Package_AhvPackage_action_install"
-          },
-          "task_definition_list": [
-            {
-              "name": "DAG_Task_for_Package_AhvPackage_action_install",
-              "description": "",
-              "type": "DAG",
-              "target_any_local_reference": {
-                "kind": "app_service",
-                "name": "AhvService"
-              },
-              "attrs": {
-                "edges": []
-              },
-              "child_tasks_local_reference_list": [],
-              "variable_list": [],
-              "retries": "",
-              "timeout_secs": ""
-            }
-          ],
-          "variable_list": []
-        },
-        "uninstall_runbook": {
-          "name": "Runbook_for_Package_AhvPackage_action_uninstall",
-          "description": "",
-          "main_task_local_reference": {
-            "kind": "app_task",
-            "name": "DAG_Task_for_Package_AhvPackage_action_uninstall"
-          },
-          "task_definition_list": [
-            {
-              "name": "DAG_Task_for_Package_AhvPackage_action_uninstall",
-              "description": "",
-              "type": "DAG",
-              "target_any_local_reference": {
-                "kind": "app_service",
-                "name": "AhvService"
-              },
-              "attrs": {
-                "edges": []
-              },
-              "child_tasks_local_reference_list": [],
-              "variable_list": [],
-              "retries": "",
-              "timeout_secs": ""
-            }
-          ],
-          "variable_list": []
-        }
-      },
-      "service_local_reference_list": [
-        {
-          "kind": "app_service",
-          "name": "AhvService"
-        }
-      ],
-      "variable_list": [
-        {
-          "name": "foo",
-          "description": "",
-          "type": "LOCAL",
-          "label": "",
-          "attrs": {},
-          "val_type": "STRING",
-          "value": "bar",
-          "data_type": "BASE",
-          "is_hidden": false,
-          "is_mandatory": false
-        }
-      ],
-      "version": ""
-    }
-  ],
-  "published_service_definition_list": [],
-  "substrate_definition_list": [
-    {
-      "name": "AhvSubstrate",
-      "description": "AHV VM config given by reading a spec file",
-      "type": "AHV_VM",
-      "os_type": "Linux",
-      "create_spec": {
-        "name": "MyAhvVm",
-        "categories": {
-          "AppFamily": "Backup",
-          "AppType": "Default"
-        },
-        "resources": {
-          "nic_list": [
-            {
-              "network_function_nic_type": "INGRESS",
-              "nic_type": "NORMAL_NIC",
-              "subnet_reference": {
-                "kind": "subnet",
-                "name": "vlan1211",
-                "uuid": "48728e67-d4af-46ca-a80e-aa571b18209f"
-              },
-              "network_function_chain_reference": null,
-              "mac_address": "",
-              "ip_endpoint_list": []
-            },
-            {
-              "network_function_nic_type": "INGRESS",
-              "nic_type": "NORMAL_NIC",
-              "subnet_reference": {
-                "kind": "subnet",
-                "name": "vlan1211",
-                "uuid": "48728e67-d4af-46ca-a80e-aa571b18209f"
-              },
-              "network_function_chain_reference": null,
-              "mac_address": "",
-              "ip_endpoint_list": []
-            },
-            {
-              "network_function_nic_type": "INGRESS",
-              "nic_type": "NORMAL_NIC",
-              "subnet_reference": {
-                "kind": "subnet",
-                "name": "vlan1211",
-                "uuid": "48728e67-d4af-46ca-a80e-aa571b18209f"
-              },
-              "network_function_chain_reference": null,
-              "mac_address": "",
-              "ip_endpoint_list": []
-            }
-          ],
-          "num_vcpus_per_socket": 1,
-          "num_sockets": 1,
-          "memory_size_mib": 4096,
-          "power_state": "ON",
-          "account_uuid": "cccf2e43-ecc4-4c5c-bb58-862fef428395",
-          "gpu_list": [],
-          "disk_list": [
-            {
-              "data_source_reference": {
-                "kind": "image",
-                "name": "CentOS-7-cloudinit",
-                "uuid": "f3bc3369-c056-4a2c-8308-90d1b76d455a"
-              },
-              "device_properties": {
-                "device_type": "DISK",
-                "disk_address": {
-                  "device_index": 0,
-                  "adapter_type": "SCSI"
+            "name": "AhvService",
+            "description": "Sample mysql service",
+            "port_list": [],
+            "singleton": false,
+            "tier": "",
+            "depends_on_list": [],
+            "variable_list": [
+                {
+                    "name": "ENV",
+                    "description": "",
+                    "type": "LOCAL",
+                    "label": "",
+                    "attrs": {},
+                    "val_type": "STRING",
+                    "value": "DEV",
+                    "data_type": "BASE",
+                    "is_hidden": false,
+                    "is_mandatory": false
                 }
-              },
-              "disk_size_mib": 0
-            },
-            {
-              "data_source_reference": null,
-              "device_properties": {
-                "device_type": "DISK",
-                "disk_address": {
-                  "device_index": 0,
-                  "adapter_type": "PCI"
+            ],
+            "action_list": [
+                {
+                    "name": "action_create",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "AhvService___create___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "AhvService___create___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "AhvService___create___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "AhvService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "status_map_list": [],
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": [],
+                        "output_variables": []
+                    }
+                },
+                {
+                    "name": "action_start",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "AhvService___start___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "AhvService___start___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "AhvService___start___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "AhvService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "status_map_list": [],
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": [],
+                        "output_variables": []
+                    }
+                },
+                {
+                    "name": "action_stop",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "AhvService___stop___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "AhvService___stop___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "AhvService___stop___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "AhvService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "status_map_list": [],
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": [],
+                        "output_variables": []
+                    }
+                },
+                {
+                    "name": "action_delete",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "AhvService___delete___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "AhvService___delete___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "AhvService___delete___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "AhvService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "status_map_list": [],
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": [],
+                        "output_variables": []
+                    }
+                },
+                {
+                    "name": "action_restart",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "AhvService___restart___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "AhvService___restart___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "AhvService___restart___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "AhvService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "status_map_list": [],
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": [],
+                        "output_variables": []
+                    }
+                },
+                {
+                    "name": "action_soft_delete",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "AhvService___soft_delete___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "AhvService___soft_delete___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "AhvService___soft_delete___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "AhvService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "status_map_list": [],
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": [],
+                        "output_variables": []
+                    }
                 }
-              },
-              "disk_size_mib": 4096
-            },
-            {
-              "data_source_reference": null,
-              "device_properties": {
-                "device_type": "DISK",
-                "disk_address": {
-                  "device_index": 1,
-                  "adapter_type": "PCI"
+            ],
+            "container_spec": {}
+        }
+    ],
+    "package_definition_list": [
+        {
+            "name": "AhvPackage",
+            "description": "Example package with variables, install tasks and link to service",
+            "type": "CUSTOM",
+            "options": {
+                "install_runbook": {
+                    "name": "Runbook_for_Package_AhvPackage_action_install",
+                    "description": "",
+                    "main_task_local_reference": {
+                        "kind": "app_task",
+                        "name": "DAG_Task_for_Package_AhvPackage_action_install"
+                    },
+                    "task_definition_list": [
+                        {
+                            "name": "DAG_Task_for_Package_AhvPackage_action_install",
+                            "description": "",
+                            "type": "DAG",
+                            "target_any_local_reference": {
+                                "kind": "app_service",
+                                "name": "AhvService"
+                            },
+                            "attrs": {
+                                "edges": []
+                            },
+                            "status_map_list": [],
+                            "child_tasks_local_reference_list": [],
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
+                        }
+                    ],
+                    "variable_list": [],
+                    "output_variables": []
+                },
+                "uninstall_runbook": {
+                    "name": "Runbook_for_Package_AhvPackage_action_uninstall",
+                    "description": "",
+                    "main_task_local_reference": {
+                        "kind": "app_task",
+                        "name": "DAG_Task_for_Package_AhvPackage_action_uninstall"
+                    },
+                    "task_definition_list": [
+                        {
+                            "name": "DAG_Task_for_Package_AhvPackage_action_uninstall",
+                            "description": "",
+                            "type": "DAG",
+                            "target_any_local_reference": {
+                                "kind": "app_service",
+                                "name": "AhvService"
+                            },
+                            "attrs": {
+                                "edges": []
+                            },
+                            "status_map_list": [],
+                            "child_tasks_local_reference_list": [],
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
+                        }
+                    ],
+                    "variable_list": [],
+                    "output_variables": []
                 }
-              },
-              "disk_size_mib": 6144
             },
-            {
-              "data_source_reference": null,
-              "device_properties": {
-                "device_type": "DISK",
-                "disk_address": {
-                  "device_index": 2,
-                  "adapter_type": "PCI"
+            "service_local_reference_list": [
+                {
+                    "kind": "app_service",
+                    "name": "AhvService"
                 }
-              },
-              "disk_size_mib": 8192
-            }
-          ],
-          "guest_customization": null,
-          "serial_port_list": [
-            {
-              "index": 0,
-              "is_connected": false
-            },
-            {
-              "index": 1,
-              "is_connected": false
-            },
-            {
-              "index": 2,
-              "is_connected": true
-            },
-            {
-              "index": 3,
-              "is_connected": true
-            }
-          ],
-          "boot_config": {
-            "boot_device": {
-              "disk_address": {
-                "device_index": 0,
-                "adapter_type": "SCSI"
-              }
-            }
-          }
+            ],
+            "variable_list": [
+                {
+                    "name": "foo",
+                    "description": "",
+                    "type": "LOCAL",
+                    "label": "",
+                    "attrs": {},
+                    "val_type": "STRING",
+                    "value": "bar",
+                    "data_type": "BASE",
+                    "is_hidden": false,
+                    "is_mandatory": false
+                }
+            ],
+            "version": ""
         }
-      },
-      "variable_list": [],
-      "action_list": [],
-      "readiness_probe": {
-        "connection_type": "SSH",
-        "connection_port": 22,
-        "connection_protocol": "",
-        "timeout_secs": "60",
-        "delay_secs": "60",
-        "retries": "5",
-        "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
-        "disable_readiness_probe": true,
-        "login_credential_local_reference": {
-          "kind": "app_credential",
-          "name": "default cred"
-        }
-      },
-      "editables": {
-        "create_spec": {
-          "resources": {
-            "num_vcpus_per_socket": true,
-            "num_sockets": true,
-            "memory_size_mib": true,
-            "boot_config": true,
-            "guest_customization": true,
-            "disk_list": {
-              "0": {
-                "data_source_reference": true,
-                "disk_size_mib": true
-              },
-              "1": {
-                "data_source_reference": true,
-                "device_properties": {
-                  "device_type": true,
-                  "disk_address": {
-                    "adapter_type": true
-                  }
+    ],
+    "published_service_definition_list": [],
+    "substrate_definition_list": [
+        {
+            "name": "AhvSubstrate",
+            "description": "AHV VM config given by reading a spec file",
+            "type": "AHV_VM",
+            "os_type": "Linux",
+            "create_spec": {
+                "name": "MyAhvVm",
+                "categories": {
+                    "AppFamily": "Backup",
+                    "AppType": "Default"
                 },
-                "disk_size_mib": true
-              }
+                "resources": {
+                    "nic_list": [
+                        {
+                            "network_function_nic_type": "INGRESS",
+                            "nic_type": "NORMAL_NIC",
+                            "subnet_reference": {
+                                "kind": "subnet",
+                                "name": "vlan1211",
+                                "uuid": "c1a401fb-5724-4b0a-bfbb-be86e6793ebe"
+                            },
+                            "network_function_chain_reference": null,
+                            "mac_address": "",
+                            "ip_endpoint_list": []
+                        },
+                        {
+                            "network_function_nic_type": "INGRESS",
+                            "nic_type": "NORMAL_NIC",
+                            "subnet_reference": {
+                                "kind": "subnet",
+                                "name": "vlan1211",
+                                "uuid": "c1a401fb-5724-4b0a-bfbb-be86e6793ebe"
+                            },
+                            "network_function_chain_reference": null,
+                            "mac_address": "",
+                            "ip_endpoint_list": []
+                        },
+                        {
+                            "network_function_nic_type": "INGRESS",
+                            "nic_type": "NORMAL_NIC",
+                            "subnet_reference": {
+                                "kind": "subnet",
+                                "name": "vlan1211",
+                                "uuid": "c1a401fb-5724-4b0a-bfbb-be86e6793ebe"
+                            },
+                            "network_function_chain_reference": null,
+                            "mac_address": "",
+                            "ip_endpoint_list": []
+                        }
+                    ],
+                    "num_vcpus_per_socket": 1,
+                    "num_sockets": 1,
+                    "memory_size_mib": 4096,
+                    "power_state": "ON",
+                    "account_uuid": null,
+                    "gpu_list": [],
+                    "disk_list": [
+                        {
+                            "data_source_reference": {
+                                "kind": "image",
+                                "name": "CentOS-7-cloudinit",
+                                "uuid": null
+                            },
+                            "device_properties": {
+                                "device_type": "DISK",
+                                "disk_address": {
+                                    "device_index": 0,
+                                    "adapter_type": "SCSI"
+                                }
+                            },
+                            "disk_size_mib": 0
+                        },
+                        {
+                            "data_source_reference": null,
+                            "device_properties": {
+                                "device_type": "DISK",
+                                "disk_address": {
+                                    "device_index": 0,
+                                    "adapter_type": "PCI"
+                                }
+                            },
+                            "disk_size_mib": 4096
+                        },
+                        {
+                            "data_source_reference": null,
+                            "device_properties": {
+                                "device_type": "DISK",
+                                "disk_address": {
+                                    "device_index": 1,
+                                    "adapter_type": "PCI"
+                                }
+                            },
+                            "disk_size_mib": 6144
+                        },
+                        {
+                            "data_source_reference": null,
+                            "device_properties": {
+                                "device_type": "DISK",
+                                "disk_address": {
+                                    "device_index": 2,
+                                    "adapter_type": "PCI"
+                                }
+                            },
+                            "disk_size_mib": 8192
+                        }
+                    ],
+                    "guest_customization": null,
+                    "serial_port_list": [
+                        {
+                            "index": 0,
+                            "is_connected": false
+                        },
+                        {
+                            "index": 1,
+                            "is_connected": false
+                        },
+                        {
+                            "index": 2,
+                            "is_connected": true
+                        },
+                        {
+                            "index": 3,
+                            "is_connected": true
+                        }
+                    ],
+                    "boot_config": {
+                        "boot_device": {
+                            "disk_address": {
+                                "device_index": 0,
+                                "adapter_type": "SCSI"
+                            }
+                        }
+                    }
+                }
             },
-            "nic_list": {
-              "0": {
-                "subnet_reference": true
-              }
+            "variable_list": [],
+            "action_list": [],
+            "readiness_probe": {
+                "connection_type": "SSH",
+                "connection_port": 22,
+                "connection_protocol": "",
+                "timeout_secs": "60",
+                "delay_secs": "60",
+                "retries": "5",
+                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+                "disable_readiness_probe": true,
+                "login_credential_local_reference": {
+                    "kind": "app_credential",
+                    "name": "default cred"
+                }
             },
-            "serial_port_list": {
-              "0": {
-                "is_connected": true
-              },
-              "1": {
-                "is_connected": true
-              }
+            "editables": {
+                "create_spec": {
+                    "resources": {
+                        "num_vcpus_per_socket": true,
+                        "num_sockets": true,
+                        "memory_size_mib": true,
+                        "boot_config": true,
+                        "guest_customization": true,
+                        "disk_list": {
+                            "0": {
+                                "data_source_reference": true,
+                                "disk_size_mib": true
+                            },
+                            "1": {
+                                "data_source_reference": true,
+                                "device_properties": {
+                                    "device_type": true,
+                                    "disk_address": {
+                                        "adapter_type": true
+                                    }
+                                },
+                                "disk_size_mib": true
+                            }
+                        },
+                        "nic_list": {
+                            "0": {
+                                "subnet_reference": true
+                            }
+                        },
+                        "serial_port_list": {
+                            "0": {
+                                "is_connected": true
+                            },
+                            "1": {
+                                "is_connected": true
+                            }
+                        }
+                    },
+                    "name": true,
+                    "categories": true
+                },
+                "readiness_probe": {
+                    "connection_port": true,
+                    "retries": true
+                }
             }
-          },
-          "name": true,
-          "categories": true
-        },
-        "readiness_probe": {
-          "connection_port": true,
-          "retries": true
         }
-      }
+    ],
+    "credential_definition_list": [
+        {
+            "name": "default cred",
+            "description": "",
+            "type": "PASSWORD",
+            "username": "root",
+            "secret": {
+                "attrs": {
+                    "is_secret_modified": true
+                },
+                "value": "passwd"
+            },
+            "editables": {
+                "username": true,
+                "secret": true
+            }
+        }
+    ],
+    "app_profile_list": [
+        {
+            "name": "DefaultProfile",
+            "deployment_create_list": [
+                {
+                    "published_service_local_reference_list": [],
+                    "package_local_reference_list": [
+                        {
+                            "kind": "app_package",
+                            "name": "AhvPackage"
+                        }
+                    ],
+                    "substrate_local_reference": {
+                        "kind": "app_substrate",
+                        "name": "AhvSubstrate"
+                    },
+                    "depends_on_list": [],
+                    "variable_list": [],
+                    "action_list": [],
+                    "min_replicas": "1",
+                    "default_replicas": "",
+                    "max_replicas": "1",
+                    "type": "GREENFIELD",
+                    "name": "AhvDeployment",
+                    "options": {},
+                    "description": "Sample deployment pulling in service and substrate references",
+                    "editables": {
+                        "min_replicas": true,
+                        "default_replicas": true,
+                        "max_replicas": true
+                    }
+                }
+            ],
+            "variable_list": [
+                {
+                    "name": "nameserver",
+                    "description": "",
+                    "type": "LOCAL",
+                    "label": "Local DNS resolver",
+                    "attrs": {},
+                    "val_type": "STRING",
+                    "value": "10.40.64.15",
+                    "data_type": "BASE",
+                    "is_hidden": false,
+                    "is_mandatory": false
+                },
+                {
+                    "name": "foo1",
+                    "description": "",
+                    "type": "LOCAL",
+                    "label": "",
+                    "attrs": {},
+                    "val_type": "STRING",
+                    "value": "bar1",
+                    "data_type": "BASE",
+                    "editables": {
+                        "value": true
+                    },
+                    "is_hidden": false,
+                    "is_mandatory": false
+                },
+                {
+                    "name": "foo2",
+                    "description": "",
+                    "type": "LOCAL",
+                    "label": "",
+                    "attrs": {},
+                    "val_type": "STRING",
+                    "value": "bar2",
+                    "data_type": "BASE",
+                    "editables": {
+                        "value": true
+                    },
+                    "is_hidden": false,
+                    "is_mandatory": false
+                }
+            ],
+            "patch_list": [
+                {
+                    "name": "patch_update",
+                    "description": "",
+                    "type": "PATCH",
+                    "variable_list": [],
+                    "config_reference_list": [],
+                    "attrs_list": [
+                        {
+                            "target_any_local_reference": {
+                                "kind": "app_blueprint_deployment",
+                                "name": "AhvDeployment"
+                            },
+                            "data": {
+                                "type": "nutanix",
+                                "nic_delete_allowed": true,
+                                "categories_delete_allowed": true,
+                                "categories_add_allowed": true,
+                                "disk_delete_allowed": true,
+                                "num_sockets_ruleset": {
+                                    "type": "",
+                                    "operation": "equal",
+                                    "editable": true,
+                                    "value": "2",
+                                    "max_value": 10,
+                                    "min_value": 1
+                                },
+                                "memory_size_mib_ruleset": {
+                                    "type": "",
+                                    "operation": "equal",
+                                    "editable": true,
+                                    "value": "2048",
+                                    "max_value": 10240,
+                                    "min_value": 1024
+                                },
+                                "num_vcpus_per_socket_ruleset": {
+                                    "type": "",
+                                    "operation": "equal",
+                                    "editable": true,
+                                    "value": "2",
+                                    "max_value": 10,
+                                    "min_value": 1
+                                },
+                                "pre_defined_disk_list": [
+                                    {
+                                        "data_source_reference": null,
+                                        "device_properties": {
+                                            "device_type": "DISK",
+                                            "disk_address": {
+                                                "device_index": 0,
+                                                "adapter_type": "PCI"
+                                            }
+                                        },
+                                        "disk_size_mib": {
+                                            "editable": true,
+                                            "operation": "modify",
+                                            "value": "3072",
+                                            "min_value": 1024,
+                                            "max_value": 10240
+                                        },
+                                        "operation": "modify"
+                                    },
+                                    {
+                                        "data_source_reference": null,
+                                        "device_properties": {
+                                            "device_type": "DISK",
+                                            "disk_address": {
+                                                "device_index": 1,
+                                                "adapter_type": "PCI"
+                                            }
+                                        },
+                                        "disk_size_mib": {
+                                            "editable": true,
+                                            "operation": "modify",
+                                            "value": "5120",
+                                            "min_value": 1024,
+                                            "max_value": 10240
+                                        },
+                                        "operation": "modify"
+                                    }
+                                ],
+                                "pre_defined_nic_list": [
+                                    {
+                                        "network_function_nic_type": "INGRESS",
+                                        "nic_type": "NORMAL_NIC",
+                                        "subnet_reference": {
+                                            "kind": "subnet",
+                                            "name": "vlan1211",
+                                            "uuid": "c1a401fb-5724-4b0a-bfbb-be86e6793ebe"
+                                        },
+                                        "network_function_chain_reference": null,
+                                        "mac_address": "",
+                                        "ip_endpoint_list": [],
+                                        "operation": "add",
+                                        "editable": true,
+                                        "identifier": "A1"
+                                    }
+                                ],
+                                "pre_defined_categories": [
+                                    {
+                                        "operation": "add",
+                                        "value": "TemplateType:Vm"
+                                    },
+                                    {
+                                        "operation": "delete",
+                                        "value": "AppFamily:Demo"
+                                    }
+                                ]
+                            },
+                            "uuid": null
+                        }
+                    ]
+                }
+            ],
+            "action_list": [],
+            "snapshot_config_list": [],
+            "restore_config_list": []
+        }
+    ],
+    "client_attrs": {},
+    "default_credential_local_reference": {
+        "kind": "app_credential",
+        "name": "default cred"
     }
-  ],
-  "credential_definition_list": [
-    {
-      "name": "default cred",
-      "description": "",
-      "type": "PASSWORD",
-      "username": "root",
-      "secret": {
-        "attrs": {
-          "is_secret_modified": true
-        },
-        "value": "passwd"
-      },
-      "editables": {
-        "username": true,
-        "secret": true
-      }
-    }
-  ],
-  "app_profile_list": [
-    {
-      "name": "DefaultProfile",
-      "deployment_create_list": [
-        {
-          "published_service_local_reference_list": [],
-          "package_local_reference_list": [
-            {
-              "kind": "app_package",
-              "name": "AhvPackage"
-            }
-          ],
-          "substrate_local_reference": {
-            "kind": "app_substrate",
-            "name": "AhvSubstrate"
-          },
-          "depends_on_list": [],
-          "variable_list": [],
-          "action_list": [],
-          "min_replicas": "1",
-          "default_replicas": "",
-          "max_replicas": "1",
-          "type": "GREENFIELD",
-          "name": "AhvDeployment",
-          "options": {},
-          "description": "Sample deployment pulling in service and substrate references",
-          "editables": {
-            "min_replicas": true,
-            "default_replicas": true,
-            "max_replicas": true
-          }
-        }
-      ],
-      "variable_list": [
-        {
-          "name": "nameserver",
-          "description": "",
-          "type": "LOCAL",
-          "label": "Local DNS resolver",
-          "attrs": {},
-          "val_type": "STRING",
-          "value": "10.40.64.15",
-          "data_type": "BASE",
-          "is_hidden": false,
-          "is_mandatory": false
-        },
-        {
-          "name": "foo1",
-          "description": "",
-          "type": "LOCAL",
-          "label": "",
-          "attrs": {},
-          "val_type": "STRING",
-          "value": "bar1",
-          "data_type": "BASE",
-          "editables": {
-            "value": true
-          },
-          "is_hidden": false,
-          "is_mandatory": false
-        },
-        {
-          "name": "foo2",
-          "description": "",
-          "type": "LOCAL",
-          "label": "",
-          "attrs": {},
-          "val_type": "STRING",
-          "value": "bar2",
-          "data_type": "BASE",
-          "editables": {
-            "value": true
-          },
-          "is_hidden": false,
-          "is_mandatory": false
-        }
-      ],
-      "patch_list": [
-        {
-          "name": "patch_update",
-          "description": "",
-          "type": "PATCH",
-          "variable_list": [],
-          "config_reference_list": [],
-          "attrs_list": [
-            {
-              "target_any_local_reference": {
-                "kind": "app_blueprint_deployment",
-                "name": "AhvDeployment"
-              },
-              "data": {
-                "type": "nutanix",
-                "nic_delete_allowed": true,
-                "categories_delete_allowed": true,
-                "categories_add_allowed": true,
-                "disk_delete_allowed": true,
-                "num_sockets_ruleset": {
-                  "type": "",
-                  "operation": "equal",
-                  "editable": true,
-                  "value": "2",
-                  "max_value": 10,
-                  "min_value": 1
-                },
-                "memory_size_mib_ruleset": {
-                  "type": "",
-                  "operation": "equal",
-                  "editable": true,
-                  "value": "2048",
-                  "max_value": 10240,
-                  "min_value": 1024
-                },
-                "num_vcpus_per_socket_ruleset": {
-                  "type": "",
-                  "operation": "equal",
-                  "editable": true,
-                  "value": "2",
-                  "max_value": 10,
-                  "min_value": 1
-                },
-                "pre_defined_disk_list": [
-                  {
-                    "data_source_reference": null,
-                    "device_properties": {
-                      "device_type": "DISK",
-                      "disk_address": {
-                        "device_index": 0,
-                        "adapter_type": "PCI"
-                      }
-                    },
-                    "disk_size_mib": {
-                      "editable": true,
-                      "operation": "modify",
-                      "value": "3072",
-                      "min_value": 1024,
-                      "max_value": 10240
-                    },
-                    "operation": "modify"
-                  },
-                  {
-                    "data_source_reference": null,
-                    "device_properties": {
-                      "device_type": "DISK",
-                      "disk_address": {
-                        "device_index": 1,
-                        "adapter_type": "PCI"
-                      }
-                    },
-                    "disk_size_mib": {
-                      "editable": true,
-                      "operation": "modify",
-                      "value": "5120",
-                      "min_value": 1024,
-                      "max_value": 10240
-                    },
-                    "operation": "modify"
-                  }
-                ],
-                "pre_defined_nic_list": [
-                  {
-                    "network_function_nic_type": "INGRESS",
-                    "nic_type": "NORMAL_NIC",
-                    "subnet_reference": {
-                      "kind": "subnet",
-                      "name": "vlan1211",
-                      "uuid": "48728e67-d4af-46ca-a80e-aa571b18209f"
-                    },
-                    "network_function_chain_reference": null,
-                    "mac_address": "",
-                    "ip_endpoint_list": [],
-                    "operation": "add",
-                    "editable": true,
-                    "identifier": "A1"
-                  }
-                ],
-                "pre_defined_categories": [
-                  {
-                    "operation": "add",
-                    "value": "TemplateType:Vm"
-                  },
-                  {
-                    "operation": "delete",
-                    "value": "AppFamily:Demo"
-                  }
-                ]
-              },
-              "uuid": "76686b0e-eed5-4dae-a791-a2fe2ebfcc21"
-            }
-          ]
-        }
-      ],
-      "action_list": [],
-      "snapshot_config_list": [],
-      "restore_config_list": []
-    }
-  ],
-  "client_attrs": {},
-  "default_credential_local_reference": {
-    "kind": "app_credential",
-    "name": "default cred"
-  }
 }

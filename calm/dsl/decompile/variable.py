@@ -1,10 +1,12 @@
 import os
 
 from calm.dsl.decompile.render import render_template
+from calm.dsl.decompile.endpoint import render_endpoint
 from calm.dsl.decompile.task import render_task_template
-from calm.dsl.builtins import VariableType, TaskType
+from calm.dsl.builtins import VariableType, TaskType, CalmEndpoint as Endpoint
 from calm.dsl.decompile.file_handler import get_local_dir
 from calm.dsl.log import get_logging_handle
+from calm.dsl.constants import VARIABLE
 
 LOG = get_logging_handle(__name__)
 SECRET_VAR_FILES = []
@@ -14,18 +16,40 @@ def render_variable_template(
     cls,
     entity_context,
     context="",
+    variable_context="variable",  # In some case, the spec field might not be variable_list
     secrets_dict=[],
     credentials_list=[],
     rendered_credential_list=[],
+    endpoints=[],
+    ep_list=[],
+    ignore_cred_dereference_error=False,
 ):
 
     LOG.debug("Rendering {} variable template".format(cls.__name__))
     if not isinstance(cls, VariableType):
         raise TypeError("{} is not of type {}".format(cls, VariableType))
 
+    if cls.options:
+        options = cls.options.get_dict()
+
+    if cls.type in [
+        VARIABLE.TYPE.EXEC_LOCAL,
+        VARIABLE.TYPE.HTTP_LOCAL,
+        VARIABLE.TYPE.EXEC_SECRET,
+        VARIABLE.TYPE.HTTP_SECRET,
+    ]:
+        ep = cls.options.get("exec_target_reference", None)
+        if ep:
+            endpoint_name = ep.get("name", "")
+            if endpoint_name not in ep_list:
+                endpoints.append(render_endpoint(Endpoint.use_existing(endpoint_name)))
+                ep_list.append(endpoint_name)
+        else:
+            options.pop("exec_target_reference")
+
     # Updating the context of variables
-    entity_context = entity_context + "_variable_" + cls.__name__
-    context = context + "variable_list." + cls.__name__
+    entity_context = entity_context + "_" + variable_context + "_" + cls.__name__
+    context = context + variable_context + "_list." + cls.__name__
 
     user_attrs = cls.get_user_attrs()
     user_attrs["description"] = cls.__doc__ or ""
@@ -41,7 +65,6 @@ def render_variable_template(
         var_type = "simple"
 
     else:
-        options = cls.options.get_dict()
         choices = options.get("choices", [])
         option_type = options.get("type", "")
 
@@ -111,7 +134,6 @@ def render_variable_template(
 
     else:
         data_type = cls.data_type
-        options = cls.options.get_dict()
         option_type = options.get("type", "PREDEFINED")
 
         if option_type == "PREDEFINED":
@@ -155,11 +177,15 @@ def render_variable_template(
             options.pop("choices", None)
             task = TaskType.decompile(options)
             task.__name__ = "SampleTask"
+            if user_attrs["value"]:  # CALM-45352
+                user_attrs["default_value"] = user_attrs.pop("value")
             user_attrs["value"] = render_task_template(
                 task,
                 entity_context=entity_context,
                 credentials_list=credentials_list,
                 rendered_credential_list=rendered_credential_list,
+                use_calm_var_task=True,
+                ignore_cred_dereference_error=ignore_cred_dereference_error,
             )
 
             if data_type == "BASE":
@@ -174,6 +200,8 @@ def render_variable_template(
                 elif var_val_type == "DATE_TIME":
                     schema_file = "var_with_options_fromTask_datetime.py.jinja2"
                 elif var_val_type == "MULTILINE_STRING":
+                    if user_attrs.get("default_value"):
+                        user_attrs["default_value"] = repr(user_attrs["default_value"])
                     schema_file = "var_with_options_fromTask_multiline.py.jinja2"
             else:
                 if var_val_type == "STRING":
@@ -187,6 +215,8 @@ def render_variable_template(
                 elif var_val_type == "DATE_TIME":
                     schema_file = "var_with_options_fromTask_array_datetime.py.jinja2"
                 elif var_val_type == "MULTILINE_STRING":
+                    if user_attrs.get("default_value"):
+                        user_attrs["default_value"] = repr(user_attrs["default_value"])
                     schema_file = "var_with_options_fromTask_array_multiline.py.jinja2"
 
     if not schema_file:

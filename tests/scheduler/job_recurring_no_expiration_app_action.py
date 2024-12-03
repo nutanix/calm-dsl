@@ -7,7 +7,7 @@ start_date = (
     str(start_date.strftime("%Y-%m-%dT%H:%M:%SZ")).replace("T", " ").replace("Z", "")
 )
 cron = "50 23 * * *"
-time_zone = "Asia/Calcutta"
+time_zone = "UTC"
 
 APP_NAME = "job_recurring_no_expiration_app_action"
 

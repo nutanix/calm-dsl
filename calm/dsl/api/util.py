@@ -59,12 +59,477 @@ def strip_secrets(
     """
 
     # Remove creds before upload
+    strip_credentials(resources, decompiled_secrets, secret_map)
+
+    # Remove creds from HTTP endpoints resources
+    filtered_decompiled_secret_auth_creds = get_secrets_from_context(
+        decompiled_secrets, "authentication"
+    )
+    auth = resources.get("authentication", {}) or {}
+    if auth.get("type", None) == "basic":
+        if is_secret_modified(
+            filtered_decompiled_secret_auth_creds, auth["username"], auth["password"]
+        ):
+            name = auth["username"]
+            secret_map[name] = auth.pop("password", {})
+            auth["password"] = {"attrs": {"is_secret_modified": False, "value": None}}
+
+    for object_list in object_lists:
+        for obj_idx, obj in enumerate(resources.get(object_list, []) or []):
+            strip_all_secret_variables(
+                [object_list, obj_idx],
+                obj,
+                decompiled_secrets,
+                secret_variables,
+                not_stripped_secrets,
+            )
+
+            # Currently, deployment actions and variables are unsupported.
+            # Uncomment the following lines if and when the API does support them.
+            # if object_list == "app_profile_list":
+            #     for dep_idx, dep in enumerate(obj["deployment_create_list"]):
+            #         strip_all_secret_variables(
+            #             [object_list, obj_idx, "deployment_create_list", dep_idx],
+            #             dep, decompiled_secrets, secret_variables, not_stripped_secrets,
+            #         )
+
+    for obj in objects:
+        strip_all_secret_variables(
+            [obj],
+            resources.get(obj, {}),
+            decompiled_secrets,
+            secret_variables,
+            not_stripped_secrets,
+        )
+
+
+def strip_provider_secrets(
+    provider_name,
+    provider_resources,
+    secret_map,
+    secret_variables,
+    decompiled_secrets=[],
+    not_stripped_secrets=[],
+):
+    """
+    Strips secrets from provider resources
+    Args:
+        provider_resources (dict): request payload
+        secret_map (dict): credential secret values
+        secret_variables (list): list of secret variables
+    Returns: None
+    """
+    # Remove creds before upload
+    strip_credentials(provider_resources, decompiled_secrets, secret_map)
+
+    for obj_idx, obj in enumerate(
+        provider_resources.get("resource_type_list", []) or []
+    ):
+        path_list = ["resource_type_list", obj_idx]
+        strip_all_secret_variables(
+            path_list,
+            obj,
+            decompiled_secrets,
+            secret_variables,
+            not_stripped_secrets,
+        )
+        strip_entity_secret_variables(
+            path_list,
+            obj,
+            decompiled_secrets,
+            secret_variables,
+            not_stripped_secrets,
+            context=path_list[0],
+            field_name="schema_list",
+        )
+
+    # NOTE: Not calling strip_all_secret_variables for provider spec because the context
+    # building logic assumes heavily that actions, variables, runbooks etc..,. always
+    # belong to an entity thats part of a list. Eg: profile_list, substrate_list etc..,.
+
+    # Strip secrets in endpoint schema, auth schema, attribute & test account variables
+    strip_entity_secret_variables(
+        [],
+        provider_resources,
+        decompiled_secrets,
+        secret_variables,
+        not_stripped_secrets,
+        context="variable_list",
+    )
+    strip_entity_secret_variables(
+        [],
+        provider_resources,
+        decompiled_secrets,
+        secret_variables,
+        not_stripped_secrets,
+        context="auth_schema_list",
+        field_name="auth_schema_list",
+    )
+    strip_entity_secret_variables(
+        ["endpoint_schema"],
+        provider_resources.get("endpoint_schema", {}),
+        decompiled_secrets,
+        secret_variables,
+        not_stripped_secrets,
+        context="endpoint_schema_list",
+    )
+    strip_entity_secret_variables(
+        ["test_account", "data"],
+        provider_resources.get("test_account", {}).get("data", {}),
+        decompiled_secrets,
+        secret_variables,
+        not_stripped_secrets,
+        context="test_account_variable_list",
+    )
+
+    # Strip secrets in provider actions & their runbooks
+    strip_action_secret_variables(
+        [],
+        provider_resources,
+        decompiled_secrets,
+        secret_variables,
+        not_stripped_secrets,
+        context="action_list",
+    )
+
+
+def strip_entity_secret_variables(
+    path_list,
+    obj,
+    decompiled_secrets,
+    secret_variables,
+    not_stripped_secrets,
+    field_name="variable_list",
+    context="",
+):
+
+    if field_name != "headers" and obj.get("name", None):
+        context = context + "." + obj["name"] + "." + field_name
+
+    filtered_decompiled_secrets = get_secrets_from_context(decompiled_secrets, context)
+
+    for var_idx, variable in enumerate(obj.get(field_name, []) or []):
+        if variable["type"] == "SECRET":
+            if is_secret_modified(
+                filtered_decompiled_secrets,
+                variable.get("name", None),
+                variable.get("value", None),
+            ):
+                secret_variables.append(
+                    (
+                        path_list + [field_name, var_idx],
+                        variable.pop("value"),
+                        variable.get("name", None),
+                    )
+                )
+                variable["attrs"] = {
+                    "is_secret_modified": False,
+                    "secret_reference": None,
+                }
+            elif variable.get("value", None):
+                not_stripped_secrets.append(
+                    (path_list + [field_name, var_idx], variable["value"])
+                )
+        # For dynamic variables having http task with auth
+        opts = variable.get("options", None)
+        auth = None
+        if opts:
+            attrs = opts.get("attrs", None)
+            if attrs:
+                auth = attrs.get("authentication", None)
+        if auth and auth.get("auth_type") == "basic":
+            basic_auth = auth.get("basic_auth")
+            username = basic_auth.get("username")
+            password = basic_auth.pop("password")
+            secret_variables.append(
+                (
+                    path_list
+                    + [
+                        field_name,
+                        var_idx,
+                        "options",
+                        "attrs",
+                        "authentication",
+                        "basic_auth",
+                        "password",
+                    ],
+                    password.get("value", None),
+                    username,
+                )
+            )
+            basic_auth["password"] = {
+                "value": None,
+                "attrs": {"is_secret_modified": False},
+            }
+
+
+def strip_action_secret_variables(
+    path_list,
+    obj,
+    decompiled_secrets,
+    secret_variables,
+    not_stripped_secrets,
+    context="",
+):
+
+    if not context:
+        context = path_list[0] + "." + obj["name"] + ".action_list"
+
+    for action_idx, action in enumerate(obj.get("action_list", []) or []):
+        var_context = context + "." + action["name"]
+        runbook = action.get("runbook", {}) or {}
+        var_runbook_context = var_context + ".runbook"
+
+        if not runbook:
+            return
+        strip_entity_secret_variables(
+            path_list + ["action_list", action_idx, "runbook"],
+            runbook,
+            decompiled_secrets,
+            secret_variables,
+            not_stripped_secrets,
+            context=var_runbook_context,
+        )
+
+        tasks = runbook.get("task_definition_list", [])
+
+        var_runbook_task_context = (
+            var_runbook_context + "." + runbook["name"] + ".task_definition_list"
+        )
+
+        for task_idx, task in enumerate(tasks):
+            if task.get("type", None) != "HTTP":
+                continue
+            auth = (task.get("attrs", {}) or {}).get("authentication", {}) or {}
+
+            var_runbook_task_name_context = (
+                var_runbook_task_context + "." + task["name"]
+            )
+
+            var_runbook_task_name_basic_auth_context = (
+                var_runbook_task_context + "." + task["name"] + ".basic_auth"
+            )
+
+            if auth.get("auth_type", None) == "basic":
+
+                filtered_decompiled_secrets = get_secrets_from_context(
+                    decompiled_secrets, var_runbook_task_name_basic_auth_context
+                )
+
+                if is_secret_modified(
+                    filtered_decompiled_secrets,
+                    auth.get("basic_auth", {}).get("username", None),
+                    auth.get("basic_auth", {}).get("password", {}).get("value", None),
+                ):
+                    secret_variables.append(
+                        (
+                            path_list
+                            + [
+                                "action_list",
+                                action_idx,
+                                "runbook",
+                                "task_definition_list",
+                                task_idx,
+                                "attrs",
+                                "authentication",
+                                "basic_auth",
+                                "password",
+                            ],
+                            auth["basic_auth"]["password"].pop("value"),
+                            auth.get("basic_auth", {}).get("username", None),
+                        )
+                    )
+                    auth["basic_auth"]["password"] = {
+                        "attrs": {
+                            "is_secret_modified": False,
+                            "secret_reference": None,
+                        }
+                    }
+                elif (
+                    auth.get("basic_auth", None)
+                    .get("password", None)
+                    .get("value", None)
+                ):
+                    not_stripped_secrets.append(
+                        (
+                            path_list
+                            + [
+                                "action_list",
+                                action_idx,
+                                "runbook",
+                                "task_definition_list",
+                                task_idx,
+                                "attrs",
+                                "authentication",
+                                "basic_auth",
+                                "password",
+                            ],
+                            auth["basic_auth"]["password"]["value"],
+                        )
+                    )
+
+            http_task_headers = (task.get("attrs", {}) or {}).get("headers", []) or []
+            if http_task_headers:
+                strip_entity_secret_variables(
+                    path_list
+                    + [
+                        "action_list",
+                        action_idx,
+                        "runbook",
+                        "task_definition_list",
+                        task_idx,
+                        "attrs",
+                    ],
+                    task["attrs"],
+                    decompiled_secrets,
+                    secret_variables,
+                    not_stripped_secrets,
+                    field_name="headers",
+                    context=var_runbook_task_name_context + ".headers",
+                )
+
+
+def strip_runbook_secret_variables(
+    path_list,
+    obj,
+    decompiled_secrets,
+    secret_variables,
+    not_stripped_secrets,
+):
+
+    context = path_list[0] + "." + obj["name"] + ".task_definition_list"
+
+    tasks = obj.get("task_definition_list", [])
+    original_path_list = copy.deepcopy(path_list)
+    for task_idx, task in enumerate(tasks):
+        path_list = original_path_list
+        if task.get("type", None) == "RT_OPERATION":
+            path_list = path_list + [
+                "task_definition_list",
+                task_idx,
+                "attrs",
+            ]
+            strip_entity_secret_variables(
+                path_list,
+                task["attrs"],
+                decompiled_secrets,
+                secret_variables,
+                not_stripped_secrets,
+                field_name="inarg_list",
+            )
+            continue
+        elif task.get("type", None) != "HTTP":
+            continue
+        auth = (task.get("attrs", {}) or {}).get("authentication", {}) or {}
+        if auth.get("auth_type", None) == "basic":
+            path_list = path_list + ["runbook"]
+
+        path_list = path_list + [
+            "task_definition_list",
+            task_idx,
+            "attrs",
+        ]
+        var_task_context = context + "." + task["name"]
+
+        strip_authentication_secret_variables(
+            path_list,
+            task.get("attrs", {}) or {},
+            decompiled_secrets,
+            secret_variables,
+            not_stripped_secrets,
+            context=var_task_context,
+        )
+
+        if not (task.get("attrs", {}) or {}).get("headers", []) or []:
+            continue
+        strip_entity_secret_variables(
+            path_list,
+            task["attrs"],
+            decompiled_secrets,
+            secret_variables,
+            not_stripped_secrets,
+            field_name="headers",
+            context=var_task_context + ".headers",
+        )
+
+
+def strip_authentication_secret_variables(
+    path_list,
+    obj,
+    decompiled_secrets,
+    secret_variables,
+    not_stripped_secrets,
+    context="",
+):
+
+    basic_auth_context = context + "." + obj.get("name", "") + ".basic_auth"
+
+    filtered_decompiled_secrets = get_secrets_from_context(
+        decompiled_secrets, basic_auth_context
+    )
+
+    auth = obj.get("authentication", {})
+    if auth.get("auth_type", None) == "basic":
+
+        if is_secret_modified(
+            filtered_decompiled_secrets,
+            auth.get("password", {}).get("name", None),
+            auth.get("password", {}).get("value", None),
+        ):
+            secret_variables.append(
+                (
+                    path_list + ["authentication", "basic_auth", "password"],
+                    auth["password"].pop("value"),
+                    auth.get("password", {}).get("name", None),
+                )
+            )
+            auth["password"] = {"attrs": {"is_secret_modified": False}}
+        elif auth.get("password", None).get("value", None):
+            not_stripped_secrets.append(
+                (
+                    path_list + ["authentication", "basic_auth", "password"],
+                    auth["password"]["value"],
+                )
+            )
+
+
+def strip_all_secret_variables(
+    path_list,
+    obj,
+    decompiled_secrets,
+    secret_variables,
+    not_stripped_secrets,
+):
+    strip_entity_secret_variables(
+        path_list,
+        obj,
+        decompiled_secrets,
+        secret_variables,
+        not_stripped_secrets,
+        context=path_list[0],
+    )
+    strip_action_secret_variables(
+        path_list, obj, decompiled_secrets, secret_variables, not_stripped_secrets
+    )
+    strip_runbook_secret_variables(
+        path_list, obj, decompiled_secrets, secret_variables, not_stripped_secrets
+    )
+    strip_authentication_secret_variables(
+        path_list,
+        obj,
+        decompiled_secrets,
+        secret_variables,
+        not_stripped_secrets,
+        context=path_list[0],
+    )
+
+
+def strip_credentials(resources, decompiled_secrets, secret_map):
     creds = resources.get("credential_definition_list", []) or []
     filtered_decompiled_secret_credentials = get_secrets_from_context(
         decompiled_secrets, "credential_definition_list"
     )
 
-    default_creds = []
     for cred in creds:
         name = cred["name"]
         value = cred["secret"]["value"]
@@ -76,301 +541,6 @@ def strip_secrets(
             cred["secret"] = {
                 "attrs": {"is_secret_modified": False, "secret_reference": None}
             }
-
-    filtered_decompiled_secret_auth_creds = get_secrets_from_context(
-        decompiled_secrets, "authentication"
-    )
-
-    # Remove creds from HTTP endpoints resources
-    auth = resources.get("authentication", {}) or {}
-    if auth.get("type", None) == "basic":
-        if is_secret_modified(
-            filtered_decompiled_secret_auth_creds, auth["username"], auth["password"]
-        ):
-            name = auth["username"]
-            secret_map[name] = auth.pop("password", {})
-            auth["password"] = {"attrs": {"is_secret_modified": False, "value": None}}
-
-    # Strip secret variable values
-    # TODO: Refactor and/or clean this up later
-
-    def strip_entity_secret_variables(
-        path_list, obj, field_name="variable_list", context=""
-    ):
-
-        if field_name != "headers" and obj.get("name", None):
-            context = context + "." + obj["name"] + "." + field_name
-
-        filtered_decompiled_secrets = get_secrets_from_context(
-            decompiled_secrets, context
-        )
-
-        for var_idx, variable in enumerate(obj.get(field_name, []) or []):
-            if variable["type"] == "SECRET":
-                if is_secret_modified(
-                    filtered_decompiled_secrets,
-                    variable.get("name", None),
-                    variable.get("value", None),
-                ):
-                    secret_variables.append(
-                        (
-                            path_list + [field_name, var_idx],
-                            variable.pop("value"),
-                            variable.get("name", None),
-                        )
-                    )
-                    variable["attrs"] = {
-                        "is_secret_modified": False,
-                        "secret_reference": None,
-                    }
-                elif variable.get("value", None):
-                    not_stripped_secrets.append(
-                        (path_list + [field_name, var_idx], variable["value"])
-                    )
-            # For dynamic variables having http task with auth
-            opts = variable.get("options", None)
-            auth = None
-            if opts:
-                attrs = opts.get("attrs", None)
-                if attrs:
-                    auth = attrs.get("authentication", None)
-            if auth and auth.get("auth_type") == "basic":
-                basic_auth = auth.get("basic_auth")
-                username = basic_auth.get("username")
-                password = basic_auth.pop("password")
-                secret_variables.append(
-                    (
-                        path_list
-                        + [
-                            field_name,
-                            var_idx,
-                            "options",
-                            "attrs",
-                            "authentication",
-                            "basic_auth",
-                            "password",
-                        ],
-                        password.get("value", None),
-                        username,
-                    )
-                )
-                basic_auth["password"] = {
-                    "value": None,
-                    "attrs": {"is_secret_modified": False},
-                }
-
-    def strip_action_secret_variables(path_list, obj):
-
-        context = path_list[0] + "." + obj["name"] + ".action_list"
-
-        for action_idx, action in enumerate(obj.get("action_list", []) or []):
-            var_context = context + "." + action["name"]
-            runbook = action.get("runbook", {}) or {}
-            var_runbook_context = var_context + ".runbook"
-
-            if not runbook:
-                return
-            strip_entity_secret_variables(
-                path_list + ["action_list", action_idx, "runbook"],
-                runbook,
-                context=var_runbook_context,
-            )
-
-            tasks = runbook.get("task_definition_list", [])
-
-            var_runbook_task_context = (
-                var_runbook_context + "." + runbook["name"] + ".task_definition_list"
-            )
-
-            for task_idx, task in enumerate(tasks):
-                if task.get("type", None) != "HTTP":
-                    continue
-                auth = (task.get("attrs", {}) or {}).get("authentication", {}) or {}
-
-                var_runbook_task_name_context = (
-                    var_runbook_task_context + "." + task["name"]
-                )
-
-                var_runbook_task_name_basic_auth_context = (
-                    var_runbook_task_context + "." + task["name"] + ".basic_auth"
-                )
-
-                if auth.get("auth_type", None) == "basic":
-
-                    filtered_decompiled_secrets = get_secrets_from_context(
-                        decompiled_secrets, var_runbook_task_name_basic_auth_context
-                    )
-
-                    if is_secret_modified(
-                        filtered_decompiled_secrets,
-                        auth.get("basic_auth", {}).get("username", None),
-                        auth.get("basic_auth", {})
-                        .get("password", {})
-                        .get("value", None),
-                    ):
-                        secret_variables.append(
-                            (
-                                path_list
-                                + [
-                                    "action_list",
-                                    action_idx,
-                                    "runbook",
-                                    "task_definition_list",
-                                    task_idx,
-                                    "attrs",
-                                    "authentication",
-                                    "basic_auth",
-                                    "password",
-                                ],
-                                auth["basic_auth"]["password"].pop("value"),
-                                auth.get("basic_auth", {}).get("username", None),
-                            )
-                        )
-                        auth["basic_auth"]["password"] = {
-                            "attrs": {
-                                "is_secret_modified": False,
-                                "secret_reference": None,
-                            }
-                        }
-                    elif (
-                        auth.get("basic_auth", None)
-                        .get("password", None)
-                        .get("value", None)
-                    ):
-                        not_stripped_secrets.append(
-                            (
-                                path_list
-                                + [
-                                    "action_list",
-                                    action_idx,
-                                    "runbook",
-                                    "task_definition_list",
-                                    task_idx,
-                                    "attrs",
-                                    "authentication",
-                                    "basic_auth",
-                                    "password",
-                                ],
-                                auth["basic_auth"]["password"]["value"],
-                            )
-                        )
-
-                http_task_headers = (task.get("attrs", {}) or {}).get(
-                    "headers", []
-                ) or []
-                if http_task_headers:
-                    strip_entity_secret_variables(
-                        path_list
-                        + [
-                            "action_list",
-                            action_idx,
-                            "runbook",
-                            "task_definition_list",
-                            task_idx,
-                            "attrs",
-                        ],
-                        task["attrs"],
-                        field_name="headers",
-                        context=var_runbook_task_name_context + ".headers",
-                    )
-
-    def strip_runbook_secret_variables(path_list, obj):
-
-        context = path_list[0] + "." + obj["name"] + ".task_definition_list"
-
-        tasks = obj.get("task_definition_list", [])
-        original_path_list = copy.deepcopy(path_list)
-        for task_idx, task in enumerate(tasks):
-            path_list = original_path_list
-            if task.get("type", None) == "RT_OPERATION":
-                path_list = path_list + [
-                    "task_definition_list",
-                    task_idx,
-                    "attrs",
-                ]
-                strip_entity_secret_variables(
-                    path_list, task["attrs"], field_name="inarg_list"
-                )
-                continue
-            elif task.get("type", None) != "HTTP":
-                continue
-            auth = (task.get("attrs", {}) or {}).get("authentication", {}) or {}
-            if auth.get("auth_type", None) == "basic":
-                path_list = path_list + ["runbook"]
-
-            path_list = path_list + [
-                "task_definition_list",
-                task_idx,
-                "attrs",
-            ]
-            var_task_context = context + "." + task["name"]
-
-            strip_authentication_secret_variables(
-                path_list, task.get("attrs", {}) or {}, context=var_task_context
-            )
-
-            if not (task.get("attrs", {}) or {}).get("headers", []) or []:
-                continue
-            strip_entity_secret_variables(
-                path_list,
-                task["attrs"],
-                field_name="headers",
-                context=var_task_context + ".headers",
-            )
-
-    def strip_authentication_secret_variables(path_list, obj, context=""):
-
-        basic_auth_context = context + "." + obj.get("name", "") + ".basic_auth"
-
-        filtered_decompiled_secrets = get_secrets_from_context(
-            decompiled_secrets, basic_auth_context
-        )
-
-        auth = obj.get("authentication", {})
-        if auth.get("auth_type", None) == "basic":
-
-            if is_secret_modified(
-                filtered_decompiled_secrets,
-                auth.get("password", {}).get("name", None),
-                auth.get("password", {}).get("value", None),
-            ):
-                secret_variables.append(
-                    (
-                        path_list + ["authentication", "basic_auth", "password"],
-                        auth["password"].pop("value"),
-                        auth.get("password", {}).get("name", None),
-                    )
-                )
-                auth["password"] = {"attrs": {"is_secret_modified": False}}
-            elif auth.get("password", None).get("value", None):
-                not_stripped_secrets.append(
-                    (
-                        path_list + ["authentication", "basic_auth", "password"],
-                        auth["password"]["value"],
-                    )
-                )
-
-    def strip_all_secret_variables(path_list, obj):
-        strip_entity_secret_variables(path_list, obj, context=path_list[0])
-        strip_action_secret_variables(path_list, obj)
-        strip_runbook_secret_variables(path_list, obj)
-        strip_authentication_secret_variables(path_list, obj, context=path_list[0])
-
-    for object_list in object_lists:
-        for obj_idx, obj in enumerate(resources.get(object_list, []) or []):
-            strip_all_secret_variables([object_list, obj_idx], obj)
-
-            # Currently, deployment actions and variables are unsupported.
-            # Uncomment the following lines if and when the API does support them.
-            # if object_list == "app_profile_list":
-            #     for dep_idx, dep in enumerate(obj["deployment_create_list"]):
-            #         strip_all_secret_variables(
-            #             [object_list, obj_idx, "deployment_create_list", dep_idx],
-            #             dep,
-            #         )
-
-    for obj in objects:
-        strip_all_secret_variables([obj], resources.get(obj, {}))
 
 
 # Handling vmware secrets
@@ -920,3 +1090,22 @@ def add_patch_config_tasks(
             idx += 1
 
         profile_idx += 1
+
+
+def strip_uuids(upload_payload):
+    """Strip UUIDs from upload payload"""
+
+    if isinstance(upload_payload, dict):
+        key_list = list(upload_payload.keys())
+        for key in key_list:
+            if key == "uuid":
+                del upload_payload[key]
+
+            # elif key == "icon_reference":
+            #     continue
+
+            else:
+                strip_uuids(upload_payload[key])
+    elif isinstance(upload_payload, list):
+        for item in upload_payload:
+            strip_uuids(item)

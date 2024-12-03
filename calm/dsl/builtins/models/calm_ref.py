@@ -761,6 +761,30 @@ class Ref:
                     "uuid": cdict["uuid"],
                 }
 
+    class Provider:
+        def __new__(cls, name, **kwargs):
+            kwargs["__ref_cls__"] = cls
+            kwargs["name"] = name
+            return _calm_ref(**kwargs)
+
+        def compile(cls, name, **kwargs):
+
+            if name:
+                res = Cache.get_entity_data(
+                    entity_type=CACHE.ENTITY.PROVIDER, name=name
+                )
+                if not res:
+                    LOG.error(
+                        "Provider with name {} not found. Run 'calm update cache' if data is stale or double check the provider name".format(
+                            name
+                        )
+                    )
+                    sys.exit(-1)
+                return res
+
+            LOG.error("Provider name not passed, please pass provider name")
+            sys.exit(-1)
+
     class Resource_Type:
         __ref_kind__ = CACHE.ENTITY.RESOURCE_TYPE
 

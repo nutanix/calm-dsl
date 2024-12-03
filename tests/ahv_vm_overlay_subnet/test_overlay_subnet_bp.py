@@ -13,6 +13,8 @@ from calm.dsl.store import Version
 from calm.dsl.cli import main as cli
 from calm.dsl.log import get_logging_handle
 from tests.cli.runtime_helpers.ahv.editable_params import DSL_CONFIG
+from tests.helper.status_map_helper import remove_status_map_from_bp
+from tests.helper.output_variables_helper import remove_output_variables_from_bp
 
 # Setting the recursion limit to max for
 sys.setrecursionlimit(100000)
@@ -180,5 +182,11 @@ class TestOverlaySubnetBlueprint:
         ][
             "uuid"
         ]
+
+        if LV(CALM_VERSION) < LV("3.9.0"):
+            remove_status_map_from_bp(known_json)
+
+        remove_output_variables_from_bp(known_json)
+        remove_output_variables_from_bp(generated_json)
 
         assert sorted(known_json.items()) == sorted(generated_json.items())

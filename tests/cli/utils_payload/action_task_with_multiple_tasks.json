@@ -1,0 +1,196 @@
+{
+    "name": "TestUtilsAction5",
+    "description": "List Action for TestUtilsResourceType",
+    "type": "resource_type_generic",
+    "critical": false,
+    "runbook": {
+        "name": "TestUtilsResourceType_TestUtilsAction5_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "TestUtilsResourceType_TestUtilsAction5_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "TestUtilsResourceType_TestUtilsAction5_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": [
+                        {
+                            "from_task_reference": {
+                                "kind": "app_task",
+                                "name": "TestUtilsTask5_parent"
+                            },
+                            "to_task_reference": {
+                                "kind": "app_task",
+                                "name": "TestUtilsTask5_child"
+                            }
+                        }
+                    ]
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "TestUtilsTask5"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "TestUtilsTask5_parent",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static_py5",
+                    "script": "print ('Successfully Authenticated Parent')"
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "TestUtilsTask5_child",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static_py5",
+                    "script": "print ('Successfully Authenticated Child')"
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": [
+            {
+                "val_type": "STRING",
+                "is_mandatory": false,
+                "description": "http_string_get_var description",
+                "data_type": "LIST",
+                "value": "",
+                "label": "http_string_get_var_label",
+                "attrs": {},
+                "editables": {
+                    "value": true
+                },
+                "is_hidden": false,
+                "type": "HTTP_LOCAL",
+                "options": {
+                    "type": "HTTP",
+                    "attrs": {
+                        "type": "HTTP",
+                        "retry_interval": 10,
+                        "method": "GET",
+                        "expected_response_params": [
+                            {
+                                "status": "SUCCESS",
+                                "code": 200
+                            }
+                        ],
+                        "retry_count": 1,
+                        "content_type": "application/json",
+                        "tls_verify": true,
+                        "headers": [
+                            {
+                                "name": "Content-Type",
+                                "description": "",
+                                "type": "LOCAL",
+                                "label": "",
+                                "attrs": {},
+                                "val_type": "STRING",
+                                "value": "application/json",
+                                "data_type": "BASE",
+                                "is_hidden": false,
+                                "is_mandatory": false
+                            }
+                        ],
+                        "response_paths": {
+                            "http_string_get_var": "$.title"
+                        },
+                        "connection_timeout": 120,
+                        "authentication": {
+                            "auth_type": "basic",
+                            "basic_auth": {
+                                "username": "root",
+                                "password": {
+                                    "attrs": {
+                                        "is_secret_modified": false
+                                    }
+                                }
+                            }
+                        },
+                        "url": "https://jsonplaceholder.typicode.com/posts/1"
+                    }
+                },
+                "name": "http_string_get_var_1"
+            },
+            {
+                "val_type": "STRING",
+                "is_mandatory": false,
+                "description": "http_string_get_var_2 description",
+                "data_type": "LIST",
+                "value": "",
+                "label": "http_string_get_var_2_label",
+                "attrs": {},
+                "editables": {
+                    "value": true
+                },
+                "is_hidden": false,
+                "type": "HTTP_LOCAL",
+                "options": {
+                    "type": "HTTP",
+                    "attrs": {
+                        "type": "HTTP",
+                        "retry_interval": 10,
+                        "method": "GET",
+                        "expected_response_params": [
+                            {
+                                "status": "SUCCESS",
+                                "code": 200
+                            }
+                        ],
+                        "retry_count": 1,
+                        "content_type": "application/json",
+                        "tls_verify": true,
+                        "headers": [
+                            {
+                                "name": "Content-Type",
+                                "description": "",
+                                "type": "LOCAL",
+                                "label": "",
+                                "attrs": {},
+                                "val_type": "STRING",
+                                "value": "application/json",
+                                "data_type": "BASE",
+                                "is_hidden": false,
+                                "is_mandatory": false
+                            }
+                        ],
+                        "response_paths": {
+                            "http_string_get_var": "$.title"
+                        },
+                        "connection_timeout": 120,
+                        "authentication": {
+                            "auth_type": "basic",
+                            "basic_auth": {
+                                "username": "root",
+                                "password": {
+                                    "attrs": {
+                                        "is_secret_modified": false
+                                    }
+                                }
+                            }
+                        },
+                        "url": "https://jsonplaceholder.typicode.com/posts/1"
+                    }
+                },
+                "name": "http_string_get_var_2"
+            }
+        ]
+    }
+}

@@ -685,7 +685,7 @@ def delete_job(job_names):
 
     for job_name in job_names:
 
-        job_get_res = get_job(client, job_name, all=True)
+        job_get_res = get_job(client, job_name)
 
         job_uuid = job_get_res["metadata"]["uuid"]
 

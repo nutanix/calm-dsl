@@ -51,7 +51,7 @@ LOG = get_logging_handle(__name__)
     default=False,
     help="Update cache before running command",
 )
-@click.version_option("3.8.1")
+@click.version_option("4.0.0")
 @click.pass_context
 def main(ctx, config_file, sync):
     """Calm CLI
@@ -442,6 +442,12 @@ def run():
 
 
 @main.group(cls=FeatureFlagGroup)
+def test():
+    """Test run provider & resource_type actions"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
 def watch():
     """Track actions running on apps or runbook executions"""
     pass
@@ -637,3 +643,9 @@ def run_script(script_type, script_file, project_name, endpoint_file):
     else:
         LOG.error("Invalid script type {}. Use one of {}".format(test_scripts_type()))
         sys.exit(-1)
+
+
+@main.group(cls=FeatureFlagGroup)
+def clone():
+    """Clone entities"""
+    pass

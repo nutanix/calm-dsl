@@ -17,6 +17,7 @@
                 "attrs": {
                     "edges": []
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -32,6 +33,7 @@
                 "description": "",
                 "type": "META",
                 "attrs": {},
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -50,6 +52,7 @@
                     "script_type": "static_py3",
                     "script": "print('Decision Task is Successful')"
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",
@@ -60,6 +63,7 @@
                 "description": "",
                 "type": "META",
                 "attrs": {},
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -78,6 +82,7 @@
                     "script_type": "static_py3",
                     "script": "print('Decision Task Failed')"
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",
@@ -103,12 +108,14 @@
                         "name": "DecisionTask_failure_meta_task"
                     }
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",
                 "timeout_secs": ""
             }
         ],
-        "variable_list": []
+        "variable_list": [],
+        "output_variables": []
     }
 }

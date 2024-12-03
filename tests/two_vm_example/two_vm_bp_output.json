@@ -42,13 +42,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -75,13 +77,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -108,13 +112,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -141,13 +147,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -174,13 +182,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -207,13 +217,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -278,13 +290,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -311,13 +325,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -344,13 +360,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -377,13 +395,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -410,13 +430,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 },
                 {
@@ -443,13 +465,15 @@
                                 "attrs": {
                                     "edges": []
                                 },
+                                "status_map_list": [],
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
                                 "retries": "",
                                 "timeout_secs": ""
                             }
                         ],
-                        "variable_list": []
+                        "variable_list": [],
+                        "output_variables": []
                     }
                 }
             ],
@@ -481,13 +505,15 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "Runbook_for_Package_MySQLPackage_action_uninstall",
@@ -508,13 +534,15 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -563,13 +591,15 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 },
                 "uninstall_runbook": {
                     "name": "Runbook_for_Package_PHPPackage_action_uninstall",
@@ -590,13 +620,15 @@
                             "attrs": {
                                 "edges": []
                             },
+                            "status_map_list": [],
                             "child_tasks_local_reference_list": [],
                             "variable_list": [],
                             "retries": "",
                             "timeout_secs": ""
                         }
                     ],
-                    "variable_list": []
+                    "variable_list": [],
+                    "output_variables": []
                 }
             },
             "service_local_reference_list": [
@@ -624,7 +656,7 @@
                             "subnet_reference": {
                                 "kind": "subnet",
                                 "name": "vlan.0",
-                                "uuid": "6a049405-a612-48b6-b098-c922fe024964"
+                                "uuid": "da1a6db3-ca32-4afd-8b83-e587a89b5415"
                             },
                             "network_function_nic_type": "INGRESS",
                             "nic_type": "NORMAL_NIC"
@@ -688,7 +720,7 @@
                             "subnet_reference": {
                                 "kind": "subnet",
                                 "name": "vlan.0",
-                                "uuid": "6a049405-a612-48b6-b098-c922fe024964"
+                                "uuid": "da1a6db3-ca32-4afd-8b83-e587a89b5415"
                             },
                             "network_function_nic_type": "INGRESS",
                             "nic_type": "NORMAL_NIC"

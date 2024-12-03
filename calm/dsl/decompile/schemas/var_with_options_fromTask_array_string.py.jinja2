@@ -1,8 +1,12 @@
+{%- macro common_details(obj) -%}
+{{obj.value}}, label='{{obj.label}}', is_mandatory={{obj.is_mandatory}}, is_hidden={{obj.is_hidden}}, description='{{obj.description}}'{%- if obj.default_value %}, value='{{obj.default_value}}'{%- endif %}
+{%- endmacro %}
+
 {%- macro with_options_from_task_array_string_var(obj) -%}
 {%- if obj.regex %}
-{{obj.name}} = CalmVariable.WithOptions.FromTask.Array({{obj.value}}, label='{{obj.label}}', regex='{{obj.regex}}', validate_regex={{obj.validate_regex}}, is_mandatory={{obj.is_mandatory}}, is_hidden={{obj.is_hidden}}, description='{{obj.description}}')
+{{obj.name}} = CalmVariable.WithOptions.FromTask.Array({{ common_details(obj) }}, regex='{{obj.regex}}', validate_regex={{obj.validate_regex}})
 {%- else %}
-{{obj.name}} = CalmVariable.WithOptions.FromTask.Array({{obj.value}}, label='{{obj.label}}', is_mandatory={{obj.is_mandatory}}, is_hidden={{obj.is_hidden}}, description='{{obj.description}}')
+{{obj.name}} = CalmVariable.WithOptions.FromTask.Array({{ common_details(obj) }})
 {%- endif %}
 {%- endmacro %}
 

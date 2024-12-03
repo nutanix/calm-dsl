@@ -16,6 +16,7 @@ from .main import (
     pause,
     resume,
     abort,
+    clone,
 )
 from .runbooks import (
     get_runbook_list,
@@ -32,6 +33,7 @@ from .runbooks import (
     resume_runbook_execution,
     pause_runbook_execution,
     abort_runbook_execution,
+    clone_runbook,
 )
 
 LOG = get_logging_handle(__name__)
@@ -291,3 +293,12 @@ def _abort_runbook_execution(runlog_uuid):
     """Abort the runbook execution"""
 
     abort_runbook_execution(runlog_uuid)
+
+
+@clone.command("runbook", feature_min_version="4.0.0", experimental=True)
+@click.argument("original_runbook_name", required=True)
+@click.argument("cloned_runbook_name", required=True)
+def _clone_runbook(original_runbook_name, cloned_runbook_name):
+    """Clone a runbook"""
+
+    clone_runbook(original_runbook_name, cloned_runbook_name)

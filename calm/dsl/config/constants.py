@@ -24,6 +24,9 @@ class CONFIG:
     class STRATOS(IterableConstants):
         STATUS = "stratos_status"
 
+    class CLOUD_PROVIDERS(IterableConstants):
+        STATUS = "cp_status"
+
     class APPROVAL_POLICY(IterableConstants):
         STATUS = "approval_policy_status"
 

@@ -20,7 +20,7 @@ def handle_meta_create(node, func_globals, prefix=None):
         node_visitor.visit(node)
     except Exception as ex:
         raise ex
-    tasks, variables, task_list = node_visitor.get_objects()
+    tasks, variables, task_list, _ = node_visitor.get_objects()
 
     child_tasks = []
     for child_task in task_list:
@@ -50,19 +50,21 @@ class GetCallNodes(ast.NodeVisitor):
         self.task_list = []
         self.all_tasks = []
         self.variables = {}
+        self.outputs = []
         self.target = target or None
         self._globals = func_globals or {}.copy()
 
         self.is_branch_present = is_branch_present
 
-        # flag to check if this runbook is in context of RaaS, as decision, while, parallel tasks are supported only in RaaS
+        # flag to check if this runbook is in context of RaaS or custom providers,
+        # as decision, while, parallel tasks are supported only in RaaS & custom provider actions
         self.is_runbook = is_runbook
 
         # flag to check if tasks are in context of metatask
         self.is_metatask = is_metatask_context
 
     def get_objects(self):
-        return self.all_tasks, self.variables, self.task_list
+        return self.all_tasks, self.variables, self.task_list, self.outputs
 
     def visit_Call(self, node, return_task=False):
         sub_node = node.func
@@ -81,18 +83,41 @@ class GetCallNodes(ast.NodeVisitor):
                 return
         return self.generic_visit(node)
 
+    def is_calm_or_runbook_variable(self, sub_node):
+        while not isinstance(sub_node, ast.Name):
+            sub_node = sub_node.value
+        py_object = eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
+        return py_object == CalmVariable or RunbookVariable
+
     def visit_Assign(self, node):
+        if isinstance(node.value, ast.List):  # Parse & set outputs
+            lhs = node.targets[0].id if node.targets else None
+            if lhs == "outputs":
+                self.outputs = []
+                for element in node.value.elts:
+                    sub_node = element.func
+
+                    if self.is_calm_or_runbook_variable(sub_node):
+                        variable = eval(
+                            compile(ast.Expression(element), "", "eval"), self._globals
+                        )
+                        if (
+                            variable.type != "LOCAL"
+                            or variable.value_type != "STRING"
+                            or variable.options
+                        ):
+                            raise ValueError(
+                                "output variable {} can only be of type Simple.string".format(
+                                    variable.name
+                                )
+                            )
+                        if isinstance(variable, VariableType):
+                            self.outputs.append(variable)
+
         if not isinstance(node.value, ast.Call):
             return self.generic_visit(node)
         sub_node = node.value.func
-        while not isinstance(sub_node, ast.Name):
-            sub_node = sub_node.value
-        if (
-            eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
-            == CalmVariable
-            or eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
-            == RunbookVariable
-        ):
+        if self.is_calm_or_runbook_variable(sub_node):
             if len(node.targets) > 1:
                 raise ValueError(
                     "not enough values to unpack (expected {}, got 1)".format(
@@ -216,7 +241,7 @@ class GetCallNodes(ast.NodeVisitor):
                         _node_visitor.visit(statementBody)
                     except Exception as ex:
                         raise ex
-                    tasks, variables, task_list = _node_visitor.get_objects()
+                    tasks, variables, task_list, outputs = _node_visitor.get_objects()
                     if len(task_list) == 0:
                         raise ValueError(
                             "Atleast one task is required under parallel branch"
@@ -224,6 +249,7 @@ class GetCallNodes(ast.NodeVisitor):
                     parallel_tasks.append(task_list)
                     self.all_tasks.extend(tasks)
                     self.variables.update(variables)
+                    self.outputs.extend(outputs)
                 else:
                     raise ValueError(
                         "Only with branch() contexts are supported under parallel context."

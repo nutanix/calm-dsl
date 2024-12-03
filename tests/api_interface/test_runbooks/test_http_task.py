@@ -293,9 +293,6 @@ class TestHTTPTasks:
             (HTTPTaskWithIncorrectAuth, "AUTHENTICATION_REQUIRED"),
         ],
     )
-    @pytest.mark.skip(
-        reason="ENG-626272, v3 pc api returns diff payload between release versions"
-    )
     def test_http_failure_scenarios(self, Helper):
         """test_http_task_failure_status_code_check,
         test_unsupported_payload_json,

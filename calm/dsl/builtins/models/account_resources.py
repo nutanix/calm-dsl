@@ -14,11 +14,12 @@ from calm.dsl.builtins import (
     custom_provider_account,
     credential_provider_account,
     CalmVariable,
+    Ref,
 )
 
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, VARIABLE
 from calm.dsl.store import Cache
-from .helper.common import get_provider
+from calm.dsl.builtins.models.helper.common import is_not_right_ref
 from .utils import is_compile_secrets
 
 from calm.dsl.log import get_logging_handle
@@ -160,12 +161,23 @@ class AccountResources:
             )
 
     class CustomProvider:
-        def __new__(cls, provider, parent, variable_dict):
+        def __new__(cls, provider, variable_dict, parent=None):
 
-            variable_list_values = variable_dict
+            if is_not_right_ref(provider, Ref.Provider):
+                LOG.error("Provider should be instance of Ref.Provider")
+                sys.exit("Provider should be instance of Ref.Provider")
 
-            provider_auth_schema_list = deepcopy(
-                provider["spec"]["resources"]["auth_schema_list"]
+            provider_cache = provider.compile()
+
+            # provider_auth_schema_list = auth_schema_variables + endpoint_schema_variables + variables
+            provider_auth_schema_list = deepcopy(provider_cache["auth_schema_list"])
+            provider_auth_schema_list.extend(
+                deepcopy(
+                    provider_cache.get("endpoint_schema", {}).get("variable_list", [])
+                )
+            )
+            provider_auth_schema_list.extend(
+                deepcopy(provider_cache.get("variable_list", []))
             )
 
             # check if all the variables provided are present in provider's auth_schema_list
@@ -174,40 +186,56 @@ class AccountResources:
                 for auth_var in provider_auth_schema_list
             ]
 
+            provider_auth_schema_variables.extend(
+                [auth_var["name"] for auth_var in provider_auth_schema_list]
+            )
+
             for auth_var in variable_dict:
                 if auth_var not in provider_auth_schema_variables:
-                    LOG.error("{} is not a valid variable")
+                    LOG.error("{} is not a valid variable".format(auth_var))
                     sys.exit("Invalid variable provided")
 
-            for auth_schema in provider_auth_schema_list:
-                auth_schema["uuid"] = str(uuid.uuid4())
-                auth_schema.pop("state")
-                auth_schema["message_list"] = []
+            for auth_schema_var in provider_auth_schema_list:
+                auth_schema_var.pop("state", None)
+                auth_schema_var.pop("message_list", None)
+                auth_schema_var["uuid"] = str(uuid.uuid4())
 
-                label_dict_key = auth_schema["label"].lower().replace(" ", "_")
+                if (
+                    auth_schema_var.get("options", {}).get("type")
+                    == VARIABLE.OPTIONS.TYPE.HTTP
+                ):
+                    header_vars = auth_schema_var["options"]["attrs"].get("headers", [])
+                    for header_var in header_vars:
+                        header_var["uuid"] = str(uuid.uuid4())
 
-                if not label_dict_key:
+                var_name = auth_schema_var["name"]
+                var_type = auth_schema_var["type"]
+                var_label = auth_schema_var["label"]
+                label_dict_key = var_label.lower().replace(" ", "_")
+
+                if not label_dict_key and not var_name:
                     continue
 
-                if (label_dict_key not in variable_list_values) and (
-                    auth_schema["is_mandatory"]
-                ):
-                    LOG.error("{} is a mandatory variable".format(label_dict_key))
+                if not is_compile_secrets() and var_type in VARIABLE.SECRET_TYPES:
+                    auth_schema_var["value"] = ""
+                elif var_name in variable_dict:
+                    auth_schema_var["value"] = variable_dict[var_name]
+                elif label_dict_key in variable_dict:
+                    auth_schema_var["value"] = variable_dict[label_dict_key]
+                elif auth_schema_var["is_mandatory"]:
+                    LOG.error(
+                        "{} is a mandatory variable".format(var_label or var_name)
+                    )
                     sys.exit("Mandatory variable not provided")
 
-                auth_schema["value"] = (
-                    ""
-                    if auth_schema["type"] == "SECRET" and not is_compile_secrets()
-                    else variable_list_values[label_dict_key]
-                )
-
-                if auth_schema["type"] == "SECRET":
-                    auth_schema.pop("attrs")
-                    auth_schema["attrs"] = {"is_secret_modified": True}
+                if var_type in VARIABLE.SECRET_TYPES:
+                    auth_schema_var.pop("attrs")
+                    auth_schema_var["attrs"] = {"is_secret_modified": True}
 
             provider_reference = {
                 "kind": "provider",
-                "uuid": provider["metadata"]["uuid"],
+                "uuid": provider_cache["uuid"],
+                "name": provider_cache["name"],
             }
 
             return custom_provider_account(
@@ -227,7 +255,7 @@ class AccountResources:
                 LOG.error("Parent should be of type 'AHV'")
                 sys.exit("Invalid parent value")
 
-            ndb_provider = get_provider(name="NDB")
+            ndb_provider = Ref.Provider(name="NDB")
 
             return AccountResources.CustomProvider(
                 provider=ndb_provider, parent=parent, variable_dict=variable_dict

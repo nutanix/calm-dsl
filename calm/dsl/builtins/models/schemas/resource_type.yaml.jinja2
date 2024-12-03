@@ -1,0 +1,49 @@
+{% macro ResourceType() -%}
+
+title: Resource Type
+type: object
+x-calm-dsl-type: resource_type
+properties:
+    name:
+        type: string
+        description: ResourceType name
+    description:
+        type: string
+        description: ResourceType description
+    schema_list:
+        type: array
+        description: Common schema variables of the resource_type
+        items:
+            $ref: '#/components/schemas/Variable'
+        x-calm-dsl-display-name: schemas
+    variable_list:
+        type: array
+        description: Variables of the resource_type
+        items:
+            $ref: '#/components/schemas/Variable'
+        x-calm-dsl-display-name: variables
+    action_list:
+        type: array
+        description: Action list of the resource_type
+        items:
+            $ref: '#/components/schemas/Action'
+        x-calm-dsl-display-name: actions
+    resource_kind:
+        type: string
+        description: Resource Type Kind
+    icon_file:
+        type: string
+        description: Icon File for the resource_type
+    icon_name:
+        type: string
+        description: Icon File for the resource_type
+
+{%- endmacro %}
+
+
+{% macro ResourceTypeSchema() -%}
+
+ResourceType:
+  {{ ResourceType()|indent(2) }}
+
+{%- endmacro %}

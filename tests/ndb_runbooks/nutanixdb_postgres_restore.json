@@ -17,6 +17,7 @@
                 "attrs": {
                     "edges": []
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [
                     {
                         "kind": "app_task",
@@ -34,14 +35,14 @@
                 "attrs": {
                     "type": "RT_OPERATION",
                     "resource_type_reference": {
-                        "uuid": "7d60e0a6-b021-4c22-b6a5-2fd311930709",
+                        "uuid": "19c07696-473b-4c48-ba7d-133dff3f98a6",
                         "name": "Postgres Database Instance",
                         "kind": "resource_type"
                     },
                     "action_reference": {
                         "kind": "app_action",
                         "name": "Restore from Time Machine",
-                        "uuid": "e3bc4dcf-7149-43e0-9d48-79ab6ab4ef5e"
+                        "uuid": "083fdf35-bbba-46a9-be14-f1a9d7b42031"
                     },
                     "inarg_list": [
                         {
@@ -55,6 +56,18 @@
                             "data_type": "BASE",
                             "is_hidden": false,
                             "is_mandatory": true
+                        },
+                        {
+                            "name": "restore_from_time_machine_nutanix_ndb_database__time_zone_pitr",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "Asia/Kolkata",
+                            "data_type": "BASE",
+                            "is_hidden": true,
+                            "is_mandatory": false
                         },
                         {
                             "name": "restore_from_time_machine_nutanix_ndb_database__user_pitr_timestamp",
@@ -71,18 +84,6 @@
                             },
                             "is_hidden": false,
                             "is_mandatory": false
-                        },
-                        {
-                            "name": "restore_from_time_machine_nutanix_ndb_database__time_zone_pitr",
-                            "description": "",
-                            "type": "LOCAL",
-                            "label": "",
-                            "attrs": {},
-                            "val_type": "STRING",
-                            "value": "Asia/Kolkata",
-                            "data_type": "BASE",
-                            "is_hidden": true,
-                            "is_mandatory": false
                         }
                     ],
                     "output_variables": {
@@ -92,16 +93,18 @@
                     "tag": "Database",
                     "account_reference": {
                         "kind": "account",
-                        "name": "ndb-account",
-                        "uuid": "65d3ec1d-8044-4c5c-af50-881acb3c3a3d"
+                        "name": "dnd_era_secondary_account",
+                        "uuid": "0bba3490-6677-49b3-a6d5-a67ef63883b0"
                     }
                 },
+                "status_map_list": [],
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
                 "retries": "",
                 "timeout_secs": ""
             }
         ],
-        "variable_list": []
+        "variable_list": [],
+        "output_variable_list": []
     }
 }

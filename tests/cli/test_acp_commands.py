@@ -19,6 +19,7 @@ USER_NAME = USER["NAME"]
 DSL_PROJECT_PATH = "tests/project/test_project_in_pc.py"
 
 
+@pytest.mark.quotas
 class TestACPCommands:
     def setup_method(self):
 

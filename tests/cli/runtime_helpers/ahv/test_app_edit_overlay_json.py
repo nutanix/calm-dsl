@@ -11,6 +11,8 @@ from calm.dsl.builtins.models.metadata_payload import (
 )
 from calm.dsl.store import Version
 from distutils.version import LooseVersion as LV
+from tests.helper.status_map_helper import remove_status_map_from_bp
+from tests.helper.output_variables_helper import remove_output_variables_from_bp
 from tests.utils import get_local_az_overlay_details_from_dsl_config
 
 CRED_USERNAME = read_local_file(".tests/username")
@@ -129,6 +131,12 @@ class TestAppEditOverlaySubnetBlueprint:
         if LV(CALM_VERSION) >= LV("3.4.0"):
             for cred in known_json["credential_definition_list"]:
                 cred["cred_class"] = "static"
+
+        if LV(CALM_VERSION) < LV("3.9.0"):
+            remove_status_map_from_bp(known_json)
+
+        remove_output_variables_from_bp(known_json)
+        remove_output_variables_from_bp(generated_json)
 
         assert sorted(known_json.items()) == sorted(
             generated_json.items()

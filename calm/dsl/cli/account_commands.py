@@ -45,21 +45,14 @@ LOG = get_logging_handle(__name__)
     default=None,
     multiple=True,
     help="Search for accounts of specific provider",
-    type=click.Choice(
-        [
-            "aws",
-            "k8s",
-            "vmware",
-            "azure",
-            "gcp",
-            "nutanix",
-            "nutanix_pc",
-            "custom_provider",
-        ]
-    ),
 )
 def _get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type):
-    """Get accounts, optionally filtered by a string"""
+    """Get accounts, optionally filtered by a string
+
+    Supported values for account_type are:\n
+        - "aws", "k8s", "vmware", "azure", "gcp", "nutanix", "nutanix_pc", "custom_provider"\n
+    NOTE: For Calm versions >= 4.0.0 where users can define their own cloud Providers, the provider names can also be used in account_type filter
+    """
 
     get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
 
@@ -91,11 +84,17 @@ def _sync_account(account_name):
 
 @verify.command("account", feature_min_version="3.0.0")
 @click.argument("account_name")
-def _verify_account(account_name):
+@click.option(
+    "--watch/--no-watch",
+    "-w",
+    default=False,
+    help="Watch verify execution. Applies only to accounts of user-defined providers",
+)
+def _verify_account(account_name, watch):
     """Verifies an account
     Args: account_name (string): name of the account to verify"""
 
-    verify_account(account_name)
+    verify_account(account_name, watch=watch)
 
 
 @create.command("account")
@@ -122,7 +121,13 @@ def _verify_account(account_name):
     default=False,
     help="Verifies the account after successfull account creation",
 )
-def create_account_command(account_file, name, force, auto_verify):
+@click.option(
+    "--watch-verify/--no-watch-verify",
+    "-w",
+    default=False,
+    help="Watch verify execution. Applies only to accounts of user-defined providers",
+)
+def create_account_command(account_file, name, force, auto_verify, watch_verify):
     """
     Creates an account
 
@@ -142,7 +147,7 @@ def create_account_command(account_file, name, force, auto_verify):
         return
 
     if auto_verify:
-        verify_account(account_data["name"])
+        verify_account(account_data["name"], watch=watch_verify)
 
 
 @compile.command("account")

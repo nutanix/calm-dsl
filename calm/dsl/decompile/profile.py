@@ -96,7 +96,12 @@ def render_profile_template(
     for entity in user_attrs.get("variables", []):
         variable_list.append(
             render_variable_template(
-                entity, entity_context, secrets_dict=secrets_dict, context=context
+                entity,
+                entity_context,
+                secrets_dict=secrets_dict,
+                context=context,
+                endpoints=endpoints,
+                ep_list=ep_list,
             )
         )
 

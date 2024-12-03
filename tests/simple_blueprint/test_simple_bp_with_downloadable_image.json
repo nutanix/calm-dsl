@@ -44,13 +44,15 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -77,13 +79,15 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -110,13 +114,15 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -143,13 +149,15 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -176,13 +184,15 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         },
                         {
@@ -209,13 +219,15 @@
                                         "attrs": {
                                             "edges": []
                                         },
+                                        "status_map_list": [],
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],
                                         "retries": "",
                                         "timeout_secs": ""
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "output_variables": []
                             }
                         }
                     ]
@@ -246,13 +258,15 @@
                                     "attrs": {
                                         "edges": []
                                     },
+                                    "status_map_list": [],
                                     "child_tasks_local_reference_list": [],
                                     "variable_list": [],
                                     "retries": "",
                                     "timeout_secs": ""
                                 }
                             ],
-                            "variable_list": []
+                            "variable_list": [],
+                            "output_variables": []
                         },
                         "uninstall_runbook": {
                             "name": "Runbook_for_Package_VmDeploymentPackage_action_uninstall",
@@ -273,13 +287,15 @@
                                     "attrs": {
                                         "edges": []
                                     },
+                                    "status_map_list": [],
                                     "child_tasks_local_reference_list": [],
                                     "variable_list": [],
                                     "retries": "",
                                     "timeout_secs": ""
                                 }
                             ],
-                            "variable_list": []
+                            "variable_list": [],
+                            "output_variables": []
                         }
                     },
                     "service_local_reference_list": [

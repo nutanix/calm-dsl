@@ -18,6 +18,7 @@ DSL_BP_FILEPATH = "tests/metadata/blueprint/blueprint.py"
 LOCAL_PROJECTNAME_FILE = "tests/metadata/blueprint/.local/project_name"
 
 
+@pytest.mark.quotas
 class TestBlueprintMetadata:
     def setup_method(self):
         """Method to create project"""

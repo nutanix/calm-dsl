@@ -282,7 +282,7 @@ def exec_app_action(
 
     # Get app uuid  from name
     client = get_api_client()
-    app = apps._get_app(client, app_name, all=True)
+    app = apps._get_app(client, app_name, all=False)
     res, err = client.application.read(app["metadata"]["uuid"])
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))

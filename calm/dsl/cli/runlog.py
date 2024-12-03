@@ -341,7 +341,7 @@ def displayRunLog(screen, obj, pre, fill, line):
     return idx()
 
 
-def get_completion_func(screen):
+def get_completion_func(screen, rerun_on_failure=True, output_function=None):
     def is_action_complete(
         response,
         task_type_map=[],
@@ -350,7 +350,6 @@ def get_completion_func(screen):
         runlog_uuid=None,
         **kwargs,
     ):
-
         client = get_api_client()
         global input_tasks
         global input_payload
@@ -399,7 +398,10 @@ def get_completion_func(screen):
                     runlog["status"]["machine_name"] = "-"
                     continue  # this runlog corresponds to endpoint loop
                 elif machine:
-                    machine = "{} ({})".format(machine[1], machine[0])
+                    if machine[0].startswith("Machine"):  # CALM-42913
+                        machine = machine[1]
+                    else:
+                        machine = "{} ({})".format(machine[1], machine[0])
 
                 if runlog["status"]["type"] == "task_runlog":
 
@@ -413,7 +415,8 @@ def get_completion_func(screen):
                         and task_type_map[task_id]
                         not in ["INPUT", "CONFIRM", "WHILE_LOOP"]
                     ):
-                        res, err = client.runbook.runlog_output(runlog_uuid, uuid)
+                        output_fn = output_function or client.runbook.runlog_output
+                        res, err = output_fn(runlog_uuid, uuid)
                         if err:
                             raise Exception(
                                 "\n[{}] - {}".format(err["code"], err["error"])
@@ -441,7 +444,9 @@ def get_completion_func(screen):
                 parent_type = parent_runlog["status"]["type"]
                 while (
                     parent_type == "task_runlog"
-                    and task_type_map[parent_runlog["status"]["task_reference"]["uuid"]]
+                    and task_type_map.get(
+                        parent_runlog["status"]["task_reference"]["uuid"], ""
+                    )
                     == "META"
                 ) or parent_runlog["status"].get("machine_name", None) == "-":
                     parent_uuid = parent_runlog["status"]["parent_reference"]["uuid"]
@@ -582,14 +587,15 @@ def get_completion_func(screen):
                     msg = "Action failed."
                     if os.isatty(sys.stdout.fileno()):
                         msg += " Exit screen?"
-                        screen.play([Scene([RerunFrame(state, screen)], -1)])
-                        if rerun.get("rerun", False):
-                            client.runbook.rerun(runlog_uuid)
-                            msg = "Triggered rerun for the Runbook Runlog"
-                            displayRunLogTree(
-                                screen, root, completed_tasks, total_tasks, msg=msg
-                            )
-                            return (False, "")
+                        if rerun_on_failure:
+                            screen.play([Scene([RerunFrame(state, screen)], -1)])
+                            if rerun.get("rerun", False):
+                                client.runbook.rerun(runlog_uuid)
+                                msg = "Triggered rerun for the Runbook Runlog"
+                                displayRunLogTree(
+                                    screen, root, completed_tasks, total_tasks, msg=msg
+                                )
+                                return (False, "")
                         displayRunLogTree(
                             screen, root, completed_tasks, total_tasks, msg=msg
                         )

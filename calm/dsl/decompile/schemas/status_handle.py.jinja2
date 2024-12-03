@@ -1,0 +1,27 @@
+{% macro warning() -%}
+StatusHandle.Result.Warning
+{%- endmacro %}
+
+{% macro failure() -%}
+StatusHandle.Status.Failure
+{%- endmacro %}
+
+{% macro task_failure() -%}
+StatusHandle.Status.TaskFailure
+{%- endmacro %}
+
+{% macro task_status_value(value) -%}
+{%- if value == "FAILURE" %}{{ failure() }}{% endif %} {%- if value == "TASK_FAILURE" %}{{ task_failure() }}{% endif %}
+{%- endmacro %}
+
+{% macro exit_code(obj) -%}
+StatusHandle.Mapping.exit_code(
+    values = {{obj.match_values}} {% if obj.result_status %}, result = {%- if obj.result_status == "WARNING" %}{{warning()}}{%- endif %}{%- endif %}
+),
+{%- endmacro %}
+
+{% macro task_status(obj) -%}
+StatusHandle.Mapping.task_status(
+    values = [{%- for value in obj.match_values %}{{task_status_value(value)}}{%- endfor %}] {% if obj.result_status %}, result = {%- if obj.result_status == "WARNING" %}{{warning()}}{%- endif %}{%- endif %}
+),
+{%- endmacro %}

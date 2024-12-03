@@ -67,6 +67,7 @@ CALM_VERSION = Version.get_version("Calm")
     LV(CALM_VERSION) < LV("3.2.0"),
     reason="Tests are for env changes introduced in 3.2.0",
 )
+@pytest.mark.quotas
 class TestProjectEnv:
     def setup_method(self):
         """Method to instantiate variable for projects to be deleted"""

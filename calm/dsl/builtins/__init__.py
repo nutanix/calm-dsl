@@ -11,7 +11,7 @@ from .models.variable import Variable, setvar, CalmVariable, VariableType
 from .models.action import action, parallel, ActionType, get_runbook_action
 from .models.credential import basic_cred, secret_cred, dynamic_cred, CredentialType
 
-from .models.task import Task, CalmTask, TaskType
+from .models.task import Task, CalmTask, TaskType, HTTPResponseHandle, StatusHandle
 
 from .models.port import Port, port, PortType
 from .models.service import (
@@ -147,6 +147,19 @@ from .models.vmware_account import VmwareAccountData, vmware_account
 from .models.gcp_account import GcpAccountData, gcp_account
 from .models.account_resources import AccountResources
 from .models.account import Account
+from .models.provider_endpoint_schema import (
+    ProviderEndpointSchema,
+    NutanixEndpointSchema,
+    VmwareEndpointSchema,
+    GCPEndpointSchema,
+    AWSEndpointSchema,
+    AzureEndpointSchema,
+    NoneEndpointSchema,
+)
+from .models.provider_test_account import ProviderTestAccount
+from .models.cloud_provider_payload import CloudProviderPayload
+from .models.cloud_provider import CloudProvider
+from .models.resource_type import ResourceType
 
 __all__ = [
     "Ref",
@@ -164,6 +177,8 @@ __all__ = [
     "Task",
     "CalmTask",
     "TaskType",
+    "HTTPResponseHandle",
+    "StatusHandle",
     "action",
     "ActionType",
     "get_runbook_action",
@@ -297,6 +312,17 @@ __all__ = [
     "TimeMachine",
     "Tag",
     "PostgresDatabaseOutputVariables",
+    "ProviderEndpointSchema",
+    "NutanixEndpointSchema",
+    "VmwareEndpointSchema",
+    "GCPEndpointSchema",
+    "AWSEndpointSchema",
+    "AzureEndpointSchema",
+    "NoneEndpointSchema",
+    "CloudProvider",
+    "CloudProviderPayload",
+    "ProviderTestAccount",
+    "ResourceType",
     "AhvUpdateConfigAttrs",
     "PatchField",
     "AppEdit",

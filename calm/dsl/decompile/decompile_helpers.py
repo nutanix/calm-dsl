@@ -13,6 +13,20 @@ def process_variable_name(var_name):
     return get_valid_identifier(var_name)
 
 
+def modify_var_format(variable):
+    """
+    Converts the variable definition from one format to other as below
+
+    "input_var = CalmVariable.Simple('@@{runbook_var}@@', label='', is_mandatory=True, is_hidden=False, runtime=False, description='')"
+            <gets converted to>
+    "CalmVariable.Simple('@@{runbook_var}@@', label='', is_mandatory=True, is_hidden=False, runtime=False, description='', name=input_var)"
+    """
+    arr = variable.split("=")
+    ret = "=".join(arr[1:]).strip()
+    ret = ret[:-1] + ", name='{}')".format(arr[0].strip())
+    return ret
+
+
 class IndentHelper:
     def generate_indents(
         self, special_tasks_data, task, base_indent, depth, if_needed, else_needed

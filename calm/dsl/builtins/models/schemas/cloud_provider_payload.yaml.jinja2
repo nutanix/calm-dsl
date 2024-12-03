@@ -1,0 +1,42 @@
+{% macro CloudProviderPayload() -%}
+
+title: CloudProviderPayload
+type: object
+x-calm-dsl-type: cloud_provider_payload
+properties:
+  spec:
+    type: object
+    x-calm-dsl-type: dict
+    properties:
+      name:
+        type: string
+        description: Provider name
+      description:
+        type: string
+        description: Provider description
+      resources:
+        type: object
+        properties:
+          $ref: '#/components/schemas/CloudProvider'
+
+  metadata:
+    type: object
+    x-calm-dsl-type: dict
+    properties:
+      name:
+        type: string
+        description: Provider name
+      kind:
+        type: string
+        description: Provider kind
+      uuid:
+        type: string
+        description: Provider uuid
+
+{%- endmacro %}
+{% macro CloudProviderPayloadSchema() -%}
+
+CloudProviderPayload:
+  {{ CloudProviderPayload()|indent(2) }}
+
+{%- endmacro %}

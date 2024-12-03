@@ -34,10 +34,17 @@ def {{obj.name}}({% if obj.credentials_list %}credentials={{obj.credentials_list
 {% if obj.description %}
     """{{obj.description}}"""
 {% endif %}
-{%- if obj.variables or obj.tasks %}
+{%- if obj.variables or obj.outputs or obj.tasks %}
 {%- for variable in obj.variables %}
 {{variable | indent( width=4, first=True)}} #noqa
 {%- endfor %}
+{% if obj.outputs %}
+    outputs=[
+        {%- for output in obj.outputs %}
+            {{output}},
+        {%- endfor %}
+    ]
+{% endif %}
 {%- for task in obj.tasks %}
 {{task | indent( width=4, first=True)}}
 {%- endfor %}

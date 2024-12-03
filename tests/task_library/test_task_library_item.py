@@ -2,6 +2,9 @@
 Create task library item
 """
 
+import json
+from distutils.version import LooseVersion as LV
+from calm.dsl.store.version import Version
 from calm.dsl.builtins import CalmTask
 
 Install_IIS = CalmTask.Exec.powershell(
@@ -20,7 +23,16 @@ def test_json():
     generated_json = Install_IIS.json_dumps(pprint=True)
 
     known_json = open(file_path).read()
-    assert generated_json == known_json
+
+    known_json = json.loads(known_json)
+    generated_json = json.loads(generated_json)
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) < LV("3.9.0"):
+        if "status_map_list" in known_json:
+            known_json.pop("status_map_list")
+
+    assert sorted(known_json.items()) == sorted(generated_json.items())
 
 
 def main():

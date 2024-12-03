@@ -2,9 +2,9 @@
 
 ![Build](https://github.com/nutanix/calm-dsl/workflows/Setup%20&%20build%20calm-dsl/badge.svg)
 
-`Latest release version: 3.8.1, Latest-release-tag: v3.8.1`
+`Latest release version: 4.0.0, Latest-release-tag: v4.0.0`
 
-`Latest Release Notes:` [read here](release-notes/3.8.1)
+`Latest Release Notes:` [read here](release-notes/4.0.0)
 
 
 # Nutanix Cloud Manager (NCM) Self Service (formerly Calm) DSL

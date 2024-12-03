@@ -1,0 +1,18 @@
+{%- macro task_resource_type_action(obj) -%}
+CalmTask.ResourceTypeAction(
+    '{{obj.name}}', Ref.Resource_Type(name='{{obj.resource_type_name}}', provider_name='{{obj.provider_name}}'),
+    Ref.ResourceTypeAction(
+        name='{{obj.action_name}}', resource_type_name='{{obj.resource_type_name}}',
+        provider_name='{{obj.provider_name}}',
+    ),
+    account_ref=Ref.Account(name='{{obj.account_name}}'),
+    inarg_list=[
+        {%- for variable in obj.inarg_list %}
+            {{variable}},
+        {%- endfor %}
+    ],
+    output_variables={{obj.output_variables}},
+)
+{%- endmacro %}
+
+{{ task_resource_type_action(obj) }}

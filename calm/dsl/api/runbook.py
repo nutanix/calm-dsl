@@ -1,4 +1,5 @@
 import os
+import sys
 from distutils.version import LooseVersion as LV
 
 
@@ -6,7 +7,10 @@ from .resource import ResourceAPI
 from .connection import REQUEST
 from .util import strip_secrets, patch_secrets
 from calm.dsl.config import get_context
+from calm.dsl.log import get_logging_handle
 from .project import ProjectAPI
+
+LOG = get_logging_handle(__name__)
 
 
 class RunbookAPI(ResourceAPI):
@@ -34,6 +38,7 @@ class RunbookAPI(ResourceAPI):
         self.MARKETPLACE_EXECUTE = self.PREFIX + "/marketplace_execute"
         self.MARKETPLACE_CLONE = self.PREFIX + "/marketplace_clone"
         self.VARIABLE_VALUES = self.ITEM + "/variables/{}/values"
+        self.CLONE = self.PREFIX + "/{}/clone"
 
     def upload(self, payload):
         return self.connection._call(
@@ -434,4 +439,22 @@ class RunbookAPI(ResourceAPI):
         url = self.VARIABLE_VALUES.format(uuid, var_uuid)
         return self.connection._call(
             url, verify=False, method=REQUEST.METHOD.POST, request_json=payload
+        )
+
+    def clone(self, uuid, payload):
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+
+        if LV(calm_version) < LV("4.0.0"):
+            LOG.error(
+                "Runbook clone is supported from Calm version 4.0.0. Please upgrade your Calm version to use this feature."
+            )
+            sys.exit("Runbook clone is supported from calm version 4.0.0 onwards")
+
+        return self.connection._call(
+            self.CLONE.format(uuid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
         )

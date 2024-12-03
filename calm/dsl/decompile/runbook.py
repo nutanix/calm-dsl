@@ -14,7 +14,10 @@ from calm.dsl.decompile.credential import (
 )
 from calm.dsl.decompile.ndb import get_NDB_files
 
-from calm.dsl.decompile.decompile_helpers import process_variable_name
+from calm.dsl.decompile.decompile_helpers import (
+    process_variable_name,
+    modify_var_format,
+)
 from calm.dsl.builtins import CalmEndpoint as Endpoint
 from calm.dsl.builtins.models.runbook import RunbookType, runbook
 from calm.dsl.log import get_logging_handle
@@ -65,9 +68,10 @@ def render_runbook_template(
 
     rendered_credential_list = []
     credentials_list = []
+    credential_names = []
     for cred in credentials:
         rendered_credential_list.append(render_credential_template(cred))
-        credentials_list.append(get_cred_var_name(cred.name))
+        credential_names.append(get_cred_var_name(cred.name))
     # get mapping used for rendering task_tree template
 
     root_node, task_child_map, decision_tasks, while_loop_tasks = get_task_order(
@@ -83,6 +87,8 @@ def render_runbook_template(
             CONFIG_SPEC_MAP,
             decision_tasks,
             while_tasks=while_loop_tasks,
+            credentials_list=credentials_list,
+            rendered_credential_list=rendered_credential_list,
         )
     )
     variables = []
@@ -93,6 +99,8 @@ def render_runbook_template(
                 entity_context,
                 credentials_list=credentials_list,
                 rendered_credential_list=rendered_credential_list,
+                endpoints=endpoints,
+                ep_list=ep_list,
             )
         )
     secret_files = get_secret_variable_files()
@@ -104,6 +112,8 @@ def render_runbook_template(
     if while_loop_tasks:
         import_status = True
 
+    credential_names.extend([cred["name_in_file"] for cred in credentials_list])
+
     # runbook project reference
     project_name = metadata_obj.project["name"]
     user_attrs = {
@@ -111,7 +121,7 @@ def render_runbook_template(
         "description": runbook_cls.__doc__ or "",
         "secret_files": secret_files,
         "endpoints": endpoints,
-        "credentials_list": credentials_list,
+        "credentials_list": credential_names,
         "credentials": rendered_credential_list,
         "tasks": tasks,
         "variables": variables,
@@ -119,6 +129,18 @@ def render_runbook_template(
         "import_status": import_status,
         "default_endpoint_name": default_endpoint_name,
     }
+
+    runbook_outputs = getattr(runbook_cls, "outputs", [])
+    if runbook_outputs:
+        outputs = []
+        for output in runbook_cls.outputs:
+            var_template = render_variable_template(
+                output,
+                entity_context,
+                variable_context="output_variable",
+            )
+            outputs.append(modify_var_format(var_template))
+        user_attrs["outputs"] = outputs
 
     gui_display_name = getattr(runbook_cls, "name", "") or runbook_cls.__name__
     if gui_display_name != runbook_cls.__name__:

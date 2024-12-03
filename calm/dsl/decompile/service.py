@@ -41,7 +41,12 @@ def render_service_template(cls, secrets_dict=[], endpoints=[], ep_list=[]):
     for entity in user_attrs.get("variables", []):
         variable_list.append(
             render_variable_template(
-                entity, entity_context, context=context, secrets_dict=secrets_dict
+                entity,
+                entity_context,
+                context=context,
+                secrets_dict=secrets_dict,
+                endpoints=endpoints,
+                ep_list=ep_list,
             )
         )
 

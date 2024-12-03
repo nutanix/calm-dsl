@@ -174,6 +174,14 @@ class CacheTableBase(BaseModel):
         )
 
     @classmethod
+    def add_one_by_entity_dict(cls, entity):
+        raise NotImplementedError(
+            "add_one_by_entity_dict method not implemented for {} table".format(
+                cls.get_cache_type()
+            )
+        )
+
+    @classmethod
     def delete_one(cls, uuid, **kwargs):
         raise NotImplementedError(
             "delete_one helper not implemented for {} table".format(
@@ -436,6 +444,8 @@ class ProviderCache(CacheTableBase):
     infra_type = CharField()
     state = CharField()
     auth_schema_list = BlobField()
+    variable_list = BlobField()
+    endpoint_schema = BlobField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self, *args, **kwargs):
@@ -448,8 +458,47 @@ class ProviderCache(CacheTableBase):
             "parent_uuid": self.parent_uuid,
             "use_parent_auth": self.use_parent_auth,
             "auth_schema_list": json.loads(self.auth_schema_list),
+            "variable_list": json.loads(self.variable_list),
+            "endpoint_schema": json.loads(self.endpoint_schema),
             "last_update_time": self.last_update_time,
         }
+
+    @classmethod
+    def _get_dict_for_db_upsert(cls, entity):
+        return {
+            "name": entity["status"]["name"],
+            "uuid": entity["metadata"]["uuid"],
+            "_type": entity["status"]["resources"].get("type", ""),
+            "infra_type": entity["status"]["resources"].get("infra_type", ""),
+            "parent_uuid": entity["status"]["resources"]
+            .get("parent_reference", {})
+            .get("uuid", ""),
+            "use_parent_auth": entity["status"]["resources"].get(
+                "use_parent_auth", False
+            ),
+            "auth_schema_list": json.dumps(
+                entity["status"]["resources"].get("auth_schema_list", {})
+            ),
+            "variable_list": json.dumps(
+                entity["status"]["resources"].get("variable_list", {})
+            ),
+            "endpoint_schema": json.dumps(
+                entity["status"]["resources"].get("endpoint_schema", {})
+            ),
+            "state": entity["status"]["state"],
+        }
+
+    @classmethod
+    def add_one_by_entity_dict(cls, entity):
+        """adds one entry to provider table"""
+        db_data = cls._get_dict_for_db_upsert(entity)
+        cls.create_entry(**db_data)
+
+    @classmethod
+    def delete_one(cls, uuid, **kwargs):
+        """deletes one provider entity from cache"""
+        obj = cls.get(cls.uuid == uuid)
+        obj.delete_instance()
 
     @classmethod
     def clear(cls):
@@ -491,6 +540,8 @@ class ProviderCache(CacheTableBase):
         use_parent_auth = kwargs.get("use_parent_auth", False)
         state = kwargs.get("state", "")
         auth_schema_list = kwargs.get("auth_schema_list", "[]")
+        variable_list = kwargs.get("variable_list", "[]")
+        endpoint_schema = kwargs.get("endpoint_schema", "{}")
 
         super().create(
             name=name,
@@ -501,6 +552,8 @@ class ProviderCache(CacheTableBase):
             state=state,
             use_parent_auth=use_parent_auth,
             auth_schema_list=auth_schema_list,
+            variable_list=variable_list,
+            endpoint_schema=endpoint_schema,
         )
 
     @classmethod
@@ -513,29 +566,24 @@ class ProviderCache(CacheTableBase):
         client = get_api_client()
         payload = {"length": 250, "filter": ""}
 
+        ContextObj = get_context()
+        stratos_status = ContextObj.get_stratos_config().get("stratos_status", False)
+        cp_status = ContextObj.get_cp_config().get("cp_status", False)
+        if cp_status:
+            additional_fltr = "type==SYS_CUSTOM|CUSTOM|CREDENTIAL|SYS_CREDENTIAL"
+            if not stratos_status:  # Exclude NDB provider if stratos is not enabled
+                additional_fltr += ";name!=NDB"
+            payload["filter"] = additional_fltr
+        elif stratos_status:
+            payload["filter"] = "type==SYS_CUSTOM|CUSTOM|CREDENTIAL|SYS_CREDENTIAL"
+
         res, err = client.provider.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
         for entity in res.get("entities", []):
-            query_obj = {
-                "name": entity["status"]["name"],
-                "uuid": entity["metadata"]["uuid"],
-                "_type": entity["status"]["resources"].get("type", ""),
-                "infra_type": entity["status"]["resources"].get("infra_type", ""),
-                "parent_uuid": entity["status"]["resources"]
-                .get("parent_reference", {})
-                .get("uuid", ""),
-                "use_parent_auth": entity["status"]["resources"].get(
-                    "use_parent_auth", False
-                ),
-                "auth_schema_list": json.dumps(
-                    entity["status"]["resources"].get("auth_schema_list", {})
-                ),
-                "state": entity["status"]["state"],
-            }
-
+            query_obj = cls._get_dict_for_db_upsert(entity)
             cls.create_entry(**query_obj)
 
     @classmethod
@@ -577,6 +625,36 @@ class ResourceTypeCache(CacheTableBase):
     provider_name = CharField()
     action_list = BlobField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    @classmethod
+    def _get_dict_for_db_upsert(cls, entity):
+        return {
+            "name": entity["status"]["name"],
+            "uuid": entity["metadata"]["uuid"],
+            "state": entity["status"]["state"],
+            "_type": entity["status"]["resources"].get("type", ""),
+            "tags": json.dumps(entity["status"]["resources"].get("tags", [])),
+            "provider_uuid": entity["status"]["resources"]
+            .get("provider_reference", {})
+            .get("uuid", ""),
+            "provider_name": entity["status"]["resources"]
+            .get("provider_reference", {})
+            .get("name", ""),
+            "action_list": json.dumps(
+                entity["status"]["resources"].get("action_list", [])
+            ),
+        }
+
+    @classmethod
+    def add_one_by_entity_dict(cls, entity):
+        """adds one entry to provider table"""
+        db_data = cls._get_dict_for_db_upsert(entity)
+        cls.create_entry(**db_data)
+
+    @classmethod
+    def delete_by_provider(cls, provider_name):
+        query = cls.delete().where(cls.provider_name == provider_name)
+        return query.execute()
 
     def get_detail_dict(self, *args, **kwargs):
         return {
@@ -671,11 +749,20 @@ class ResourceTypeCache(CacheTableBase):
         }
 
         ContextObj = get_context()
-        stratos_config = ContextObj.get_stratos_config()
-        if stratos_config.get("stratos_status", False):
+        stratos_status = ContextObj.get_stratos_config().get("stratos_status", False)
+        cp_status = ContextObj.get_cp_config().get("cp_status", False)
+        if cp_status:
+            additional_fltr = (
+                "provider_type==SYS_CUSTOM|CUSTOM|CREDENTIAL|SYS_CREDENTIAL"
+            )
+            if not stratos_status:  # Exclude NDB provider if stratos is not enabled
+                additional_fltr += ";provider_name!=NDB"
+            payload["filter"] = additional_fltr
+
+        elif stratos_status:
             payload[
                 "filter"
-            ] += ";provider_type==SYS_CUSTOM|CUSTOM|CREDENTIAL|SYS_CREDENTIAL"
+            ] = "provider_type==SYS_CUSTOM|CUSTOM|CREDENTIAL|SYS_CREDENTIAL"
 
         res, err = client.resource_types.list(payload)
         if err:
@@ -683,22 +770,7 @@ class ResourceTypeCache(CacheTableBase):
 
         res = res.json()
         for entity in res.get("entities", []):
-            query_obj = {
-                "name": entity["status"]["name"],
-                "uuid": entity["metadata"]["uuid"],
-                "state": entity["status"]["state"],
-                "_type": entity["status"]["resources"].get("type", ""),
-                "tags": json.dumps(entity["status"]["resources"].get("tags", [])),
-                "provider_uuid": entity["status"]["resources"]
-                .get("provider_reference", {})
-                .get("uuid", ""),
-                "provider_name": entity["status"]["resources"]
-                .get("provider_reference", {})
-                .get("name", ""),
-                "action_list": json.dumps(
-                    entity["status"]["resources"].get("action_list", [])
-                ),
-            }
+            query_obj = cls._get_dict_for_db_upsert(entity)
             cls.create_entry(**query_obj)
 
     @classmethod

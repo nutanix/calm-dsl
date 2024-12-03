@@ -1,5 +1,7 @@
+{% import "status_handle.py.jinja2" as status_handle %}
+
 {%- macro while_task(obj) -%}
-CalmTask.Loop(name='{{obj.name}}', iterations="{{obj.attrs.iterations}}", exit_condition={{obj.attrs.exit_condition_type}}, loop_variable='{{obj.attrs.loop_variable}}')
+CalmTask.Loop(name='{{obj.name}}', iterations={{obj.attrs.iterations}}, exit_condition={{obj.attrs.exit_condition_type}}, loop_variable='{{obj.attrs.loop_variable}}' {%- if obj.status_map_list %}, status_map_list=[{%- for status_map in obj.status_map_list %}{%- if status_map.type == "status" %}{{ status_handle.task_status(status_map) }}{% endif %}{%- endfor %}] {%- endif %})
 {%- endmacro %}
 
 {{ while_task(obj) }}

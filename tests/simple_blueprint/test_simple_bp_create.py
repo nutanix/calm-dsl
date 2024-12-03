@@ -8,10 +8,13 @@ from click.testing import CliRunner
 from calm.dsl.cli import main as cli
 from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins import read_local_file
+from calm.dsl.api import get_api_client
 
 # for tcs
 from calm.dsl.store import Version
 from distutils.version import LooseVersion as LV
+from tests.helper.status_map_helper import remove_status_map_from_bp
+from tests.helper.output_variables_helper import remove_output_variables_from_bp
 
 # Setting the recursion limit to max for
 sys.setrecursionlimit(100000)
@@ -31,15 +34,47 @@ DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
 SUBNET_UUID = NTNX_LOCAL_ACCOUNT["SUBNETS"][0]["UUID"]
 
+# Endpoint file used to create endpoints for runbook used in scheduler test
+DSL_EP_PATH = "tests/cli/endpoints/http_endpoint.py"
+CALM_ENDPOINT_NAME = "DND-Http-Endpoint"
+
 
 class TestSimpleBlueprint:
     def setup_method(self):
         """Method to instantiate to created_bp_list"""
 
+        # Method to create endpoint
+        client = get_api_client()
+        self.endpoint = CALM_ENDPOINT_NAME
+
+        # Check if there is existing endpoint with this name
+        payload = {"filter": "name=={}".format(self.endpoint)}
+        res, _ = client.endpoint.list(payload)
+        res = res.json()
+
+        if res["metadata"]["total_matches"] > 0:
+            return
+
+        # If there is no endpoint, create one
+        LOG.info("Creating Endpoint {}".format(self.endpoint))
+        runner = CliRunner()
+        result = runner.invoke(
+            cli, ["create", "endpoint", "-f", DSL_EP_PATH, "-n", self.endpoint]
+        )
+        assert result.exit_code == 0
+        LOG.info("Successult Created Endoint {}".format(self.endpoint))
+
         self.created_bp_list = []
 
     def teardown_method(self):
         """Method to delete creates bps and apps during tests"""
+
+        # Method to delete endpoint
+
+        LOG.info("Deleting Endpoint {}".format(self.endpoint))
+        runner = CliRunner()
+        result = runner.invoke(cli, ["delete", "endpoint", self.endpoint])
+        assert result.exit_code == 0
 
         for bp_name in self.created_bp_list:
             LOG.info("Deleting Blueprint {}".format(bp_name))
@@ -148,5 +183,10 @@ class TestSimpleBlueprint:
 
         # Pop the project referecne from metadata
         generated_json["metadata"].pop("project_reference", None)
+        if LV(CALM_VERSION) < LV("3.9.0"):
+            remove_status_map_from_bp(known_json["spec"]["resources"])
+
+        remove_output_variables_from_bp(known_json["spec"]["resources"])
+        remove_output_variables_from_bp(generated_json["spec"]["resources"])
 
         assert sorted(known_json.items()) == sorted(generated_json.items())

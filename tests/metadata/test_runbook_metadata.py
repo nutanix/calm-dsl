@@ -18,6 +18,7 @@ DSL_RUNBOOK_FILEPATH = "tests/metadata/runbook/runbook.py"
 LOCAL_PROJECTNAME_FILE = "tests/metadata/runbook/.local/project_name"
 
 
+@pytest.mark.quotas
 class TestRunbookMetadata:
     def setup_method(self):
         """

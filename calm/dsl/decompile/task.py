@@ -1,5 +1,6 @@
 import os
 import sys
+import uuid
 
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.ndb import get_schema_file_and_user_attrs
@@ -33,6 +34,8 @@ def render_task_template(
     secrets_dict=[],
     credentials_list=[],
     rendered_credential_list=[],
+    use_calm_var_task=False,
+    ignore_cred_dereference_error=False,
 ):
     LOG.debug("Rendering {} task template".format(cls.name))
     if not isinstance(cls, TaskType):
@@ -55,11 +58,21 @@ def render_task_template(
 
     cred = cls.attrs.get("login_credential_local_reference", None)
     if cred:
-        user_attrs["cred"] = "ref({})".format(
-            get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
-        )
+        try:
+            user_attrs["cred"] = "ref({})".format(
+                get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
+            )
+        except ValueError as ve:
+            if ignore_cred_dereference_error:
+                LOG.debug("Ignoring cred not found error for RTOpTask")
+            else:
+                raise Exception(ve)
+    status_map_list = getattr(cls, "status_map_list", [])
+    if status_map_list:
+        user_attrs["status_map_list"] = status_map_list
 
     if cls.type == "EXEC":
+        user_attrs["calm_var_task"] = use_calm_var_task
         script_type = cls.attrs["script_type"]
         cls.attrs["script_file"] = create_script_file(
             script_type, cls.attrs["script"], entity_context
@@ -120,7 +133,7 @@ def render_task_template(
         elif scaling_type == "SCALEIN":
             schema_file = "task_scaling_scalein.py.jinja2"
     elif cls.type == "HTTP":
-        user_attrs["calm_var_task"] = False
+        user_attrs["calm_var_task"] = use_calm_var_task
         if "Runbook" in entity_context:
             if user_attrs.get("attrs", {}).get("url", ""):
 
@@ -132,7 +145,9 @@ def render_task_template(
         attrs = cls.attrs
         user_attrs["headers"] = {}
         user_attrs["secret_headers"] = {}
-        user_attrs["status_mapping"] = {}
+        user_attrs["response_code_status_map"] = attrs.get(
+            "expected_response_params", []
+        )
 
         for var in attrs.get("headers", []):
             var_type = var["type"]
@@ -149,33 +164,46 @@ def render_task_template(
                     }
                 )
 
-        for status in attrs.get("expected_response_params", []):
-            user_attrs["status_mapping"][status["code"]] = (
-                True if status["status"] == "SUCCESS" else False
-            )
-
         # Store auth objects
         auth_obj = attrs.get("authentication", {})
         auth_type = auth_obj.get("type", "")
         if auth_type == "basic_with_cred":
             auth_cred = auth_obj.get("credential_local_reference", None)
             if auth_cred:
-                user_attrs["cred"] = "ref({})".format(
-                    get_cred_var_name(
-                        getattr(auth_cred, "name", "") or auth_cred.__name__
+                try:
+                    user_attrs["cred"] = "ref({})".format(
+                        get_cred_var_name(
+                            getattr(auth_cred, "name", "") or auth_cred.__name__
+                        )
                     )
-                )
+                except ValueError as ve:
+                    if ignore_cred_dereference_error:
+                        LOG.debug("Ignoring cred not found error for RTOpTask")
+                    else:
+                        raise Exception(ve)
         elif auth_type == "basic":
             cred_dict = {
                 "username": auth_obj["username"],
                 "password": auth_obj["password"],
                 "type": "PASSWORD",
+                "name": "Credential" + str(uuid.uuid4())[:8],
             }
             cred = CredentialType.decompile(cred_dict)
-            rendered_credential_list.append(render_credential_template(cred))
+            rendered_credential_list.append(
+                render_credential_template(
+                    cred,
+                    context="PROVIDER"
+                    if (
+                        entity_context.startswith("CloudProvider")
+                        or entity_context.startswith("ResourceType")
+                    )
+                    else "BP",
+                )
+            )
             cred = get_cred_var_name(cred.name)
             user_attrs["credentials_list"] = cred
-            credentials_list.append(cred)
+            cred_dict["name_in_file"] = cred
+            credentials_list.append(cred_dict)
 
         user_attrs["response_paths"] = attrs.get("response_paths", {})
         method = attrs["method"]
@@ -193,10 +221,10 @@ def render_task_template(
             schema_file = "task_http_put.py.jinja2"
 
         elif method == "DELETE":
-            # TODO remove it from here
-            if not cls.attrs["request_body"]:
-                cls.attrs["request_body"] = {}
             schema_file = "task_http_delete.py.jinja2"
+
+        if cls.attrs["request_body"] != None:
+            cls.attrs["request_body"] = repr(cls.attrs["request_body"])
 
     elif cls.type == "CALL_RUNBOOK":
         is_power_action = False
@@ -242,15 +270,12 @@ def render_task_template(
         }
         schema_file = "task_call_config.py.jinja2"
     elif cls.type == "RT_OPERATION":
-        acc_name = cls.attrs["account_reference"]["name"]
-        tag = cls.attrs.get("tag", "")
-        if tag == "Database":
-            schema_file, user_attrs = get_schema_file_and_user_attrs(
-                cls.name, cls.attrs, acc_name
-            )
-        else:
-            LOG.error("Tag {} not supported for RT operation".format(tag))
-            sys.exit("Tag {} not supported for RT operation".format(tag))
+        schema_file, user_attrs = get_schema_file_and_user_attrs(
+            cls.name,
+            cls.attrs,
+            credentials_list=credentials_list,
+            rendered_credential_list=rendered_credential_list,
+        )
     elif cls.type == "DECISION":
         script_type = cls.attrs["script_type"]
         cls.attrs["script_file"] = create_script_file(
