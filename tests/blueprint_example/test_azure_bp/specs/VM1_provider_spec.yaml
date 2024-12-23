@@ -1,0 +1,85 @@
+name: ''
+resources:
+  account_uuid: 09d3ba78-2744-4871-9a0c-43cef26112ef
+  availability_option: ''
+  availability_set_id: ''
+  availability_zone: ''
+  hw_profile:
+    max_data_disk_count: 8
+    type: ''
+    vm_size: Standard_D11_v2
+  location: eastus
+  nw_profile:
+    nic_list:
+    - asg_list: []
+      enable_ip_forwarding: false
+      nic_name: nic-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0
+      nsg_id: "/subscriptions/c88c75b1-c860-411e-b920-a48d02a8ce45/resourceGroups/9f24615034/providers/Microsoft.Network/networkSecurityGroups/Beeeee\xE2\
+        -nsg"
+      nsg_name: ''
+      private_ip_info:
+        ip_address: ''
+        ip_allocation_method: Dynamic
+        type: ''
+      public_ip_info:
+        dns_label: dns-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0
+        ip_allocation_method: Dynamic
+        ip_name: public-ip-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0
+        type: ''
+      subnet_id: /subscriptions/c88c75b1-c860-411e-b920-a48d02a8ce45/resourceGroups/9f24615034/providers/Microsoft.Network/virtualNetworks/9f24615034-vnet/subnets/default
+      subnet_name: ''
+      type: ''
+      vnet_id: /subscriptions/c88c75b1-c860-411e-b920-a48d02a8ce45/resourceGroups/9f24615034/providers/Microsoft.Network/virtualNetworks/9f24615034-vnet
+      vnet_name: ''
+    primary_nic: -1
+    type: ''
+  os_profile:
+    linux_config:
+      custom_data: ''
+      disable_password_auth: false
+      public_keys: []
+      type: ''
+    secrets: []
+    type: ''
+    windows_config:
+      additional_unattend_content: []
+      auto_updates: false
+      provision_vm_agent: true
+      time_zone: ''
+      type: ''
+      winrm_listeners: []
+  resource_group: /subscriptions/c88c75b1-c860-411e-b920-a48d02a8ce45/resourceGroups/calmrg1
+  rg_details:
+    delete_rg_if_empty: false
+    rg_location: ''
+    rg_tag_list: []
+    type: ''
+  rg_operation: use_existing
+  storage_profile:
+    data_disk_list: []
+    image_details:
+      offer: nginx-plus-v1-standard
+      publisher: nginxinc
+      sku: nginx-plus-rhel7
+      source_image_id: ''
+      source_image_type: Marketplace
+      type: ''
+      version: 3.0.0
+    is_managed: true
+    os_disk_details:
+      caching_type: ReadWrite
+      create_option: FromImage
+      lun: -1
+      name: os-@@{calm_random_hash}@@-@@{calm_array_index}@@-disk
+      size_in_gb: 32
+      storage_name: ''
+      storage_type: Standard_LRS
+      type: ''
+    type: ''
+  tag_list:
+  - key: tag
+    type: ''
+    value: value
+  type: ''
+  vm_name: testvm-@@{calm_random_hash}@@
+type: PROVISION_AZURE_VM

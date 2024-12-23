@@ -8,6 +8,7 @@ import json
 import traceback
 from distutils.version import LooseVersion as LV
 from tests.utils import get_vpc_project
+from tests.cli.test_utils import DelayedAssert
 from calm.dsl.cli import main as cli
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.cli.marketplace import (
@@ -21,15 +22,23 @@ from calm.dsl.cli.constants import MARKETPLACE_ITEM
 from calm.dsl.log import get_logging_handle
 from tests.utils import Application as ApplicationHelper
 from calm.dsl.store import Version
+from tests.constants import PROVIDER, BP_SPEC
 
 LOG = get_logging_handle(__name__)
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 CALM_VERSION = Version.get_version("Calm")
+CLUSTER = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]["SUBNETS"][1]["CLUSTER"]
 APP_ICON_IMAGE_PATH = "tests/cli/images/test_app_icon.jpg"
 DSL_BP_FILEPATH = "tests/existing_vm_example/test_existing_vm_bp.py"
 DSL_BP_WITH_OVERLAY_SUBNETS = (
     "tests/ahv_vm_overlay_subnet/test_overlay_subnet_blueprint.py"
 )
 DSL_BP_EDITABLE_PARAMS = "tests/existing_vm_example/existing_vm_bp_editable_params.py"
+DSL_AHV_BP_FILEPATH = "tests/blueprint_example/test_ahv_bp/blueprint.py"
+DSL_VMW_BP_FILEPATH = "tests/blueprint_example/test_vmware_bp/blueprint.py"
+DSL_AWS_BP_FILEPATH = "tests/blueprint_example/test_aws_bp/blueprint.py"
+DSL_AZURE_BP_FILEPATH = "tests/blueprint_example/test_azure_bp/blueprint.py"
+DSL_GCP_BP_FILEPATH = "tests/blueprint_example/test_gcp_bp/blueprint.py"
 
 APP_STATES = [
     MARKETPLACE_ITEM.STATES.PENDING,
@@ -1297,6 +1306,706 @@ class TestMarketplaceBPCommands:
         LOG.info("Success")
 
         self._delete_mpi()
+
+    @pytest.mark.slow
+    @pytest.mark.parametrize(
+        "provider, BP_PATH",
+        [
+            ("AHV", DSL_AHV_BP_FILEPATH),
+            ("VMW", DSL_VMW_BP_FILEPATH),
+            ("AWS", DSL_AWS_BP_FILEPATH),
+            ("GCP", DSL_GCP_BP_FILEPATH),
+            ("AZURE", DSL_AZURE_BP_FILEPATH),
+        ],
+    )
+    def test_mpi_launch_without_platfrom_dependant_fields(self, provider, BP_PATH):
+        """
+        Metadata:
+            Summary: This test verifies launching of marketplace blueprint without platform_dependant_fields
+            Priority: $P0
+            Steps:
+                - 1. Create a blueprint
+                - 2. Publish the blueprint to marketplace manager
+                - 3. Launch the blueprint in PENDING state and delete the app
+                - 4. Approve the blueprint
+                - 5. Launch the blueprint in ACCEPTED state and delete the app
+                - 6. Publish the blueprint in marketplace
+                - 7. Launch the mpi and delete the app
+                - 8. Delete the blueprint
+                - ExpectedResults
+                    - Publish the blueprint to marketplace manager without platform_dependant_fields should be successful
+                    - Launching of marketplace blueprint without platform_dependant_fields should be successful
+
+        """
+        # Create a blueprint
+
+        proj_name = BP_SPEC.PROJECT_NAME_DEFAULT
+        self._create_bp(BP_PATH)
+        self.created_bp_list.append(self.created_dsl_bp_name)
+        self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(
+            str(uuid.uuid4())[-10:]
+        )
+        self.mpi1_version = "1.0.0"
+
+        # Publish the blueprint to marketplace manager without platform_dependant_fields
+
+        LOG.info(
+            "Publishing Bp {} as new marketplace blueprint {}".format(
+                self.created_dsl_bp_name, self.marketplace_bp_name
+            )
+        )
+        command = [
+            "publish",
+            "bp",
+            self.created_dsl_bp_name,
+            "--version",
+            self.mpi1_version,
+            "--name",
+            self.marketplace_bp_name,
+            "--without-platform-data",
+        ]
+        runner = CliRunner()
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail(
+                "Publishing of marketplace blueprint as new marketplace item failed"
+            )
+        LOG.info("Success")
+
+        # Approve the blueprint
+
+        LOG.info(
+            "Approving marketplace blueprint {} with version {}".format(
+                self.marketplace_bp_name, self.mpi1_version
+            )
+        )
+        command = [
+            "approve",
+            "marketplace",
+            "bp",
+            self.marketplace_bp_name,
+            "--version",
+            self.mpi1_version,
+        ]
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Approving of marketplace blueprint failed")
+        LOG.info("Success")
+
+        # Publish the blueprint to marketplace
+
+        LOG.info(
+            "Publishing marketplace blueprint {} with version {} to marketplace".format(
+                self.marketplace_bp_name, self.mpi1_version
+            )
+        )
+        command = [
+            "publish",
+            "marketplace",
+            "bp",
+            self.marketplace_bp_name,
+            "--version",
+            self.mpi1_version,
+            "--project",
+            proj_name,
+        ]
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Publishing of marketplace blueprint to marketplace failed")
+        LOG.info("Success")
+
+        # Verify MPI published is blank for platform_dependant_fields
+
+        LOG.info(
+            "Verifying Marketplace Item {} with version {} is published without platform dependent feilds".format(
+                self.marketplace_bp_name, self.mpi1_version
+            )
+        )
+        command = [
+            "describe",
+            "marketplace",
+            "item",
+            self.marketplace_bp_name,
+            "--out=json",
+        ]
+        runner = CliRunner()
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Describe of marketplace blueprint in PUBLISHED state failed")
+
+        self._verify_platform_dependent_fields_mpi(provider, result.output)
+
+        # Launching the bp in PUBLISHED state(Marketplace Item)
+        self.published_mpbp_app_name = "Test_MPI_APP_{}".format(str(uuid.uuid4())[-10:])
+        LOG.info(
+            "Launching Marketplace Item {} with version {}".format(
+                self.marketplace_bp_name, self.mpi1_version
+            )
+        )
+
+        command = [
+            "launch",
+            "marketplace",
+            "item",
+            self.marketplace_bp_name,
+            "--version",
+            self.mpi1_version,
+            "--project",
+            proj_name,
+            "--app_name",
+            self.published_mpbp_app_name,
+            "-i",
+        ]
+        runner = CliRunner()
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Launching of marketplace blueprint in PUBLISHED state failed")
+        self.created_app_list.append(self.published_mpbp_app_name)
+
+        # verify mpi patching from environment
+        command = [
+            "describe",
+            "app",
+            self.published_mpbp_app_name,
+            "--out=json",
+        ]
+        runner = CliRunner()
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Describe of marketplace app in PUBLISHED state failed")
+
+        self._verify_platform_dependent_fields_app(provider, result.output)
+        LOG.info("Success")
+
+        # Unpublish marketplace blueprint from marketplace
+        LOG.info(
+            "Unpublishing marketplace blueprint {} with version {}".format(
+                self.marketplace_bp_name, self.mpi1_version
+            )
+        )
+        command = [
+            "unpublish",
+            "marketplace",
+            "bp",
+            self.marketplace_bp_name,
+            "--version",
+            self.mpi1_version,
+        ]
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail(
+                "Unpublishing of marketplace blueprint in PUBLISHED state failed"
+            )
+        LOG.info("Success")
+
+        self._delete_mpi()
+
+    def _verify_platform_dependent_fields_mpi(self, provider, result):
+        """
+        Verifies platform-dependent fields in the marketplace blueprint configuration.
+
+        This function checks the presence of specific fields in the marketplace
+        blueprint configuration based on the provider type. It asserts that the expected
+        fields are present in the result string.
+
+        Args:
+            provider (str): The provider type (e.g., "AHV", "VMW").
+            result (str): The JSON string containing the marketplace blueprint configuration.
+
+        Raises:
+            AssertionError: If any of the expected fields are not found in the result.
+        """
+        expect = DelayedAssert()
+        result = json.loads(result)
+        if provider == "AHV":
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["nic_list"][0]["subnet_reference"]
+                == {}
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["categories"]
+                == {}
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["cluster_reference"]
+                == {}
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["disk_list"][0]["data_source_reference"]
+                == {}
+            )
+
+        elif provider == "VMW":
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["nic_list"][0]["net_name"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["nic_list"][0]["nic_type"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["tag_list"][0]["tag_id"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["template_nic_list"]
+                == []
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["template_disk_list"]
+                == []
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["template_controller_list"]
+                == []
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["datastore"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["template"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["host"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["cluster"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["storage_pod"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["storage_drs_mode"]
+                is None
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["compute_drs_mode"]
+                is None
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["library"]
+                is None
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["compute_drs_mode"]
+                is None
+            )
+
+        elif provider == "AWS":
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["security_group_list"][0]["security_group_id"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["image_id"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["key_name"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["region"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["instance_profile_name"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["subnet_id"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["vpc_id"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["availability_zone_reference"]
+                is None
+            )
+
+        elif provider == "GCP":
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["disks"][0]["source"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["disks"][0]["initializeParams"]["sourceImage"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["networkInterfaces"][0]["network"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["networkInterfaces"][0]["subnetwork"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["serviceAccounts"][0]["email"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["tags"]["items"]
+                == []
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["machineType"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["zone"]
+                == ""
+            )
+
+        elif provider == "AZURE":
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["storage_profile"]["image_details"]["publisher"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["storage_profile"]["image_details"]["offer"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["storage_profile"]["image_details"]["sku"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["storage_profile"]["image_details"]["version"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["storage_profile"]["image_details"]["source_image_type"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["storage_profile"]["image_details"]["source_image_id"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["nw_profile"]["nic_list"][0]["nsg_name"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["nw_profile"]["nic_list"][0]["vnet_name"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["nw_profile"]["nic_list"][0]["subnet_name"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["nw_profile"]["nic_list"][0]["nsg_id"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["nw_profile"]["nic_list"][0]["vnet_id"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["nw_profile"]["nic_list"][0]["subnet_id"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["nw_profile"]["nic_list"][0]["asg_list"]
+                == []
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["resource_group"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["location"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["availability_set_id"]
+                == ""
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["rg_details"]
+                == {}
+            )
+            expect.expect(
+                result["spec"]["resources"]["substrate_definition_list"][0][
+                    "create_spec"
+                ]["resources"]["rg_operation"]
+                == ""
+            )
+
+        expect.assert_expectations()
+
+    def _verify_platform_dependent_fields_app(self, provider, result):
+        """
+        Verifies platform-dependent fields in the application configuration.
+
+        This function checks the presence of specific fields in the application
+        configuration based on the provider type. It asserts that the expected
+        fields are present in the result string.
+
+        Args:
+            provider (str): The provider type (e.g., "AHV", "VMW").
+            result (str): The JSON string containing the application configuration.
+
+        Raises:
+            AssertionError: If any of the expected fields are not found in the result.
+        """
+        if provider == "AHV":
+            assert PROVIDER.AHV.NIC in result
+            assert PROVIDER.AHV.LINIX_IMAGE in result
+
+        elif provider == "VMW":
+            expected_substrings = [
+                PROVIDER.VMWARE.DND_CENTOS_WITH_NIC_J_TEMPLATE,
+                PROVIDER.VMWARE.DATASTORE,
+                PROVIDER.VMWARE.HOST,
+                PROVIDER.VMWARE.TAG_ID,
+                PROVIDER.VMWARE.VNIC.NET_NAME_API,
+                PROVIDER.VMWARE.VNIC.NIC_TYPE_API,
+                PROVIDER.VMWARE.SCSI_CONTROLLER.CONTROLLER_TYPE_API,
+            ]
+            for substring in expected_substrings:
+                assert substring in result
+
+        elif provider == "AWS":
+            expected_substrings = [
+                PROVIDER.AWS.SECGROUPID,
+                PROVIDER.AWS.AMIID,
+                PROVIDER.AWS.DEFAULT_KEYNAME,
+                PROVIDER.AWS.DEFAULT_REGION,
+                PROVIDER.AWS.DEFAULT_PROFILE,
+                PROVIDER.AWS.DEFAULT_SUBNET,
+                PROVIDER.AWS.DEFAULT_VPC,
+            ]
+            for substring in expected_substrings:
+                assert substring in result
+
+        elif provider == "GCP":
+            expected_substrings = [
+                PROVIDER.GCP.SOURCE_IMAGE,
+                PROVIDER.GCP.NETWORK_NAME,
+                PROVIDER.GCP.SUBNETWORK_NAME,
+                PROVIDER.GCP.CLIENT_EMAIL,
+                PROVIDER.GCP.ITEMS,
+                PROVIDER.GCP.MACHINE_TYPE,
+                PROVIDER.GCP.DEFAULT_ZONE,
+            ]
+            for substring in expected_substrings:
+                assert substring in result
+
+        elif provider == "AZURE":
+            expected_substrings = [
+                PROVIDER.AZURE.PUBLIC_IMAGE_PUBLISHER,
+                PROVIDER.AZURE.PUBLIC_IMAGE_OFFER,
+                PROVIDER.AZURE.PUBLIC_IMAGE_SKU,
+                PROVIDER.AZURE.PUBLIC_IMAGE_VERSION,
+                PROVIDER.AZURE.IMAGE_MARKETPLACE,
+                PROVIDER.AZURE.SECURITY_GROUP,
+                PROVIDER.AZURE.VIRTUAL_NETWORK,
+                PROVIDER.AZURE.SUBNET_NAME,
+                PROVIDER.AZURE.RESOURCE_GROUP,
+                PROVIDER.AZURE.RG_OPERATION,
+                PROVIDER.AZURE.NSG_ID,
+                PROVIDER.AZURE.VNET_ID,
+                PROVIDER.AZURE.SUBNET_ID,
+            ]
+            for substring in expected_substrings:
+                assert substring in result
 
     def test_publish_to_marketplace_flag(self):
         """Test for publish_to_marketplace_flag for publsh command"""
