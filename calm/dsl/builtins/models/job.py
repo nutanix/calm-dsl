@@ -252,7 +252,7 @@ def patch_runbook_runtime_editables(client, runbook):
     return payload
 
 
-def exec_runbook(runbook_name, patch_editables=True):
+def exec_runbook(runbook_name, patch_editables=True, runtime_params_file=False):
     # Get runbook uuid  from name
 
     from calm.dsl.cli import runbooks
@@ -266,10 +266,19 @@ def exec_runbook(runbook_name, patch_editables=True):
 
     runbook = res.json()
     runbook_uuid = runbook["metadata"]["uuid"]
+
+    # do not patch editables if it is False
     if not patch_editables:
         payload = {}
+
+    # patch editables from runtime_param_file.py
+    elif runtime_params_file:
+        payload = runbooks.parse_input_file(client, runbook, runtime_params_file)
+
+    # patch editables from inputs from console
     else:
         payload = patch_runbook_runtime_editables(client, runbook)
+
     return _create_job_executable_payload(
         "runbook", runbook_uuid, "RUNBOOK_RUN", payload, None
     )
