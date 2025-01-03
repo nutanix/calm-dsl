@@ -2071,7 +2071,7 @@ def update_app_migratable_bp(app_name, bp_file):
         click.echo("\n\t".join(res["status"].get("message_list", [])))
 
 
-def decompile_app_migratable_bp(app_name, bp_dir):
+def decompile_app_migratable_bp(app_name, bp_dir, no_format=False):
 
     client = get_api_client()
     params = {"filter": "name=={}".format(app_name)}
@@ -2096,7 +2096,9 @@ def decompile_app_migratable_bp(app_name, bp_dir):
     fix_missing_name_in_reference(res["spec"])
     remove_non_escript_actions_variables(res["spec"]["resources"])
     filter_launch_profile(launch_profile, res["spec"]["resources"])
-    _decompile_bp(bp_payload=res, with_secrets=False, bp_dir=bp_dir)
+    _decompile_bp(
+        bp_payload=res, with_secrets=False, bp_dir=bp_dir, no_format=no_format
+    )
 
 
 def fix_missing_name_in_reference(data):

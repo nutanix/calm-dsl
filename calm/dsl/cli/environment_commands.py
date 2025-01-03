@@ -183,9 +183,19 @@ def _compile_environment_command(env_file, project_name, out):
     default=None,
     help="Environment directory location used for placing decompiled entities",
 )
+@click.option(
+    "--no-format",
+    "-nf",
+    "no_format",
+    is_flag=True,
+    default=False,
+    help="Disable formatting the decompiled environment using black",
+)
 def _decompile_environment_command(
-    name, environment_file, project_name, environment_dir
+    name, environment_file, project_name, environment_dir, no_format
 ):
     """Decompiles environment present on server or json file"""
 
-    decompile_environment_command(name, environment_file, project_name, environment_dir)
+    decompile_environment_command(
+        name, environment_file, project_name, environment_dir, no_format
+    )

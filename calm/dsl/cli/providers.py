@@ -1083,6 +1083,7 @@ def decompile_provider(
     prefix="",
     provider_dir=None,
     passphrase=None,
+    no_format=False,
 ):
     """helper to decompile provider"""
 
@@ -1099,6 +1100,7 @@ def decompile_provider(
             prefix=prefix,
             provider_dir=provider_dir,
             passphrase=passphrase,
+            no_format=no_format,
         )
 
     elif provider_file:
@@ -1108,6 +1110,7 @@ def decompile_provider(
             prefix=prefix,
             provider_dir=provider_dir,
             passphrase=passphrase,
+            no_format=no_format,
         )
 
     else:
@@ -1118,7 +1121,12 @@ def decompile_provider(
 
 
 def decompile_provider_from_server(
-    name, with_secrets=False, prefix="", provider_dir=None, passphrase=None
+    name,
+    with_secrets=False,
+    prefix="",
+    provider_dir=None,
+    passphrase=None,
+    no_format=False,
 ):
     """decompiles the provider by fetching it from server, along with secrets"""
 
@@ -1140,11 +1148,17 @@ def decompile_provider_from_server(
         prefix=prefix,
         provider_dir=provider_dir,
         contains_encrypted_secrets=True if passphrase else False,
+        no_format=no_format,
     )
 
 
 def decompile_provider_from_file(
-    filename, with_secrets=False, prefix="", provider_dir=None, passphrase=None
+    filename,
+    with_secrets=False,
+    prefix="",
+    provider_dir=None,
+    passphrase=None,
+    no_format=False,
 ):
     """decompile provider from local provider file"""
 
@@ -1155,6 +1169,7 @@ def decompile_provider_from_file(
         prefix=prefix,
         provider_dir=provider_dir,
         contains_encrypted_secrets=True if passphrase else False,
+        no_format=no_format,
     )
 
 
@@ -1164,6 +1179,7 @@ def _decompile_provider(
     prefix="",
     provider_dir=None,
     contains_encrypted_secrets=False,
+    no_format=False,
     **kwargs,
 ):
     """decompiles the provider from payload"""
@@ -1186,6 +1202,7 @@ def _decompile_provider(
         with_secrets=with_secrets,
         provider_dir=provider_dir,
         contains_encrypted_secrets=contains_encrypted_secrets,
+        no_format=no_format,
     )
     click.echo(
         "\nSuccessfully decompiled. Directory location: {}. provider location: {}".format(

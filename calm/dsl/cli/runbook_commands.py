@@ -208,10 +208,20 @@ def _compile_runbook_command(runbook_file, out):
     default=None,
     help="Runbook directory location used for placing decompiled entities",
 )
-def _decompile_runbook_command(name, runbook_file, prefix, runbook_dir):
+@click.option(
+    "--no-format",
+    "-nf",
+    "no_format",
+    is_flag=True,
+    default=False,
+    help="Disable formatting the decompiled runbook using black",
+)
+def _decompile_runbook_command(name, runbook_file, prefix, runbook_dir, no_format):
     """Decompiles runbook present on server or json file"""
 
-    decompile_runbook_command(name, runbook_file, prefix, runbook_dir)
+    decompile_runbook_command(
+        name, runbook_file, prefix, runbook_dir, no_format=no_format
+    )
 
 
 @run.command("runbook", feature_min_version="3.0.0", experimental=True)

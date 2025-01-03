@@ -143,11 +143,19 @@ def _describe_app(app_name):
     default=None,
     help="Blueprint directory location used for placing decompiled entities",
 )
+@click.option(
+    "--no-format",
+    "-nf",
+    "no_format",
+    is_flag=True,
+    default=False,
+    help="Disable formatting the decompiled blueprint using black",
+)
 @click.argument("app_name")
-def _decompile_app_migratable_bp(app_name, bp_dir):
+def _decompile_app_migratable_bp(app_name, bp_dir, no_format):
     """Decompile app-blueprint app-actions to be migrated"""
 
-    decompile_app_migratable_bp(app_name, bp_dir)
+    decompile_app_migratable_bp(app_name, bp_dir, no_format)
 
 
 @update.command("app-migratable-bp")

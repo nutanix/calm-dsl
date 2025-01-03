@@ -265,8 +265,16 @@ def _launch_marketplace_bp(
     default=None,
     help="Blueprint directory location used for placing decompiled entities",
 )
+@click.option(
+    "--no-format",
+    "-nf",
+    "no_format",
+    is_flag=True,
+    default=False,
+    help="Disable formatting the decompiled marketplace blueprint using black",
+)
 def _decompile_marketplace_bp(
-    mpi_name, version, project, name, source, with_secrets, bp_dir
+    mpi_name, version, project, name, source, with_secrets, bp_dir, no_format
 ):
     """Decompiles marketplace manager blueprint
 
@@ -285,6 +293,7 @@ def _decompile_marketplace_bp(
         app_source=None,
         with_secrets=with_secrets,
         bp_dir=bp_dir,
+        no_format=no_format,
     )
 
 

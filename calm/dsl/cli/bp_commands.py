@@ -154,10 +154,18 @@ def _compile_blueprint_command(bp_file, brownfield_deployment_file, out):
     default=None,
     help="Blueprint directory location used for placing decompiled entities",
 )
-def _decompile_bp(name, bp_file, with_secrets, prefix, bp_dir, passphrase):
+@click.option(
+    "--no-format",
+    "-nf",
+    "no_format",
+    is_flag=True,
+    default=False,
+    help="Disable formatting the decompiled blueprint using black",
+)
+def _decompile_bp(name, bp_file, with_secrets, prefix, bp_dir, passphrase, no_format):
     """Decompiles blueprint present on server or json file"""
 
-    decompile_bp(name, bp_file, with_secrets, prefix, bp_dir, passphrase)
+    decompile_bp(name, bp_file, with_secrets, prefix, bp_dir, passphrase, no_format)
 
 
 @create.command("bp")

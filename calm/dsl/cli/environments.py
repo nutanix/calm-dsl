@@ -563,7 +563,7 @@ def delete_environment(environment_name, project_name, no_cache_update=False):
 
 
 def decompile_environment_command(
-    name, environment_file, project, environment_dir=None
+    name, environment_file, project, environment_dir=None, no_format=False
 ):
     """helper to decompile environment"""
     if name and environment_file:
@@ -575,12 +575,17 @@ def decompile_environment_command(
 
     if name:
         decompile_environment_from_server(
-            name=name, environment_dir=environment_dir, project=project
+            name=name,
+            environment_dir=environment_dir,
+            project=project,
+            no_format=no_format,
         )
 
     elif environment_file:
         decompile_environment_from_file(
-            filename=environment_file, environment_dir=environment_dir
+            filename=environment_file,
+            environment_dir=environment_dir,
+            no_format=no_format,
         )
     else:
         LOG.error(
@@ -589,7 +594,7 @@ def decompile_environment_command(
         sys.exit("Environment name or file location not provided.")
 
 
-def decompile_environment_from_server(name, environment_dir, project):
+def decompile_environment_from_server(name, environment_dir, project, no_format=False):
     """decompiles the environment by fetching it from server"""
 
     client = get_api_client()
@@ -602,20 +607,24 @@ def decompile_environment_from_server(name, environment_dir, project):
 
     environment = res.json()
     _decompile_environment(
-        environment_payload=environment, environment_dir=environment_dir
+        environment_payload=environment,
+        environment_dir=environment_dir,
+        no_format=no_format,
     )
 
 
-def decompile_environment_from_file(filename, environment_dir):
+def decompile_environment_from_file(filename, environment_dir, no_format=False):
     """decompile environment from local environment file"""
 
     environment_payload = json.loads(open(filename).read())
     _decompile_environment(
-        environment_payload=environment_payload, environment_dir=environment_dir
+        environment_payload=environment_payload,
+        environment_dir=environment_dir,
+        no_format=no_format,
     )
 
 
-def _decompile_environment(environment_payload, environment_dir):
+def _decompile_environment(environment_payload, environment_dir, no_format=False):
     """decompiles the environment from payload"""
 
     environment_name = environment_payload["status"].get("name", "DslEnvironment")
@@ -643,6 +652,7 @@ def _decompile_environment(environment_payload, environment_dir):
         environment_dir=environment_dir,
         metadata_obj=metadata_obj,
         credentials=credentials,
+        no_format=no_format,
     )
     click.echo(
         "\nSuccessfully decompiled. Directory location: {}. Environment location: {}".format(

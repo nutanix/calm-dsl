@@ -81,9 +81,17 @@ def _compile_project_command(project_file, out):
     default=None,
     help="Project directory location used for placing decompiled entities",
 )
-def _decompile_project_command(name, project_file, project_dir):
+@click.option(
+    "--no-format",
+    "-nf",
+    "no_format",
+    is_flag=True,
+    default=False,
+    help="Disable formatting the decompiled project using black",
+)
+def _decompile_project_command(name, project_file, project_dir, no_format):
     """Decompiles project present on server or json file"""
-    decompile_project_command(name, project_file, project_dir)
+    decompile_project_command(name, project_file, project_dir, no_format=no_format)
 
 
 @create.command("project")

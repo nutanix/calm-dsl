@@ -1556,7 +1556,7 @@ def get_project_usage_payload(project_payload, old_project_payload):
     return project_usage_payload
 
 
-def decompile_project_command(name, project_file, project_dir=None):
+def decompile_project_command(name, project_file, project_dir=None, no_format=False):
     """helper to decompile project"""
     if name and project_file:
         LOG.error("Please provide either project file location or server project name")
@@ -1564,16 +1564,22 @@ def decompile_project_command(name, project_file, project_dir=None):
     init_decompile_context()
 
     if name:
-        decompile_project_from_server(name=name, project_dir=project_dir)
+        decompile_project_from_server(
+            name=name, project_dir=project_dir, no_format=no_format
+        )
 
     elif project_file:
-        decompile_project_from_file(filename=project_file, project_dir=project_dir)
+        decompile_project_from_file(
+            filename=project_file,
+            project_dir=project_dir,
+            no_format=no_format,
+        )
     else:
         LOG.error("Please provide either project file location or server project name")
         sys.exit("Project name or file location not provided.")
 
 
-def decompile_project_from_server(name, project_dir):
+def decompile_project_from_server(name, project_dir, no_format=False):
     """decompiles the project by fetching it from server"""
 
     client = get_api_client()
@@ -1581,17 +1587,23 @@ def decompile_project_from_server(name, project_dir):
     LOG.info("Fetching project '{}' details".format(name))
     project = get_project(name)
 
-    _decompile_project(project_payload=project, project_dir=project_dir)
+    _decompile_project(
+        project_payload=project, project_dir=project_dir, no_format=no_format
+    )
 
 
-def decompile_project_from_file(filename, project_dir):
+def decompile_project_from_file(filename, project_dir, no_format=False):
     """decompile project from local project file"""
 
     project_payload = json.loads(open(filename).read())
-    _decompile_project(project_payload=project_payload, project_dir=project_dir)
+    _decompile_project(
+        project_payload=project_payload,
+        project_dir=project_dir,
+        no_format=no_format,
+    )
 
 
-def _decompile_project(project_payload, project_dir):
+def _decompile_project(project_payload, project_dir, no_format=False):
     """decompiles the project from payload"""
 
     try:
@@ -1607,8 +1619,7 @@ def _decompile_project(project_payload, project_dir):
     project_cls.__doc__ = project_description
 
     create_project_dir(
-        project_cls=project_cls,
-        project_dir=project_dir,
+        project_cls=project_cls, project_dir=project_dir, no_format=no_format
     )
     click.echo(
         "\nSuccessfully decompiled. Directory location: {}. Project location: {}".format(

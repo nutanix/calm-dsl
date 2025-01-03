@@ -596,7 +596,14 @@ def launch_marketplace_bp(
 
 
 def decompile_marketplace_bp(
-    name, version, app_source, bp_name, project, with_secrets, bp_dir
+    name,
+    version,
+    app_source,
+    bp_name,
+    project,
+    with_secrets,
+    bp_dir,
+    no_format=False,
 ):
     """decompiles marketplace blueprint"""
 
@@ -646,7 +653,12 @@ def decompile_marketplace_bp(
     bp_cls.__name__ = blueprint_name
     bp_cls.__doc__ = blueprint_description
 
-    create_bp_dir(bp_cls=bp_cls, bp_dir=bp_dir, with_secrets=with_secrets)
+    create_bp_dir(
+        bp_cls=bp_cls,
+        bp_dir=bp_dir,
+        with_secrets=with_secrets,
+        no_format=no_format,
+    )
     click.echo(
         "\nSuccessfully decompiled. Directory location: {}. Blueprint location: {}".format(
             get_bp_dir(), os.path.join(get_bp_dir(), "blueprint.py")

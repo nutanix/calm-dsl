@@ -533,7 +533,13 @@ def create_blueprint_from_dsl_with_encrypted_secrets(
 
 
 def decompile_bp(
-    name, bp_file, with_secrets=False, prefix="", bp_dir=None, passphrase=None
+    name,
+    bp_file,
+    with_secrets=False,
+    prefix="",
+    bp_dir=None,
+    passphrase=None,
+    no_format=False,
 ):
     """helper to decompile blueprint"""
 
@@ -551,15 +557,24 @@ def decompile_bp(
                 prefix=prefix,
                 bp_dir=bp_dir,
                 passphrase=passphrase,
+                no_format=no_format,
             )
         else:
             decompile_bp_from_server(
-                name=name, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
+                name=name,
+                with_secrets=with_secrets,
+                prefix=prefix,
+                bp_dir=bp_dir,
+                no_format=no_format,
             )
 
     elif bp_file:
         decompile_bp_from_file(
-            filename=bp_file, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
+            filename=bp_file,
+            with_secrets=with_secrets,
+            prefix=prefix,
+            bp_dir=bp_dir,
+            no_format=no_format,
         )
 
     else:
@@ -569,7 +584,9 @@ def decompile_bp(
         sys.exit(-1)
 
 
-def decompile_bp_from_server(name, with_secrets=False, prefix="", bp_dir=None):
+def decompile_bp_from_server(
+    name, with_secrets=False, prefix="", bp_dir=None, no_format=False
+):
     """decompiles the blueprint by fetching it from server"""
 
     client = get_api_client()
@@ -600,12 +617,18 @@ def decompile_bp_from_server(name, with_secrets=False, prefix="", bp_dir=None):
         with_secrets=with_secrets,
         prefix=prefix,
         bp_dir=bp_dir,
+        no_format=no_format,
         **kwargs,
     )
 
 
 def decompile_bp_from_server_with_secrets(
-    name, with_secrets=False, prefix="", bp_dir=None, passphrase=None
+    name,
+    with_secrets=False,
+    prefix="",
+    bp_dir=None,
+    passphrase=None,
+    no_format=False,
 ):
     """decompiles the blueprint by fetching it from server"""
 
@@ -638,11 +661,14 @@ def decompile_bp_from_server_with_secrets(
         prefix=prefix,
         bp_dir=bp_dir,
         contains_encrypted_secrets=True,
+        no_format=no_format,
         **kwargs,
     )
 
 
-def decompile_bp_from_file(filename, with_secrets=False, prefix="", bp_dir=None):
+def decompile_bp_from_file(
+    filename, with_secrets=False, prefix="", bp_dir=None, no_format=False
+):
     """decompile blueprint from local blueprint file"""
 
     # ToDo - Fix this
@@ -653,7 +679,11 @@ def decompile_bp_from_file(filename, with_secrets=False, prefix="", bp_dir=None)
     filter_patch_config_tasks(bp_payload["spec"]["resources"])
 
     _decompile_bp(
-        bp_payload=bp_payload, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
+        bp_payload=bp_payload,
+        with_secrets=with_secrets,
+        prefix=prefix,
+        bp_dir=bp_dir,
+        no_format=no_format,
     )
 
 
@@ -663,6 +693,7 @@ def _decompile_bp(
     prefix="",
     bp_dir=None,
     contains_encrypted_secrets=False,
+    no_format=False,
     **kwargs,
 ):
     """decompiles the blueprint from payload"""
@@ -719,6 +750,7 @@ def _decompile_bp(
         metadata_obj=metadata_obj,
         bp_dir=bp_dir,
         contains_encrypted_secrets=contains_encrypted_secrets,
+        no_format=no_format,
     )
     click.echo(
         "\nSuccessfully decompiled. Directory location: {}. Blueprint location: {}".format(

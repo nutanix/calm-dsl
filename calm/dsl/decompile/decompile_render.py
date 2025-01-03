@@ -61,6 +61,7 @@ def create_bp_dir(
     with_secrets=False,
     metadata_obj=None,
     contains_encrypted_secrets=False,
+    no_format=False,
 ):
 
     if not bp_dir:
@@ -75,8 +76,11 @@ def create_bp_dir(
         metadata_obj=metadata_obj,
         contains_encrypted_secrets=contains_encrypted_secrets,
     )
-    LOG.info("Formatting blueprint file using black")
-    bp_data = format_str(bp_data, mode=FileMode())
+
+    if not no_format:
+        LOG.info("Formatting blueprint file using black")
+        bp_data = format_str(bp_data, mode=FileMode())
+
     LOG.info("Creating blueprint file")
     create_bp_file(bp_dir, bp_data)
 
@@ -86,6 +90,7 @@ def create_provider_dir(
     provider_dir=None,
     with_secrets=False,
     contains_encrypted_secrets=False,
+    no_format=False,
 ):
 
     if not provider_dir:
@@ -99,8 +104,11 @@ def create_provider_dir(
         with_secrets=with_secrets,
         contains_encrypted_secrets=contains_encrypted_secrets,
     )
-    LOG.info("Formatting provider file using black")
-    provider_data = format_str(provider_data, mode=FileMode())
+
+    if not no_format:
+        LOG.info("Formatting provider file using black")
+        provider_data = format_str(provider_data, mode=FileMode())
+
     LOG.info("Creating provider file")
     create_provider_file(provider_dir, provider_data)
 
@@ -111,6 +119,7 @@ def create_runbook_dir(
     metadata_obj=None,
     credentials=None,
     default_endpoint=None,
+    no_format=False,
 ):
     if not runbook_dir:
         runbook_dir = os.path.join(os.getcwd(), runbook_cls.__name__)
@@ -125,16 +134,16 @@ def create_runbook_dir(
         default_endpoint=default_endpoint,
     )
 
-    LOG.info("Formatting runbook file using black")
-    runbook_data = format_str(runbook_data, mode=FileMode())
+    if not no_format:
+        LOG.info("Formatting runbook file using black")
+        runbook_data = format_str(runbook_data, mode=FileMode())
+
     LOG.info("Creating runbook file")
     create_runbook_file(runbook_dir, runbook_data)
 
 
 def create_project_dir(
-    project_cls=None,
-    project_dir=None,
-    credentials=None,
+    project_cls=None, project_dir=None, credentials=None, no_format=False
 ):
     if not project_dir:
         project_dir = os.path.join(os.getcwd(), project_cls.__name__)
@@ -147,8 +156,10 @@ def create_project_dir(
         credentials=credentials,
     )
 
-    LOG.info("Formatting project file using black")
-    project_data = format_str(project_data, mode=FileMode())
+    if not no_format:
+        LOG.info("Formatting project file using black")
+        project_data = format_str(project_data, mode=FileMode())
+
     LOG.info("Creating project file")
     create_project_file(project_dir, project_data)
 
@@ -158,6 +169,7 @@ def create_environment_dir(
     environment_dir=None,
     metadata_obj=None,
     credentials=None,
+    no_format=False,
 ):
     if not environment_dir:
         environment_dir = os.path.join(os.getcwd(), environment_cls.__name__)
@@ -171,7 +183,9 @@ def create_environment_dir(
         metadata_obj=metadata_obj,
     )
 
-    LOG.info("Formatting environment file using black")
-    environment_data = format_str(environment_data, mode=FileMode())
+    if not no_format:
+        LOG.info("Formatting environment file using black")
+        environment_data = format_str(environment_data, mode=FileMode())
+
     LOG.info("Creating environment file")
     create_environment_file(environment_dir, environment_data)

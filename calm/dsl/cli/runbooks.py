@@ -190,25 +190,35 @@ def compile_runbook_command(runbook_file, out):
         LOG.error("Unknown output format {} given".format(out))
 
 
-def decompile_runbook_command(name, runbook_file, prefix="", runbook_dir=None):
+def decompile_runbook_command(
+    name, runbook_file, prefix="", runbook_dir=None, no_format=False
+):
     """helper to decompile runbook"""
     if name and runbook_file:
         LOG.error("Please provide either runbook file location or server runbook name")
         sys.exit("Both runbook name and file location provided.")
     init_decompile_context()
     if name:
-        decompile_runbook_from_server(name=name, runbook_dir=runbook_dir, prefix=prefix)
+        decompile_runbook_from_server(
+            name=name,
+            runbook_dir=runbook_dir,
+            prefix=prefix,
+            no_format=no_format,
+        )
 
     elif runbook_file:
         decompile_runbook_from_file(
-            filename=runbook_file, runbook_dir=runbook_dir, prefix=prefix
+            filename=runbook_file,
+            runbook_dir=runbook_dir,
+            prefix=prefix,
+            no_format=no_format,
         )
     else:
         LOG.error("Please provide either runbook file location or server runbook name")
         sys.exit("Runbook name or file location not provided.")
 
 
-def decompile_runbook_from_server(name, runbook_dir, prefix):
+def decompile_runbook_from_server(name, runbook_dir, prefix, no_format=False):
     """decompiles the runbook by fetching it from server"""
 
     client = get_api_client()
@@ -219,19 +229,27 @@ def decompile_runbook_from_server(name, runbook_dir, prefix):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     runbook = res.json()
-    _decompile_runbook(runbook_payload=runbook, runbook_dir=runbook_dir, prefix=prefix)
+    _decompile_runbook(
+        runbook_payload=runbook,
+        runbook_dir=runbook_dir,
+        prefix=prefix,
+        no_format=no_format,
+    )
 
 
-def decompile_runbook_from_file(filename, runbook_dir, prefix):
+def decompile_runbook_from_file(filename, runbook_dir, prefix, no_format=False):
     """decompile runbook from local runbook file"""
 
     runbook_payload = json.loads(open(filename).read())
     _decompile_runbook(
-        runbook_payload=runbook_payload, runbook_dir=runbook_dir, prefix=prefix
+        runbook_payload=runbook_payload,
+        runbook_dir=runbook_dir,
+        prefix=prefix,
+        no_format=no_format,
     )
 
 
-def _decompile_runbook(runbook_payload, runbook_dir, prefix):
+def _decompile_runbook(runbook_payload, runbook_dir, prefix, no_format=False):
     """decompiles the runbook from payload"""
     runbook = runbook_payload["status"]["resources"]["runbook"]
     credential_list = runbook_payload["status"]["resources"][
@@ -264,6 +282,7 @@ def _decompile_runbook(runbook_payload, runbook_dir, prefix):
         metadata_obj=metadata_obj,
         credentials=credentials,
         default_endpoint=default_endpoint,
+        no_format=no_format,
     )
     click.echo(
         "\nSuccessfully decompiled. Directory location: {}. Runbook location: {}".format(

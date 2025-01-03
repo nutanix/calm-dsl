@@ -381,13 +381,27 @@ def _abort_rt_action_execution(runlog_uuid):
     default=None,
     help="Provider directory location used for placing decompiled entities",
 )
+@click.option(
+    "--no-format",
+    "-nf",
+    "no_format",
+    is_flag=True,
+    default=False,
+    help="Disable formatting the decompiled provider using black",
+)
 def _decompile_provider(
-    name, provider_file, with_secrets, prefix, provider_dir, passphrase
+    name, provider_file, with_secrets, prefix, provider_dir, passphrase, no_format
 ):
     """Decompiles provider present on server or json file"""
 
     decompile_provider(
-        name, provider_file, with_secrets, prefix, provider_dir, passphrase
+        name,
+        provider_file,
+        with_secrets,
+        prefix,
+        provider_dir,
+        passphrase,
+        no_format=no_format,
     )
 
 
