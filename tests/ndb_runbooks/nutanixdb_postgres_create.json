@@ -342,7 +342,8 @@
                                     "60",
                                     "90",
                                     "120"
-                                ]
+                                ],
+                                "exec_target_reference": {}
                             },
                             "is_hidden": false,
                             "is_mandatory": false
@@ -365,7 +366,8 @@
                                     "4",
                                     "5",
                                     "6"
-                                ]
+                                ],
+                                "exec_target_reference": {}
                             },
                             "is_hidden": false,
                             "is_mandatory": false
@@ -410,7 +412,8 @@
                                     "26",
                                     "27",
                                     "28"
-                                ]
+                                ],
+                                "exec_target_reference": {}
                             },
                             "is_hidden": false,
                             "is_mandatory": false
@@ -430,7 +433,8 @@
                                     "JANUARY",
                                     "FEBRUARY",
                                     "MARCH"
-                                ]
+                                ],
+                                "exec_target_reference": {}
                             },
                             "is_hidden": false,
                             "is_mandatory": false
@@ -471,7 +475,8 @@
                                     "21",
                                     "22",
                                     "23"
-                                ]
+                                ],
+                                "exec_target_reference": {}
                             },
                             "is_hidden": false,
                             "is_mandatory": false
@@ -548,7 +553,8 @@
                                     "57",
                                     "58",
                                     "59"
-                                ]
+                                ],
+                                "exec_target_reference": {}
                             },
                             "is_hidden": false,
                             "is_mandatory": false
@@ -625,7 +631,8 @@
                                     "57",
                                     "58",
                                     "59"
-                                ]
+                                ],
+                                "exec_target_reference": {}
                             },
                             "is_hidden": false,
                             "is_mandatory": false
@@ -649,7 +656,8 @@
                                     "FRIDAY",
                                     "SATURDAY",
                                     "SUNDAY"
-                                ]
+                                ],
+                                "exec_target_reference": {}
                             },
                             "is_hidden": false,
                             "is_mandatory": false

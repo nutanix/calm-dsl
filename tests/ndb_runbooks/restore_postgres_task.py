@@ -22,6 +22,7 @@ def postgresinstance_params():
     return Database.Postgres.RestoreFromTimeMachine(
         database="@@{db_uuid}@@",
         point_in_time="2023-02-12 10:01:40",
+        time_zone="Asia/Kolkata",
     )
 
 
