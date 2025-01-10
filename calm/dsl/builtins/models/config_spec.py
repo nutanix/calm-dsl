@@ -193,12 +193,12 @@ class ConfigSpecType(EntityType):
             data["num_sockets_ruleset"] = {}
 
         if isinstance(memory, PatchDataField):
-            data["memory_size_mib_ruleset"] = attrs.numsocket.get_all_attrs()
+            data["memory_size_mib_ruleset"] = memory.get_all_attrs()
         else:
             data["memory_size_mib_ruleset"] = {}
 
         if isinstance(attrs.vcpu, PatchDataField):
-            data["num_vcpus_per_socket_ruleset"] = attrs.numsocket.get_all_attrs()
+            data["num_vcpus_per_socket_ruleset"] = attrs.vcpu.get_all_attrs()
         else:
             data["num_vcpus_per_socket_ruleset"] = {}
 
