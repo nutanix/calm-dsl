@@ -12,8 +12,8 @@ jobs:
     runs-on: self-hosted
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        python-version: ['3.7']
+        os: [ubuntu-20.04]
+        python-version: ['3.8']
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -36,7 +36,7 @@ jobs:
         image: ntnx/calm-dsl
         run: calm
     - name: Publish docker image to jfrog-artifactory
-      if: ${{ github.repository == 'nutanix/calm-dsl' && matrix.python-version == '3.7'}}
+      if: ${{ github.repository == 'nutanix/calm-dsl' && matrix.python-version == '3.8'}}
       run: |
         docker login ${{ secrets.JFROG_REGISTRY }} -u ${{ secrets.JFROG_USERNAME }} -p ${{ secrets.JFROG_PASSWORD }}
         docker tag ntnx/calm-dsl:latest ${{ secrets.JFROG_REGISTRY }}/calm-dsl/calm-dsl:v${{ steps.getversion.outputs.version }}
