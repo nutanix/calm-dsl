@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from pytz import timezone, utc
 
 from calm.dsl.builtins import Job, JobScheduler
 
@@ -7,7 +8,18 @@ start_date = (
     str(start_date.strftime("%Y-%m-%dT%H:%M:%SZ")).replace("T", " ").replace("Z", "")
 )
 
-time_zone = "UTC"
+# Get the current time in UTC and Asia/Calcutta
+utc_now = datetime.now(utc)
+ist_time = utc_now.astimezone(timezone("Asia/Calcutta"))
+
+# Compare offsets
+local_offset = utc_now.utcoffset()  # Local UTC offset
+ist_offset = ist_time.utcoffset()
+
+if local_offset == utc.utcoffset(None):
+    time_zone = "UTC"
+elif local_offset == ist_offset:
+    time_zone = "Asia/Calcutta"
 
 RUNBOOK_NAME = "one_time_scheduler_decision_task"
 
