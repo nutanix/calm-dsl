@@ -48,7 +48,7 @@ from anytree import NodeMixin, RenderTree
 LOG = get_logging_handle(__name__)
 
 
-def get_runbook_list(name, filter_by, limit, offset, quiet, all_items):
+def get_runbook_list(name, filter_by, limit, offset, quiet, all_items, out):
     """Get the runbooks, optionally filtered by a string"""
 
     client = get_api_client()
@@ -77,7 +77,12 @@ def get_runbook_list(name, filter_by, limit, offset, quiet, all_items):
         LOG.warning("Cannot fetch runbooks from {}".format(pc_ip))
         return
 
-    json_rows = res.json()["entities"]
+    res = res.json()
+    if out == "json":
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
+        return
+
+    json_rows = res.get("entities", [])
     if not json_rows:
         click.echo(highlight_text("No runbook found !!!\n"))
         return
