@@ -13,7 +13,7 @@ from calm.dsl.constants import CACHE
 from calm.dsl.builtins import Ref
 from calm.dsl.store import Version
 
-from .constants import ACP, ACP_3_8_0, ACP_BEFORE_3_8_0, ACP_3_8_1, ACP_4_1_0, ROLE
+from .constants import ACP, ACP_3_8_0, ACP_BEFORE_3_8_0, ACP_3_8_1, ACP_4_2_0, ROLE
 from .task_commands import watch_task
 from .utils import get_name_query, highlight_text
 
@@ -817,8 +817,8 @@ def get_updated_acp_filter_list_for_3_8_0_global_scope(
         filter_list.extend(ACP_3_8_0.ENTITY_FILTER_EXPRESSION_LIST.COMMON)
         if LV(CALM_VERSION) >= LV("3.8.1"):
             filter_list.extend(ACP_3_8_1.ENTITY_FILTER_EXPRESSION_LIST.COMMON)
-        if LV(CALM_VERSION) >= LV("4.1.0"):
-            filter_list.extend(ACP_4_1_0.ENTITY_FILTER_EXPRESSION_LIST.COMMON)
+        if LV(CALM_VERSION) >= LV("4.2.0"):
+            filter_list.extend(ACP_4_2_0.ENTITY_FILTER_EXPRESSION_LIST.COMMON)
         if role == ROLE.PROJECT_ADMIN:
             filter_list.extend(ACP_3_8_0.ENTITY_FILTER_EXPRESSION_LIST.PROJECT_ADMIN)
 
