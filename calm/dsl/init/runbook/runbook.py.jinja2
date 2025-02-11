@@ -104,7 +104,7 @@ def {{runbook_name}}(endpoints=[PCEndpoint, IPEndpoint]):
         with branch(p):
 
             # Exec Task to print all entity stats
-            Task.Exec.escript(name="EntityStats", filename="scripts/entity_stats.py2", target=endpoints[1])
+            Task.Exec.escript(name="EntityStats", filename="scripts/entity_stats.py3", target=endpoints[1])
 
         with branch(p):
 
@@ -112,11 +112,11 @@ def {{runbook_name}}(endpoints=[PCEndpoint, IPEndpoint]):
             with Task.Loop(iterations=2, name="LoopTask", loop_variable="loop_var"):
 
                 # decision task example
-                with Task.Decision.escript(name="DecisionTask", script="print 'ExitCode-@@{loop_var}@@';exit(@@{loop_var}@@)") as d:
+                with Task.Decision.escript(name="DecisionTask", script="print('ExitCode-@@{loop_var}@@');exit(@@{loop_var}@@)") as d:
                     if d.ok:
-                        Task.Exec.escript(name="TruePath", script="print 'True path is executed'")
+                        Task.Exec.escript(name="TruePath", script="print('True path is executed')")
                     else:
-                        Task.Exec.escript(name="FalsePath", script="print 'False path is executed'")
+                        Task.Exec.escript(name="FalsePath", script="print('False path is executed')")
 
 
 {%- endmacro %}
