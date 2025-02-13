@@ -13,6 +13,9 @@ from calm.dsl.runbooks import CalmEndpoint as Endpoint
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 GCP_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["GCP"][1]
+PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
+PROJECT_NAME = PROJECT["NAME"]
+ENV_NAME = PROJECT["ENVIRONMENTS"][0]["NAME"]
 
 # Secret Variables
 
@@ -70,7 +73,7 @@ class deployment_db203d7a(Deployment):
 
 class Default(Profile):
 
-    environments = [Ref.Environment(name="test_env1364451608d5")]
+    environments = [Ref.Environment(name=ENV_NAME)]
     deployments = [deployment_db203d7a]
 
 

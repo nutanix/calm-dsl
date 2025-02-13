@@ -13,6 +13,9 @@ from calm.dsl.runbooks import CalmEndpoint as Endpoint
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 AZURE_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["AZURE"][1]
+PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
+PROJECT_NAME = PROJECT["NAME"]
+ENV_NAME = PROJECT["ENVIRONMENTS"][0]["NAME"]
 
 # Secret Variables
 
@@ -38,6 +41,7 @@ class VM1(Substrate):
     os_type = "Linux"
     provider_type = "AZURE_VM"
     provider_spec = read_provider_spec(os.path.join("specs", "VM1_provider_spec.yaml"))
+    provider_spec.spec.get("resources", {})["account_uuid"] = AZURE_ACCOUNT.get("UUID")
     provider_spec.spec.get("resources", {})["account_uuid"] = AZURE_ACCOUNT.get("UUID")
     provider_spec_editables = read_spec(
         os.path.join("specs", "VM1_create_spec_editables.yaml")
@@ -70,7 +74,7 @@ class deployment_5b4215da(Deployment):
 
 class Default(Profile):
 
-    environments = [Ref.Environment(name="test_env1364451608d5")]
+    environments = [Ref.Environment(name=ENV_NAME)]
     deployments = [deployment_5b4215da]
 
 

@@ -1308,6 +1308,10 @@ class TestMarketplaceBPCommands:
         self._delete_mpi()
 
     @pytest.mark.slow
+    @pytest.mark.skipif(
+        LV(CALM_VERSION) < LV("3.8.0"),
+        reason="MPI without Platform dependant fields was released in 3.8.0 hence cannot be tested on lower versions",
+    )
     @pytest.mark.parametrize(
         "provider, BP_PATH",
         [
