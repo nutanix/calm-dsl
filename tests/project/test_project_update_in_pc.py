@@ -47,10 +47,8 @@ class TestDslProject(Project):
             account=Ref.Account("NTNX_LOCAL_AZ"),
             subnets=[
                 Ref.Subnet(name=VLAN_NETWORK, cluster=CLUSTER1),
-                Ref.Subnet(name=NETWORK1, vpc=VPC1),
             ],
             clusters=[Ref.Cluster(name=CLUSTER1, account_name="NTNX_LOCAL_AZ")],
-            vpcs=[Ref.Vpc(name=VPC1, account_name="NTNX_LOCAL_AZ")],
         ),
         Provider.Aws(account=Ref.Account(AWS_ACCOUNT_NAME)),
         Provider.Azure(account=Ref.Account(AZURE_ACCOUNT_NAME)),
