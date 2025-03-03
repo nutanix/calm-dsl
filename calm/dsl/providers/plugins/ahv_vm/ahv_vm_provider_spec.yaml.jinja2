@@ -461,7 +461,6 @@ properties:
     items:
       {{ ahvSerialPort() | indent(6) }}
   vtpm_config:
-    x-calm-dsl-min-version: 4.1.0
     {{ ahvVtpmConfig() | indent(4) }}
 
 {%- endmacro %}
