@@ -96,6 +96,19 @@ properties:
 
 {%- endmacro %}
 
+{% macro ahvVtpmConfig() -%}
+
+title: AHV Vtpm Configuration
+type: [object, "null"]
+properties:
+  type:
+    type: string
+  vtpm_enabled:
+    type: boolean
+    default: false
+
+{%- endmacro %}
+
 
 {% macro ahvDisk() -%}
 
@@ -447,6 +460,9 @@ properties:
     type: array
     items:
       {{ ahvSerialPort() | indent(6) }}
+  vtpm_config:
+    x-calm-dsl-min-version: 4.1.0
+    {{ ahvVtpmConfig() | indent(4) }}
 
 {%- endmacro %}
 
