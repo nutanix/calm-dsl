@@ -654,7 +654,7 @@ def parse_input_file(client, runbook, input_file):
                 args.append(
                     {
                         "name": variable.get("name"),
-                        "value": type(variable.get("value"))(new_val),
+                        "value": type(variable.get("value", ""))(new_val),
                     }
                 )
 
@@ -685,7 +685,7 @@ def patch_runbook_runtime_editables(client, runbook):
                 args.append(
                     {
                         "name": variable.get("name"),
-                        "value": type(variable.get("value"))(new_val),
+                        "value": type(variable.get("value", ""))(new_val),
                     }
                 )
 
