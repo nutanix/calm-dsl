@@ -143,11 +143,19 @@ def _describe_app(app_name):
     default=None,
     help="Blueprint directory location used for placing decompiled entities",
 )
+@click.option(
+    "--no-format",
+    "-nf",
+    "no_format",
+    is_flag=True,
+    default=False,
+    help="Disable formatting the decompiled blueprint using black",
+)
 @click.argument("app_name")
-def _decompile_app_migratable_bp(app_name, bp_dir):
+def _decompile_app_migratable_bp(app_name, bp_dir, no_format):
     """Decompile app-blueprint app-actions to be migrated"""
 
-    decompile_app_migratable_bp(app_name, bp_dir)
+    decompile_app_migratable_bp(app_name, bp_dir, no_format)
 
 
 @update.command("app-migratable-bp")
@@ -299,10 +307,17 @@ def _download_runlog(runlog_uuid, app_name, file_name):
 @delete.command("app")
 @click.argument("app_names", nargs=-1)
 @click.option("--soft", "-s", is_flag=True, default=False, help="Soft delete app")
-def _delete_app(app_names, soft):
+@click.option(
+    "--all-items",
+    "-a",
+    is_flag=True,
+    default=False,
+    help="Delete all kind of apps including system apps.",
+)
+def _delete_app(app_names, soft, all_items):
     """Deletes an application"""
 
-    delete_app(app_names, soft)
+    delete_app(app_names, soft, delete_system_app=all_items)
 
 
 @main.group(cls=FeatureFlagGroup)

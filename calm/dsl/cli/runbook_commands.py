@@ -46,7 +46,7 @@ LOG = get_logging_handle(__name__)
 )
 @click.option("--limit", "-l", default=20, help="Number of results to return")
 @click.option(
-    "--offset", "-o", default=0, help="Offset results by the specified amount"
+    "--offset", "-s", default=0, help="Offset results by the specified amount"
 )
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only runbook names."
@@ -54,10 +54,18 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
 )
-def _get_runbook_list(name, filter_by, limit, offset, quiet, all_items):
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format",
+)
+def _get_runbook_list(name, filter_by, limit, offset, quiet, all_items, out):
     """Get the runbooks, optionally filtered by a string"""
 
-    get_runbook_list(name, filter_by, limit, offset, quiet, all_items)
+    get_runbook_list(name, filter_by, limit, offset, quiet, all_items, out)
 
 
 @get.command("runbook_executions", feature_min_version="3.0.0", experimental=True)
@@ -208,10 +216,20 @@ def _compile_runbook_command(runbook_file, out):
     default=None,
     help="Runbook directory location used for placing decompiled entities",
 )
-def _decompile_runbook_command(name, runbook_file, prefix, runbook_dir):
+@click.option(
+    "--no-format",
+    "-nf",
+    "no_format",
+    is_flag=True,
+    default=False,
+    help="Disable formatting the decompiled runbook using black",
+)
+def _decompile_runbook_command(name, runbook_file, prefix, runbook_dir, no_format):
     """Decompiles runbook present on server or json file"""
 
-    decompile_runbook_command(name, runbook_file, prefix, runbook_dir)
+    decompile_runbook_command(
+        name, runbook_file, prefix, runbook_dir, no_format=no_format
+    )
 
 
 @run.command("runbook", feature_min_version="3.0.0", experimental=True)

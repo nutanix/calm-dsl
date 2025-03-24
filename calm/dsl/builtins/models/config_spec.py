@@ -14,7 +14,7 @@ from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from .runbook import runbook_create
 from .action import _action_create
-from calm.dsl.builtins import get_valid_identifier
+from calm.dsl.builtins import get_valid_identifier, PatchDataField
 from calm.dsl.constants import PROVIDER
 from calm.dsl.store import Cache
 from calm.dsl.builtins.models.config_attrs import ahv_disk_ruleset, ahv_nic_ruleset
@@ -80,12 +80,15 @@ class ConfigSpecType(EntityType):
                 categories_data.append(val)
 
         memory = attrs.memory
-        if memory.min_value:
-            memory.min_value = memory.min_value * 1024
-        if memory.max_value:
-            memory.max_value = memory.max_value * 1024
-        if memory.value:
-            memory.value = str(int(float(memory.value) * 1024))
+
+        # set memory values only if it is present as attribute in AhvUpdateConfigAttrs class
+        if memory:
+            if memory.min_value:
+                memory.min_value = memory.min_value * 1024
+            if memory.max_value:
+                memory.max_value = memory.max_value * 1024
+            if memory.value:
+                memory.value = str(int(float(memory.value) * 1024))
 
         resource_disks = (
             target.__self__.substrate.__self__.provider_spec.resources.disks
@@ -178,13 +181,26 @@ class ConfigSpecType(EntityType):
             "categories_delete_allowed": attrs.categories_delete,
             "categories_add_allowed": attrs.categories_add,
             "disk_delete_allowed": attrs.disk_delete,
-            "num_sockets_ruleset": attrs.numsocket.get_all_attrs(),
-            "memory_size_mib_ruleset": memory.get_all_attrs(),
-            "num_vcpus_per_socket_ruleset": attrs.vcpu.get_all_attrs(),
             "pre_defined_disk_list": disk_data,
             "pre_defined_nic_list": nic_data,
             "pre_defined_categories": categories_data,
         }
+
+        # setting num_sockets_ruleset, memory_size_mib_ruleset, vcpus to default blank dict if not present
+        if isinstance(attrs.numsocket, PatchDataField):
+            data["num_sockets_ruleset"] = attrs.numsocket.get_all_attrs()
+        else:
+            data["num_sockets_ruleset"] = {}
+
+        if isinstance(memory, PatchDataField):
+            data["memory_size_mib_ruleset"] = memory.get_all_attrs()
+        else:
+            data["memory_size_mib_ruleset"] = {}
+
+        if isinstance(attrs.vcpu, PatchDataField):
+            data["num_vcpus_per_socket_ruleset"] = attrs.vcpu.get_all_attrs()
+        else:
+            data["num_vcpus_per_socket_ruleset"] = {}
 
         # Setting actions attribute to PatchConfigSpecType to compile actions
         if isinstance(cls, PatchConfigSpecType):

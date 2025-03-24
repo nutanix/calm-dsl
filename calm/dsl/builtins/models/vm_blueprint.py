@@ -75,6 +75,9 @@ class VmBlueprintType(EntityType):
             profiles=bp_profiles,
         )
 
+        # add description to blueprint object
+        bp_obj.__doc__ = cls.__doc__ or ""
+
         return bp_obj
 
 

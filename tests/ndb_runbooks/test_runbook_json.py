@@ -170,5 +170,16 @@ def _test_compare_compile_result(Runbook, json_file, action_name):
             known_attrs[field]["uuid"] = generated_attrs[field]["uuid"]
     if action_name in ACTION_NAME_JSON_TEST_MAPPING:
         ACTION_NAME_JSON_TEST_MAPPING[action_name](known_attrs, generated_attrs)
+
+    # remove exec_target_reference from options introduced in DSL 4.0.0
+    if LV(CALM_VERSION) < LV("4.0.0"):
+        for task in known_json["runbook"].get("task_definition_list", []):
+            attrs = task.get("attrs", {})
+            if not attrs:
+                continue
+            for inargs in attrs.get("inarg_list", []):
+                if inargs.get("options"):
+                    inargs["options"].pop("exec_target_reference", None)
+
     assert sorted(known_json.items()) == sorted(generated_json.items())
     print("JSON compilation successful for {}".format(Runbook.action_name))

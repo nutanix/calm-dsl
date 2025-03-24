@@ -1,0 +1,78 @@
+resources:
+  account_uuid: cd679cf5-7768-462d-994c-99bf560e0a48
+  blankDisks: []
+  canIpForward: false
+  description: ''
+  disks:
+  - autoDelete: true
+    boot: true
+    deviceName: ''
+    diskEncryptionKey: {}
+    disk_type: PERSISTENT
+    initializeParams:
+      diskName: ''
+      diskSizeGb: -1
+      diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-a/diskTypes/pd-balanced
+      sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/snapshots/postgres-image
+      sourceImageEncryptionKey: {}
+      type: ''
+    interface: ''
+    mode: ''
+    source: ''
+    type: ''
+  guestCustomization:
+    startupScript: ''
+    sysprep: ''
+    type: ''
+  labelFingerprint: ''
+  labels: []
+  machineType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-a/machineTypes/g1-small
+  metadata:
+    fingerprint: ''
+    items:
+    - key: ssh-keys
+      type: ''
+      value: harsha.deshpande:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCRaWr8SHO30knQvWAgoX526w7N85Un/4mxP9FDHvjknbTU0r1RuOCls9JM88tFJSz1i9U6EJLEzRsjaKm0eBaQ8/ZMhJdGXzOCmDDrhgbc+sNk2+tUpW+51zZ/oSyMVjREOC4GMNkSK98NEAqCLvvsGB1LJcnAfkcB2EqAlnPbPNWnX9f4LpmjYFQnwWOstrgEztTx6Si8HEHC17x1Qcc0w0KfHFwHuBWw6747XKuEyoCiYx3GzmvKInsqAZf+LWWR2d1miAx4MJay2BQDoOKYb3jogx7t7KP7KjESlDZu0l/EQrCoErcxoFWCf5RkPhXtIoDJMmp/BtYvNVC6Cb01
+        harsha.deshpande@C02TN07WHF1Q
+    type: ''
+  minCpuPlatform: ''
+  name: testvm-@@{calm_random_hash}@@
+  networkInterfaces:
+  - accessConfigs:
+    - config_type: ONE_TO_ONE_NAT
+      name: qanetwork
+      natIP: ''
+      type: ''
+    aliasIpRanges: []
+    associatePublicIP: true
+    network: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/networks/qanetwork
+    networkIP: ''
+    subnetwork: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/regions/us-central1/subnetworks/qasubnet
+    type: ''
+  scheduling:
+    automaticRestart: true
+    onHostMaintenance: TERMINATE
+    preemptible: false
+    type: ''
+  serviceAccounts:
+  - email: 108048128720-compute@developer.gserviceaccount.com
+    scopes:
+    - https://www.googleapis.com/auth/devstorage.read_only
+    - https://www.googleapis.com/auth/logging.write
+    - https://www.googleapis.com/auth/monitoring.write
+    - https://www.googleapis.com/auth/servicecontrol
+    - https://www.googleapis.com/auth/service.management.readonly
+    - https://www.googleapis.com/auth/trace.append
+    type: ''
+  sshKeys:
+  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCRaWr8SHO30knQvWAgoX526w7N85Un/4mxP9FDHvjknbTU0r1RuOCls9JM88tFJSz1i9U6EJLEzRsjaKm0eBaQ8/ZMhJdGXzOCmDDrhgbc+sNk2+tUpW+51zZ/oSyMVjREOC4GMNkSK98NEAqCLvvsGB1LJcnAfkcB2EqAlnPbPNWnX9f4LpmjYFQnwWOstrgEztTx6Si8HEHC17x1Qcc0w0KfHFwHuBWw6747XKuEyoCiYx3GzmvKInsqAZf+LWWR2d1miAx4MJay2BQDoOKYb3jogx7t7KP7KjESlDZu0l/EQrCoErcxoFWCf5RkPhXtIoDJMmp/BtYvNVC6Cb01
+    harsha.deshpande@C02TN07WHF1Q
+  tags:
+    fingerprint: ''
+    items:
+    - https-server
+    - http-server
+    type: ''
+  type: ''
+  zone: us-central1-a
+type: PROVISION_GCP_VM
