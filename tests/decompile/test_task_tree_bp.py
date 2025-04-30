@@ -2,14 +2,18 @@ import json  # no_qa
 import os  # no_qa
 
 from calm.dsl.builtins import *  # no_qa
-
+from tests.utils import get_subnet_details_from_config
 
 # Secret Variables
 BP_CRED_root_PASSWORD = read_local_file(".tests/password")
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
-SUBNET_NAME = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]["SUBNETS"][1]["NAME"]
-CLUSTER = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]["SUBNETS"][1]["CLUSTER"]
+
+VLAN_NAME = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
+
+SUBNET = get_subnet_details_from_config(DSL_CONFIG, "NTNX_LOCAL_AZ", VLAN_NAME)
+SUBNET_NAME = SUBNET.get("NAME", "")
+CLUSTER = SUBNET.get("CLUSTER", "")
 
 # Credentials
 BP_CRED_root = basic_cred(

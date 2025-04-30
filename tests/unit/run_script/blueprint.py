@@ -7,15 +7,19 @@ from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import vm_disk_package, AhvVmDisk, AhvVmNic
 from calm.dsl.builtins import AhvVmGC, AhvVmResources, AhvVm
 from calm.dsl.builtins import AhvVmGC, AhvVmResources, AhvVm, Ref
+from tests.utils import get_subnet_details_from_config
 
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 
 PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
 PROJECT_NAME = PROJECT["NAME"]
-NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
-SUBNET_NAME = NTNX_LOCAL_ACCOUNT["SUBNETS"][1]["NAME"]
-CLUSTER_NAME = NTNX_LOCAL_ACCOUNT["SUBNETS"][1]["CLUSTER"]
+
+VLAN_NAME = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
+
+SUBNET = get_subnet_details_from_config(DSL_CONFIG, "NTNX_LOCAL_AZ", VLAN_NAME)
+SUBNET_NAME = SUBNET.get("NAME", "")
+CLUSTER_NAME = SUBNET.get("CLUSTER", "")
 
 # SSH Credentials
 CENTOS_USER = "centos"

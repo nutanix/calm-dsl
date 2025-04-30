@@ -11,11 +11,19 @@ import inspect
 
 from calm.dsl.builtins import *  # no_qa
 from calm.dsl.config import get_context
+from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 
-VLAN1211 = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]["SUBNETS"][1]["NAME"]
-CLUSTER = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]["SUBNETS"][1]["CLUSTER"]
+VLAN1211 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
+NTNX_ACCOUNT_UUID = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]["UUID"]
+subnet_cache_data = Cache.get_entity_data(
+    entity_type=CACHE.ENTITY.AHV_SUBNET,
+    name=VLAN1211,
+    account_uuid=NTNX_ACCOUNT_UUID,
+)
+CLUSTER = subnet_cache_data.get("cluster_name", "")
 
 # Credentials
 BP_CRED_test_cred = basic_cred(

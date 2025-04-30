@@ -38,6 +38,21 @@ class ConfigFileParser:
         else:
             return {}
 
+    def get_ncm_server_config(self):
+        """returns NCM server config"""
+
+        ncm_server_config = {}
+        if "NCM_SERVER" in self._CONFIG_PARSER_OBJECT:
+            for k, v in self._CONFIG_PARSER_OBJECT.items("NCM_SERVER"):
+                if k == CONFIG.NCM_SERVER.NCM_ENABLED:
+                    ncm_server_config[k] = self._CONFIG_PARSER_OBJECT[
+                        "NCM_SERVER"
+                    ].getboolean(k)
+                else:
+                    ncm_server_config[k] = v
+
+        return ncm_server_config
+
     def get_project_config(self):
         """returns project config"""
 
@@ -147,6 +162,7 @@ class ConfigHandle:
         config_obj = ConfigFileParser(config_file)
 
         self.server_config = config_obj.get_server_config()
+        self.ncm_server_config = config_obj.get_ncm_server_config()
         self.project_config = config_obj.get_project_config()
         self.log_config = config_obj.get_log_config()
         self.policy_config = config_obj.get_policy_config()
@@ -160,6 +176,11 @@ class ConfigHandle:
         """returns server configuration"""
 
         return self.server_config
+
+    def get_ncm_server_config(self):
+        """returns NCM server configuration"""
+
+        return self.ncm_server_config
 
     def get_project_config(self):
         """returns project configuration"""
@@ -210,6 +231,9 @@ class ConfigHandle:
         port,
         username,
         password,
+        ncm_enabled,
+        ncm_host,
+        ncm_port,
         api_key_location,
         project_name,
         log_level,
@@ -232,6 +256,9 @@ class ConfigHandle:
             port=port,
             username=username,
             password=password,
+            ncm_enabled=ncm_enabled,
+            ncm_host=ncm_host,
+            ncm_port=ncm_port,
             api_key_location=api_key_location,
             project_name=project_name,
             log_level=log_level,
@@ -253,6 +280,9 @@ class ConfigHandle:
         port,
         username,
         password,
+        ncm_enabled,
+        ncm_host,
+        ncm_port,
         api_key_location,
         project_name,
         log_level,
@@ -273,6 +303,9 @@ class ConfigHandle:
             port,
             username,
             password,
+            ncm_enabled,
+            ncm_host,
+            ncm_port,
             api_key_location,
             project_name,
             log_level,
@@ -301,6 +334,9 @@ def set_dsl_config(
     port,
     username,
     password,
+    ncm_enabled,
+    ncm_host,
+    ncm_port,
     api_key_location,
     project_name,
     log_level,
@@ -336,6 +372,9 @@ def set_dsl_config(
         port=port,
         username=username,
         password=password,
+        ncm_enabled=ncm_enabled,
+        ncm_host=ncm_host,
+        ncm_port=ncm_port,
         api_key_location=api_key_location,
         project_name=project_name,
         log_level=log_level,

@@ -30,6 +30,7 @@ class Context:
 
         config_handle = get_config_handle()
         self.server_config = config_handle.get_server_config()
+        self.ncm_server_config = config_handle.get_ncm_server_config()
         self.project_config = config_handle.get_project_config()
         self.log_config = config_handle.get_log_config()
         self.categories_config = config_handle.get_categories_config()
@@ -97,6 +98,14 @@ class Context:
         except:  # validate init_config file, if it's contents are valid
             self.validate_init_config()
             raise
+
+        return config
+
+    def get_ncm_server_config(self):
+        """returns NCM server configuration"""
+        config = self.ncm_server_config
+        if not config.get(CONFIG.NCM_SERVER.NCM_ENABLED):
+            config[CONFIG.NCM_SERVER.NCM_ENABLED] = False
 
         return config
 
@@ -183,6 +192,22 @@ class Context:
         LOG.debug("Updating project in dsl context to {}".format(project_name))
         self.project_config["name"] = project_name
 
+    def update_ncm_server_context(self, ncm_enabled, host, port):
+        """Overrides the existing NCM server configuration"""
+
+        LOG.debug(
+            "Updating NCM server in dsl context to {}, {}, {}".format(
+                ncm_enabled, host, port
+            )
+        )
+        self.ncm_server_config.update(
+            {
+                CONFIG.NCM_SERVER.NCM_ENABLED: ncm_enabled,
+                CONFIG.NCM_SERVER.HOST: host,
+                CONFIG.NCM_SERVER.PORT: port,
+            }
+        )
+
     def update_config_file_context(self, config_file):
         """Overrides the existing configuration with passed file configuration"""
 
@@ -190,6 +215,7 @@ class Context:
         self._CONFIG_FILE = config_file
         cxt_config_handle = get_config_handle(self._CONFIG_FILE)
         self.server_config.update(cxt_config_handle.get_server_config())
+        self.ncm_server_config.update(cxt_config_handle.get_ncm_server_config())
         self.project_config.update(cxt_config_handle.get_project_config())
         self.log_config.update(cxt_config_handle.get_log_config())
         self.connection_config.update(cxt_config_handle.get_connection_config())
@@ -201,6 +227,7 @@ class Context:
         """prints the configuration"""
 
         server_config = self.get_server_config()
+        ncm_server_config = self.get_ncm_server_config()
         project_config = self.get_project_config()
         log_config = self.get_log_config()
         policy_config = self.get_policy_config()
@@ -215,6 +242,13 @@ class Context:
             port=server_config[CONFIG.SERVER.PORT],
             username=server_config[CONFIG.SERVER.USERNAME],
             password="xxxxxxxx",  # Do not render password
+            ncm_enabled=ncm_server_config[CONFIG.NCM_SERVER.NCM_ENABLED],
+            ncm_host=ncm_server_config.get(
+                CONFIG.NCM_SERVER.HOST, DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME
+            ),
+            ncm_port=ncm_server_config.get(
+                CONFIG.NCM_SERVER.PORT, DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME
+            ),
             api_key_location=server_config.get(
                 CONFIG.SERVER.API_KEY_LOCATION, DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME
             ),

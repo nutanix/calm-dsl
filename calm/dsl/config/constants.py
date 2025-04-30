@@ -40,6 +40,11 @@ class CONFIG:
         PASSWORD = "pc_password"
         API_KEY_LOCATION = "api_key_location"
 
+    class NCM_SERVER(IterableConstants):
+        NCM_ENABLED = "ncm_enabled"
+        HOST = "host"
+        PORT = "port"
+
     class PROJECT(IterableConstants):
         NAME = "name"
 

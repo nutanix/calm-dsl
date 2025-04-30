@@ -2,7 +2,11 @@ import click
 import os
 import json
 import sys
+
+from copy import deepcopy
+
 from distutils.version import LooseVersion as LV
+from urllib.parse import urlparse
 
 from calm.dsl.config import (
     get_context,
@@ -15,14 +19,24 @@ from calm.dsl.config import (
     init_context,
 )
 from calm.dsl.db import init_db_handle
-from calm.dsl.api import get_resource_api, get_client_handle_obj
+from calm.dsl.api import (
+    get_resource_api,
+    get_client_handle_obj,
+    get_multi_client_handle_obj,
+)
 from calm.dsl.store import Cache
 from calm.dsl.init import init_bp, init_runbook, init_provider
 from calm.dsl.providers import get_provider_types
 from calm.dsl.store import Version
-from calm.dsl.constants import POLICY, STRATOS, DSL_CONFIG, CLOUD_PROVIDERS
+from calm.dsl.constants import (
+    POLICY,
+    STRATOS,
+    DSL_CONFIG,
+    CLOUD_PROVIDERS,
+    MARKETPLACE,
+)
 from calm.dsl.builtins import file_exists
-from calm.dsl.api.util import get_auth_info
+from calm.dsl.api.util import get_auth_info, is_ncm_enabled, fetch_host_port_from_url
 from .main import init, set
 from calm.dsl.log import get_logging_handle, CustomLogging
 
@@ -147,7 +161,7 @@ def initialize_engine(
     Initializes the calm dsl engine.
 
     NOTE: Env variables(if available) will be used as defaults for configuration
-        i.) CALM_DSL_PC_IP: Prism Central IP
+        i.) CALM_DSL_PC_IP: Prism Central Host
         ii.) CALM_DSL_PC_PORT: Prism Central Port
         iii.) CALM_DSL_PC_USERNAME: Prism Central username
         iv.) CALM_DSL_PC_PASSWORD: Prism Central password
@@ -212,6 +226,54 @@ def _fetch_cp_feature_status(client):
     return result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
 
 
+def _fetch_ncm_decoupled_status(client):
+    """
+    Fetch NCM decoupled status
+
+    Returns:
+        ncm_enabled: bool
+        host (str): PC-FQDN
+        ncm_host (str): NCM-FQDN
+        ncm_port (str): NCM PORT
+    """
+
+    pc_url = None
+    ncm_url = None
+    ncm_host = None
+    ncm_port = None
+
+    Obj = get_resource_api("groups", client.connection, dm_api=True)
+
+    payload = deepcopy(MARKETPLACE.FETCH_APP_DETAILS_PAYLOAD)
+    payload["filter"] += ";app_name=={}".format(MARKETPLACE.APP_NAME.INFRASTRUCTURE)
+
+    res, err = Obj.create(payload)
+
+    if err:
+        click.echo("[Fail]")
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+
+    result = json.loads(res.content)
+
+    for group in result.get("group_results", []):
+        for entity in group.get("entity_results", []):
+            pc_url = entity.get("app_url")
+            break
+
+    host, _ = fetch_host_port_from_url(pc_url)
+    LOG.debug("PC-FQDN of server is: {}".format(host))
+
+    ncm_enabled, ncm_url = is_ncm_enabled(client)
+
+    if ncm_enabled:
+        LOG.info("Checking if NCM is enabled on Server")
+        ncm_host, ncm_port = fetch_host_port_from_url(ncm_url)
+        LOG.info("ENABLED")
+        LOG.info("NCM-FQDN is: {}".format(ncm_host))
+
+    return ncm_enabled, host, ncm_host, ncm_port
+
+
 def set_server_details(
     ip,
     port,
@@ -231,7 +293,7 @@ def set_server_details(
     if not (ip and port and username and password and project_name):
         click.echo("Please provide Calm DSL settings:\n")
 
-    host = ip or click.prompt("Prism Central IP", default="")
+    host = ip or click.prompt("Prism Central Host", default="")
 
     if api_key_location:
         cred = get_auth_info(api_key_location)
@@ -258,20 +320,34 @@ def set_server_details(
         else:
             LOG.warning(DSL_CONFIG.SAAS_LOGIN_WARN)
 
-    LOG.info("Checking if Calm is enabled on Server")
-
-    # Get temporary client handle
+    # Get FQDN using temporary client handle
+    LOG.debug("Reading PC-FQDN from server")
     client = get_client_handle_obj(host, port, auth=(username, password))
-    Obj = get_resource_api("services/nucalm/status", client.connection)
-    res, err = Obj.read()
+    ncm_enabled, host, ncm_host, ncm_port = _fetch_ncm_decoupled_status(client)
 
-    if err:
-        click.echo("[Fail]")
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    # Use temporary multi client handle if NCM is enabled
+    if ncm_enabled:
+        # update ncm_server_config in DSL context to use it for API routing.
+        ContextObj = get_context()
+        ContextObj.update_ncm_server_context(ncm_enabled, ncm_host, ncm_port)
 
-    result = json.loads(res.content)
-    service_enablement_status = result["service_enablement_status"]
-    LOG.info(service_enablement_status)
+        client = get_multi_client_handle_obj(
+            host, port, ncm_host, ncm_port, auth=(username, password)
+        )
+
+    # check calm enablement status when NCM is not decoupled
+    if not ncm_enabled:
+        LOG.info("Checking if Calm is enabled on Server")
+        Obj = get_resource_api("services/nucalm/status", client.connection)
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        result = json.loads(res.content)
+        service_enablement_status = result["service_enablement_status"]
+        LOG.info(service_enablement_status)
 
     res, err = client.version.get_calm_version()
     if err:
@@ -362,6 +438,9 @@ def set_server_details(
         port=port,
         username=username,
         password=password,
+        ncm_enabled=ncm_enabled or False,
+        ncm_host=ncm_host,
+        ncm_port=ncm_port,
         api_key_location=api_key_location or DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME,
         project_name=project_name,
         log_level=log_level,
@@ -605,20 +684,34 @@ def _set_config(
         else:
             LOG.warning(DSL_CONFIG.SAAS_LOGIN_WARN)
 
-    LOG.info("Checking if Calm is enabled on Server")
-
-    # Get temporary client handle
+    # Get FQDN using temporary client handle
+    LOG.debug("Reading PC-FQDN from server")
     client = get_client_handle_obj(host, port, auth=(username, password))
-    Obj = get_resource_api("services/nucalm/status", client.connection)
-    res, err = Obj.read()
+    ncm_enabled, host, ncm_host, ncm_port = _fetch_ncm_decoupled_status(client)
 
-    if err:
-        click.echo("[Fail]")
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    # Use temporary multi client handle if NCM is enabled
+    if ncm_enabled:
+        # update ncm_server_config in DSL context to use it for API routing.
+        ContextObj.update_ncm_server_context(ncm_enabled, ncm_host, ncm_port)
 
-    result = json.loads(res.content)
-    service_enablement_status = result["service_enablement_status"]
-    LOG.info(service_enablement_status)
+        client = get_multi_client_handle_obj(
+            host, port, ncm_host, ncm_port, auth=(username, password)
+        )
+
+    # check calm enablement status when NCM is not decoupled
+    if not ncm_enabled:
+        LOG.info("Checking if Calm is enabled on Server")
+        Obj = get_resource_api("services/nucalm/status", client.connection)
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        result = json.loads(res.content)
+        service_enablement_status = result["service_enablement_status"]
+        LOG.info(service_enablement_status)
+
     res, err = client.version.get_calm_version()
     if err:
         LOG.error("Failed to get version")
@@ -726,6 +819,9 @@ def _set_config(
         port=port,
         username=username,
         password=password,
+        ncm_enabled=ncm_enabled or False,
+        ncm_host=ncm_host,
+        ncm_port=ncm_port,
         api_key_location=api_key_location or DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME,
         project_name=project_name,
         db_location=db_location,

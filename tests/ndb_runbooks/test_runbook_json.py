@@ -11,10 +11,15 @@ from calm.dsl.runbooks import runbook_json
 from calm.dsl.builtins.models.utils import read_local_file
 from calm.dsl.constants import STRATOS
 from calm.dsl.config import get_context
+from calm.dsl.api.util import is_policy_check_required
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
 STRATOS_ENABLED = DSL_CONFIG.get("IS_STRATOS_ENABLED", False)
+
+context = get_context()
+ncm_server_config = context.get_ncm_server_config()
+NCM_ENABLED = ncm_server_config.get("ncm_enabled", False)
 
 
 def _test_postgres_create_compile_result(known_attrs, generated_attrs):
@@ -92,9 +97,11 @@ def get_runbook_action_map():
     return RUNBOOK_ACTION_MAP
 
 
+# if ncm is enabled on smsp (opt-in), then no need to check policy status and run these tests
+# if ncm sits in PC (opt-out), then skip tests if policy is disabled.
 @pytest.mark.skipif(
-    not STRATOS_ENABLED or not get_policy_status(),
-    reason="Stratos is not enabled on CALM",
+    is_policy_check_required() and not get_policy_status(),
+    reason="Policy is not enabled, so skipping the test",
 )
 @pytest.mark.parametrize(
     "json_file,action_name",

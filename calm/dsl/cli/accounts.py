@@ -39,6 +39,7 @@ from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
+from calm.dsl.providers.plugins.gcp_vm.constants import GCP
 
 LOG = get_logging_handle(__name__)
 
@@ -805,7 +806,7 @@ def describe_gcp_account(client, spec, account_id):
     click.echo("\nPublic Images:\n--------------\n")
     images = spec["public_images"]
 
-    Obj = get_resource_api("gcp/v1/images", client.connection)
+    Obj = get_resource_api(GCP.DISK_IMAGES, client.connection)
     payload = {"filter": "account_uuid=={};public_only==true".format(account_id)}
 
     res, err = Obj.list(payload)  # TODO move this to GCP specific method
@@ -1062,10 +1063,8 @@ def verify_account(account_name, watch=False):
         watch_action_execution(runlog_uuid)
     else:
         server_config = get_context().get_server_config()
-        run_url = (
-            "https://{}:{}/console/#page/explore/calm/providers/runlogs/{}".format(
-                server_config["pc_ip"], server_config["pc_port"], runlog_uuid
-            )
+        run_url = "https://{}:{}/dm/self_service/providers/runlogs/{}".format(
+            server_config["pc_ip"], server_config["pc_port"], runlog_uuid
         )
         LOG.info("Verify action execution url: {}".format(highlight_text(run_url)))
         watch_cmd = "calm watch provider-verify-execution {}".format(runlog_uuid)

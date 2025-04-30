@@ -2,10 +2,16 @@ import copy
 import json
 import sys
 import os
+import click
+
+from urllib.parse import urlparse
+from copy import deepcopy
 
 from calm.dsl.log import get_logging_handle
 from calm.dsl.config import get_context
-from calm.dsl.constants import DSL_CONFIG
+from calm.dsl.constants import DSL_CONFIG, MARKETPLACE, MULTICONNECT, FLAGS
+from calm.dsl.api.resource import get_resource_api
+from calm.dsl.api.connection import MultiConnection
 
 LOG = get_logging_handle(__name__)
 
@@ -1109,3 +1115,144 @@ def strip_uuids(upload_payload):
     elif isinstance(upload_payload, list):
         for item in upload_payload:
             strip_uuids(item)
+
+
+def is_ncm_enabled(client):
+    """
+    Checks if NCM is enabled for the given client.
+    Args:
+        client (object): The client object which contains the connection information.
+    Returns:
+        tuple: A tuple containing:
+            - ncm_enabled (bool): True if NCM is enabled, False otherwise.
+            - ncm_url (str or None): The URL of the NCM if enabled, None otherwise.
+
+    """
+    ncm_enabled = False
+    ncm_url = None
+
+    if isinstance(client.connection, MultiConnection):
+        try:
+            Obj = get_resource_api(
+                "groups", getattr(client.connection, MULTICONNECT.PC_OBJ), dm_api=True
+            )
+        except Exception as e:
+            LOG.error("Error while fetching NCM enablement: {}".format(e))
+            return ncm_enabled, ncm_url
+    else:
+        try:
+            Obj = get_resource_api("groups", client.connection, dm_api=True)
+        except Exception as e:
+            LOG.error("Error while fetching NCM enablement: {}".format(e))
+            return ncm_enabled, ncm_url
+
+    payload = deepcopy(MARKETPLACE.FETCH_APP_DETAILS_PAYLOAD)
+
+    payload["filter"] += ";app_name=={}".format(MARKETPLACE.APP_NAME.NCM)
+
+    res, err = Obj.create(payload)
+    if err:
+        click.echo("[Fail]")
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+
+    result = json.loads(res.content)
+
+    for group in result.get("group_results", []):
+        for entity in group.get("entity_results", []):
+            ncm_url = entity.get("app_url")
+            ncm_enabled = True
+            break
+
+    return ncm_enabled, ncm_url
+
+
+def fetch_host_port_from_url(url):
+    """
+    Extracts the host and port from a given URL.
+    Args:
+        url (str): The URL from which to extract the host and port.
+    Returns:
+        tuple: A tuple containing the host and port. If the port is not specified in the URL, it returns None for the port.
+    Raises:
+        SystemExit: If an error occurs while fetching the host and port from the URL.
+    """
+
+    try:
+        parsed_url = urlparse(url)
+
+        # Extract host and port info from URL
+        host = parsed_url.hostname
+        port = parsed_url.port
+        return host, port
+
+    except Exception as e:
+        LOG.error(
+            "An unexpected error occurred while fetching host and port from URL({}): {}".format(
+                url, e
+            )
+        )
+        sys.exit("Error while fetching host and port from URL: {}".format(url))
+
+
+def replace_host_port_in_url(url, new_host, new_port=None):
+    """
+    Replaces the host and optionally the port in the given URL.
+    Args:
+        url (str): The original URL.
+        host (str): The new host to replace in the URL.
+        port (str, optional): The new port to replace in the URL. If not provided, the original port is retained.
+    Returns:
+        str: The updated URL with the new host and port.
+    Raises:
+        SystemExit: If an unexpected error occurs during URL processing.
+    """
+
+    try:
+        parsed_url = urlparse(url)
+        old_port = parsed_url.port
+
+        # if host and port are None, return the original URL
+        if not (new_host and new_port):
+            LOG.debug(
+                "Returning original URL: {} as host: {} port: {}".format(
+                    url, new_host, new_port
+                )
+            )
+            return url
+
+        # Replace host in the parsed URL
+        updated_netloc = new_host
+
+        # if port is given then update the netloc with port
+        if new_port:
+            updated_netloc += f":{new_port}"
+        else:
+            updated_netloc += f":{old_port}"
+
+        # Construct the updated URL
+        updated_url = parsed_url._replace(netloc=updated_netloc).geturl()
+
+        return updated_url
+
+    except Exception as e:
+        LOG.error(
+            "An unexpected error occurred while replacing host and port in URL({}): {}".format(
+                url, e
+            )
+        )
+        sys.exit("Error while replacing host and port in URL: {}".format(url))
+
+
+def is_policy_check_required():
+    """This helper returns whether policy enablement check is required for a setup"""
+
+    context = get_context()
+    ncm_server_config = context.get_ncm_server_config()
+    NCM_ENABLED = ncm_server_config.get("ncm_enabled", False)
+
+    if NCM_ENABLED:
+        if FLAGS.POLICY_ON_SMSP:
+            return False
+        else:
+            return True
+    return True

@@ -8,6 +8,7 @@ from calm.dsl.runbooks import runbook
 from calm.dsl.runbooks import RunbookTask as Task, Status, RunbookVariable as Variable
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
 from calm.dsl.runbooks import read_local_file, basic_cred
+from tests.utils import replace_host_port_in_tests_url
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
@@ -20,6 +21,8 @@ AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="linux_cred")
 WindowsCred = basic_cred(CRED_WINDOWS_USERNAME, CRED_PASSWORD, name="windows_cred")
+
+URL = replace_host_port_in_tests_url(URL)
 
 linux_endpoint = Endpoint.Linux.ip([linux_ip], cred=LinuxCred)
 windows_endpoint = Endpoint.Windows.ip([windows_ip], cred=WindowsCred)

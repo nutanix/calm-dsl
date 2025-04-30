@@ -302,7 +302,7 @@ def enable_policy_command(name):
     server_config = ContextObj.get_server_config()
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/policies/approvals/{}".format(
+    link = "https://{}:{}/dm/self_service/policies/approvals/{}".format(
         pc_ip, pc_port, policy_uuid
     )
     stdout_dict = {"name": policy_name, "link": link, "state": policy_state}
@@ -352,7 +352,7 @@ def disable_policy_command(name):
     server_config = ContextObj.get_server_config()
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/policies/approvals/{}".format(
+    link = "https://{}:{}/dm/self_service/policies/approvals/{}".format(
         pc_ip, pc_port, policy_uuid
     )
     stdout_dict = {"name": policy_name, "link": link, "state": policy_state}
@@ -663,7 +663,7 @@ def create_policy_command(policy_file, name, description, force):
     server_config = ContextObj.get_server_config()
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/policies/approvals/{}".format(
+    link = "https://{}:{}/dm/self_service/policies/approvals/{}".format(
         pc_ip, pc_port, policy_uuid
     )
     stdout_dict = {"name": policy_name, "link": link, "state": policy_state}

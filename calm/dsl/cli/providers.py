@@ -845,10 +845,8 @@ def run_provider_or_resource_type_action(
 
     if not watch:
         server_config = get_context().get_server_config()
-        run_url = (
-            "https://{}:{}/console/#page/explore/calm/providers/runlogs/{}".format(
-                server_config["pc_ip"], server_config["pc_port"], runlog_uuid
-            )
+        run_url = "https://{}:{}/dm/self_service/providers/runlogs/{}".format(
+            server_config["pc_ip"], server_config["pc_port"], runlog_uuid
         )
         screen.print_at(
             "Verify action execution url: {}".format(highlight_text(run_url)), 0, 0
@@ -965,7 +963,7 @@ def abort_action_execution(runlog_uuid):
     """Abort test execution of a Provider/ResourceType action"""
     client = get_api_client()
     server_config = get_context().get_server_config()
-    link = "https://{}:{}/console/#page/explore/calm/providers/runlogs/{}".format(
+    link = "https://{}:{}/dm/self_service/providers/runlogs/{}".format(
         server_config["pc_ip"], server_config["pc_port"], runlog_uuid
     )
 

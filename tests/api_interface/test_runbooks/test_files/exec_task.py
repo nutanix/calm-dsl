@@ -6,6 +6,7 @@ from calm.dsl.runbooks import read_local_file, read_file
 from calm.dsl.runbooks import runbook, Ref
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
 from calm.dsl.runbooks import CalmEndpoint as Endpoint, ref
+from tests.utils import replace_host_port_in_tests_url
 from calm.dsl.builtins.models.helper.common import get_vmware_account_from_datacenter
 from calm.dsl.log import get_logging_handle
 
@@ -38,6 +39,8 @@ LOCAL_LINUX_ENDPOINT_VPC = read_local_file(".tests/endpoint_linux_vpc")
 LOCAL_WINDOWS_ENDPOINT_VPC = read_local_file(".tests/endpoint_windows_vpc")
 
 VMWARE_ACCOUNT_NAME = get_vmware_account_from_datacenter()
+
+HTTP_URL = replace_host_port_in_tests_url(HTTP_URL)
 
 http_endpoint = Endpoint.HTTP(
     HTTP_URL,

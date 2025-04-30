@@ -262,9 +262,9 @@ def create_blueprint_command(bp_file, name, description, force, passphrase):
     server_config = context.get_server_config()
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/blueprints/{}".format(
-        pc_ip, pc_port, bp_uuid
-    )
+
+    link = "https://{}:{}/dm/self_service/blueprints/{}".format(pc_ip, pc_port, bp_uuid)
+
     stdout_dict = {"name": bp_name, "link": link, "state": bp_state}
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 

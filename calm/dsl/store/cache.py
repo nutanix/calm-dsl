@@ -56,7 +56,8 @@ class Cache:
                 if table.is_approval_policy_required:
                     # if approval policy is required check policy and approval_policy status
                     if (
-                        policy_config.get("policy_status", "False") == "True"
+                        eval(policy_config.get("policy_status", "False"))
+                        == table.is_policy_required
                         and approval_policy_config.get(
                             "approval_policy_status", "False"
                         )
