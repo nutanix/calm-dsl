@@ -1,1 +1,1 @@
-Error in script: At line 2, SyntaxError: duplicate argument 'a' in function definition
+Error in script: At line 3, SyntaxError: duplicate argument 'a' in function definition

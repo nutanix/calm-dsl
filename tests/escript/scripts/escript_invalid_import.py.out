@@ -1,1 +1,1 @@
-Error in script: Syntax Error at line 4 - import from module 'bs4' not allowed
+Error in script: At line 4, Syntax Error: import from module 'bs4' not allowed
