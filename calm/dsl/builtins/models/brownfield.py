@@ -213,6 +213,7 @@ def get_aws_bf_vm_data(
                 "instance_name": e_name,
                 "instance_id": e_id,
                 "address": ip_address or e_address,
+                "platform_data": {"region": e_resources["region"][0]},
             }
 
     # If vm not found raise error
