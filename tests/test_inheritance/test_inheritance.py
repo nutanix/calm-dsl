@@ -14,7 +14,7 @@ from calm.dsl.builtins import AhvVmGC, AhvVmResources, AhvVm
 from calm.dsl.config import get_context
 from tests.helper.status_map_helper import remove_status_map_from_bp
 from tests.helper.output_variables_helper import remove_output_variables_from_bp
-
+from tests.helper.vtpm_helper import remove_vtpm_config_from_bp
 
 # SSH Credentials
 CENTOS_USER = "centos"
@@ -283,6 +283,9 @@ def test_json():
     CALM_VERSION = Version.get_version("Calm")
     if LV(CALM_VERSION) < LV("3.9.0"):
         remove_status_map_from_bp(known_json)
+
+    if LV(CALM_VERSION) < LV("4.2.0"):
+        remove_vtpm_config_from_bp(known_json)
 
     remove_output_variables_from_bp(known_json)
     remove_output_variables_from_bp(generated_json)

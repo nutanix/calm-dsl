@@ -15,6 +15,7 @@ from calm.dsl.log import get_logging_handle
 from tests.cli.runtime_helpers.ahv.editable_params import DSL_CONFIG
 from tests.helper.status_map_helper import remove_status_map_from_bp
 from tests.helper.output_variables_helper import remove_output_variables_from_bp
+from tests.helper.vtpm_helper import remove_vtpm_config_from_bp_resources
 
 # Setting the recursion limit to max for
 sys.setrecursionlimit(100000)
@@ -186,11 +187,9 @@ class TestOverlaySubnetBlueprint:
         if LV(CALM_VERSION) < LV("3.9.0"):
             remove_status_map_from_bp(known_json)
 
-        # remove vtpm config for version less than master
-        if LV(CALM_VERSION) < LV("4.1.0"):
-            known_json["resources"]["substrate_definition_list"][0]["create_spec"][
-                "resources"
-            ].pop("vtpm_config", None)
+        # remove vtpm config for version less than 4.2.0
+        if LV(CALM_VERSION) < LV("4.2.0"):
+            remove_vtpm_config_from_bp_resources(known_json)
 
         remove_output_variables_from_bp(known_json)
         remove_output_variables_from_bp(generated_json)
