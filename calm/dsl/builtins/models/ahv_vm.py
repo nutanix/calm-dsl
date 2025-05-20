@@ -61,9 +61,11 @@ class AhvVmResourcesType(EntityType):
 
         # Merging vtpm_enabled to vtpm_config
         calm_version = Version.get_version("Calm")
-        if LV(calm_version) > LV("4.0.0"):
+        if LV(calm_version) >= LV("4.2.0"):
             vtpm_config = {"vtpm_enabled": cdict.pop("vtpm_enabled", False)}
             cdict["vtpm_config"] = vtpm_config
+            if boot_type == "LEGACY":
+                cdict.pop("vtpm_config", None)
 
         serial_port_list = []
         if cdict.get("serial_port_list"):
