@@ -845,8 +845,14 @@ def run_provider_or_resource_type_action(
 
     if not watch:
         server_config = get_context().get_server_config()
-        run_url = "https://{}:{}/dm/self_service/providers/runlogs/{}".format(
-            server_config["pc_ip"], server_config["pc_port"], runlog_uuid
+        provider_uuid = get_provider_uuid_from_runlog(client, runlog_uuid)
+        run_url = (
+            "https://{}:{}/dm/self_service/providers/runlogs/{}?entityId={}".format(
+                server_config["pc_ip"],
+                server_config["pc_port"],
+                runlog_uuid,
+                provider_uuid,
+            )
         )
         screen.print_at(
             "Verify action execution url: {}".format(highlight_text(run_url)), 0, 0
@@ -963,11 +969,11 @@ def abort_action_execution(runlog_uuid):
     """Abort test execution of a Provider/ResourceType action"""
     client = get_api_client()
     server_config = get_context().get_server_config()
-    link = "https://{}:{}/dm/self_service/providers/runlogs/{}".format(
-        server_config["pc_ip"], server_config["pc_port"], runlog_uuid
-    )
-
     provider_uuid = get_provider_uuid_from_runlog(client, runlog_uuid)
+
+    link = "https://{}:{}/dm/self_service/providers/runlogs/{}?entityId={}".format(
+        server_config["pc_ip"], server_config["pc_port"], runlog_uuid, provider_uuid
+    )
 
     def poll_func(runlog_uuid):
         return client.provider.poll_action_run(provider_uuid, runlog_uuid)
