@@ -1228,7 +1228,9 @@ def get_provider_uuid_from_runlog(client, runlog_uuid):
         Exception if runlog_uuid is not a valid provider/RT-action runlog
     """
     response, err = client.provider.list_runlogs(
-        payload={"filter": "uuid=={}".format(runlog_uuid)}
+        payload={
+            "filter": "uuid=in={}".format(runlog_uuid)
+        }  # workaround to use 'uuid=in=' instead of 'uuid==' mentioned in ENG-779820
     )
     if err:
         LOG.error("Error while fetching runlog info: {}".format(str(err)))
