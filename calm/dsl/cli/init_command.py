@@ -237,31 +237,9 @@ def _fetch_ncm_decoupled_status(client):
         ncm_port (str): NCM PORT
     """
 
-    pc_url = None
     ncm_url = None
     ncm_host = None
     ncm_port = None
-
-    Obj = get_resource_api("groups", client.connection, dm_api=True)
-
-    payload = deepcopy(MARKETPLACE.FETCH_APP_DETAILS_PAYLOAD)
-    payload["filter"] += ";app_name=={}".format(MARKETPLACE.APP_NAME.INFRASTRUCTURE)
-
-    res, err = Obj.create(payload)
-
-    if err:
-        click.echo("[Fail]")
-        LOG.error("[{}] - {}".format(err["code"], err["error"]))
-
-    result = json.loads(res.content)
-
-    for group in result.get("group_results", []):
-        for entity in group.get("entity_results", []):
-            pc_url = entity.get("app_url")
-            break
-
-    host, _ = fetch_host_port_from_url(pc_url)
-    LOG.debug("PC-FQDN of server is: {}".format(host))
 
     ncm_enabled, ncm_url = is_ncm_enabled(client)
 
@@ -271,7 +249,7 @@ def _fetch_ncm_decoupled_status(client):
         LOG.info("ENABLED")
         LOG.info("NCM-FQDN is: {}".format(ncm_host))
 
-    return ncm_enabled, host, ncm_host, ncm_port
+    return ncm_enabled, ncm_host, ncm_port
 
 
 def set_server_details(
@@ -320,10 +298,9 @@ def set_server_details(
         else:
             LOG.warning(DSL_CONFIG.SAAS_LOGIN_WARN)
 
-    # Get FQDN using temporary client handle
-    LOG.debug("Reading PC-FQDN from server")
+    # Get NCM-FQDN using temporary client handle
     client = get_client_handle_obj(host, port, auth=(username, password))
-    ncm_enabled, host, ncm_host, ncm_port = _fetch_ncm_decoupled_status(client)
+    ncm_enabled, ncm_host, ncm_port = _fetch_ncm_decoupled_status(client)
 
     # Use temporary multi client handle if NCM is enabled
     if ncm_enabled:
@@ -684,10 +661,9 @@ def _set_config(
         else:
             LOG.warning(DSL_CONFIG.SAAS_LOGIN_WARN)
 
-    # Get FQDN using temporary client handle
-    LOG.debug("Reading PC-FQDN from server")
+    # Get NCM-FQDN using temporary client handle
     client = get_client_handle_obj(host, port, auth=(username, password))
-    ncm_enabled, host, ncm_host, ncm_port = _fetch_ncm_decoupled_status(client)
+    ncm_enabled, ncm_host, ncm_port = _fetch_ncm_decoupled_status(client)
 
     # Use temporary multi client handle if NCM is enabled
     if ncm_enabled:
