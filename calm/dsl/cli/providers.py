@@ -845,9 +845,13 @@ def run_provider_or_resource_type_action(
 
     if not watch:
         server_config = get_context().get_server_config()
+        provider_uuid = get_provider_uuid_from_runlog(client, runlog_uuid)
         run_url = (
-            "https://{}:{}/console/#page/explore/calm/providers/runlogs/{}".format(
-                server_config["pc_ip"], server_config["pc_port"], runlog_uuid
+            "https://{}:{}/dm/self_service/providers/runlogs/{}?entityId={}".format(
+                server_config["pc_ip"],
+                server_config["pc_port"],
+                runlog_uuid,
+                provider_uuid,
             )
         )
         screen.print_at(
@@ -965,11 +969,11 @@ def abort_action_execution(runlog_uuid):
     """Abort test execution of a Provider/ResourceType action"""
     client = get_api_client()
     server_config = get_context().get_server_config()
-    link = "https://{}:{}/console/#page/explore/calm/providers/runlogs/{}".format(
-        server_config["pc_ip"], server_config["pc_port"], runlog_uuid
-    )
-
     provider_uuid = get_provider_uuid_from_runlog(client, runlog_uuid)
+
+    link = "https://{}:{}/dm/self_service/providers/runlogs/{}?entityId={}".format(
+        server_config["pc_ip"], server_config["pc_port"], runlog_uuid, provider_uuid
+    )
 
     def poll_func(runlog_uuid):
         return client.provider.poll_action_run(provider_uuid, runlog_uuid)
@@ -1224,7 +1228,9 @@ def get_provider_uuid_from_runlog(client, runlog_uuid):
         Exception if runlog_uuid is not a valid provider/RT-action runlog
     """
     response, err = client.provider.list_runlogs(
-        payload={"filter": "uuid=={}".format(runlog_uuid)}
+        payload={
+            "filter": "uuid=in={}".format(runlog_uuid)
+        }  # workaround to use 'uuid=in=' instead of 'uuid==' mentioned in ENG-779820
     )
     if err:
         LOG.error("Error while fetching runlog info: {}".format(str(err)))

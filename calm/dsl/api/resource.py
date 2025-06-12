@@ -1,14 +1,45 @@
+import sys
+
 from .connection import REQUEST
+from calm.dsl.config import get_context
+from calm.dsl.constants import RESOURCE, MULTICONNECT
+from calm.dsl.log import get_logging_handle
+from calm.dsl.api.connection import Connection
+
+LOG = get_logging_handle(__name__)
 
 
 class ResourceAPI:
 
     ROOT = "api/nutanix/v3"
     CALM_ROOT = "api/calm/v3.0"
+    DM_ROOT = "dm/v3"
 
-    def __init__(self, connection, resource_type, calm_api=False):
-        self.connection = connection
-        self.PREFIX = (self.CALM_ROOT if calm_api else self.ROOT) + "/" + resource_type
+    def __init__(self, connection, resource_type, calm_api=False, dm_api=False):
+
+        context = get_context()
+        ncm_server_config = context.get_ncm_server_config()
+
+        if ncm_server_config.get("ncm_enabled", False):
+            # Case when ncm is enabled:
+            # If multi connection object is supplied it will return connection object based on resource_type
+            # If single connection object is supplied it will return the same connection object
+            self.connection = get_resource_type_connection_obj(
+                connection, resource_type
+            )
+        else:
+            # Case when ncm is disabled: For all resource type there should be one connection object.
+            # If multi connection object is supplied it will return connection.pc_conn_obj
+            # If single connection object is supplied it will return the same connection object
+            self.connection = get_resource_type_connection_obj(connection)
+
+        if dm_api:
+            self.PREFIX = self.DM_ROOT + "/" + resource_type
+        else:
+            self.PREFIX = (
+                (self.CALM_ROOT if calm_api else self.ROOT) + "/" + resource_type
+            )
+
         self.LIST = self.PREFIX + "/list"
         self.ITEM = self.PREFIX + "/{}"
 
@@ -138,5 +169,76 @@ class ResourceAPI:
         return final_list
 
 
-def get_resource_api(resource_type, connection, calm_api=False):
-    return ResourceAPI(connection, resource_type, calm_api=calm_api)
+def is_ncm_resource(resource_type):
+    """
+    Returns True if
+        -> resource_type matches with existing NCM resources
+        -> Else search if existing resource is part of supplied resource_type.
+    Usecase:
+        1. Let's say "blueprint" is an existing resource type. And API under investigation is of "blueprint" type then return True
+        2. Let's say "blueprint" is an existing resource type. And API under investigation is of "blueprint/{some-uuid}".
+           Then we check an existing resource "blueprint" is part of "blueprint/{some-uuid}" or not. If yes, "blueprint/{some-uuid}"
+           will be routed to host of "blueprint"
+    """
+    if resource_type in RESOURCE.NCM:
+        return True
+    if (
+        resource_type in RESOURCE.NON_NCM
+    ):  # prevent cases when resource_type already exists as NON-NCM resource.
+        return False
+    return any(existing_resource in resource_type for existing_resource in RESOURCE.NCM)
+
+
+def is_non_ncm_resource(resource_type):
+    """
+    Returns True if
+        -> resource_type matches with existing NON-NCM resources
+        -> Else search if existing resource is part of supplied resource_type.
+    Usecase:
+        1. Let's say "projects" is an existing resource type. And API under investigation is of "projects" type then return True
+        2. Let's say "projects" is an existing resource type. And API under investigation is of "projects/{some-uuid}".
+           Then we check an existing resource "projects" is part of "projects/{some-uuid}" or not. If yes, "projects/{some-uuid}"
+           will be routed to host of "projects"
+    """
+    if resource_type in RESOURCE.NON_NCM:
+        return True
+    if (
+        resource_type in RESOURCE.NCM
+    ):  # prevent cases when resource_type already exists as NCM resource.
+        return False
+    return any(
+        existing_resource in resource_type for existing_resource in RESOURCE.NON_NCM
+    )
+
+
+def get_resource_type_connection_obj(connection, resource_type=""):
+    """
+    This routine returns the connection object based on the resource type.
+    For single connection object (only one host) it returns same connection object
+    For multi connection object (multiple hosts) it returns connection object based on the resource type.
+
+    Returns:
+        If resource type is:
+            -> NCM, it returns the NCM connection object.
+            -> PC, it returns the PC connection object.
+
+    """
+    if isinstance(connection, Connection) or resource_type == "groups":
+        return connection
+    elif is_ncm_resource(resource_type):
+        LOG.debug("connection object of {} set to NCM".format(resource_type))
+        return getattr(connection, MULTICONNECT.NCM_OBJ)
+    elif is_non_ncm_resource(resource_type) or resource_type == "":
+        LOG.debug("connection object of {} set to PC".format(resource_type))
+        return getattr(connection, MULTICONNECT.PC_OBJ)
+    else:
+        LOG.error(
+            "Invalid resource type '{}', should be one of {}".format(
+                resource_type, RESOURCE.NCM | RESOURCE.NON_NCM
+            )
+        )
+        sys.exit("Invalid resource type '{}".format(resource_type))
+
+
+def get_resource_api(resource_type, connection, calm_api=False, dm_api=False):
+    return ResourceAPI(connection, resource_type, calm_api=calm_api, dm_api=dm_api)

@@ -1,10 +1,16 @@
 from calm.dsl.config import get_context
+from calm.dsl.constants import MULTICONNECT
 
 from .connection import (
     get_connection_obj,
-    get_connection_handle,
-    update_connection_handle,
+    get_pc_connection_obj,
+    get_ncm_connection_obj,
+    get_pc_connection_handle,
+    get_ncm_connection_handle,
+    update_pc_connection_handle,
+    update_ncm_connection_handle,
     REQUEST,
+    MultiConnection,
 )
 from .blueprint import BlueprintAPI
 from .endpoint import EndpointAPI
@@ -38,6 +44,7 @@ from .approval import ApprovalAPI
 from .approval_request import ApprovalRequestAPI
 from .provider import ProviderAPI
 from .quotas import QuotasAPI
+from .groups_api import MultiGroupsAPI
 from .util import get_auth_info
 
 
@@ -46,7 +53,6 @@ class ClientHandle:
         self.connection = connection
 
     def _connect(self):
-
         self.connection.connect()
 
         # Note - add entity api classes here
@@ -83,6 +89,7 @@ class ClientHandle:
         self.approval_requests = ApprovalRequestAPI(self.connection)
         self.provider = ProviderAPI(self.connection)
         self.quotas = QuotasAPI(self.connection)
+        self.groups = MultiGroupsAPI(self.connection)
 
 
 def get_client_handle_obj(
@@ -100,6 +107,34 @@ def get_client_handle_obj(
     return handle
 
 
+def get_multi_client_handle_obj(
+    host,
+    port,
+    ncm_host,
+    ncm_port,
+    auth_type=REQUEST.AUTH_TYPE.BASIC,
+    scheme=REQUEST.SCHEME.HTTPS,
+    auth=None,
+):
+    """returns object of ClientHandle class"""
+
+    multi_connection = MultiConnection()
+    setattr(
+        multi_connection,
+        MULTICONNECT.PC_OBJ,
+        get_pc_connection_obj(host, port, auth_type, scheme, auth),
+    )
+    setattr(
+        multi_connection,
+        MULTICONNECT.NCM_OBJ,
+        get_ncm_connection_obj(ncm_host, ncm_port, auth_type, scheme, auth),
+    )
+
+    handle = ClientHandle(multi_connection)
+    handle._connect()
+    return handle
+
+
 _API_CLIENT_HANDLE = None
 
 
@@ -109,14 +144,43 @@ def update_api_client(
     auth_type=REQUEST.AUTH_TYPE.BASIC,
     scheme=REQUEST.SCHEME.HTTPS,
     auth=None,
+    **kwargs,
 ):
     """updates global api client object (_API_CLIENT_HANDLE)"""
 
     global _API_CLIENT_HANDLE
 
-    update_connection_handle(host, port, auth_type, scheme=scheme, auth=auth)
-    connection = get_connection_handle(host, port, auth_type, scheme, auth)
-    _API_CLIENT_HANDLE = ClientHandle(connection)
+    multi_connection = MultiConnection()
+
+    context = get_context()
+    ncm_server_config = context.get_ncm_server_config()
+    ncm_enabled = ncm_server_config.get("ncm_enabled", False)
+    ncm_host = ncm_server_config.get("host", None)
+    ncm_port = ncm_server_config.get("port", None)
+
+    # If ncm is not enabled, use pc host and port for ncm
+    # It will create ncm session pointing to PC
+    if not ncm_enabled:
+        ncm_host = host
+        ncm_port = port
+
+    update_pc_connection_handle(host, port, auth_type, scheme=scheme, auth=auth)
+    setattr(
+        multi_connection,
+        MULTICONNECT.PC_OBJ,
+        get_pc_connection_handle(host, port, auth_type, scheme, auth),
+    )
+
+    update_ncm_connection_handle(
+        ncm_host, ncm_port, auth_type, scheme=scheme, auth=auth
+    )
+    setattr(
+        multi_connection,
+        MULTICONNECT.NCM_OBJ,
+        get_ncm_connection_handle(ncm_host, ncm_port, auth_type, scheme, auth),
+    )
+
+    _API_CLIENT_HANDLE = ClientHandle(multi_connection)
     _API_CLIENT_HANDLE._connect()
 
     return _API_CLIENT_HANDLE

@@ -12,7 +12,8 @@ from calm.dsl.log import get_logging_handle
 from calm.dsl.api import get_client_handle_obj
 from calm.dsl.api.connection import REQUEST
 from calm.dsl.cli.main import get_api_client
-
+from calm.dsl.config import get_context
+from calm.dsl.api.util import replace_host_port_in_url
 
 VPC_TUNNEL_NAME = "vpc_name_1"
 LOG = get_logging_handle(__name__)
@@ -455,3 +456,74 @@ def get_local_az_overlay_details_from_dsl_config(config):
             cluster = subnet["CLUSTER"]
             break
     return overlay_subnet, vpc, cluster
+
+
+def verify_platform_sync_task(account_name, timeout=180):
+    """
+    This routine will verify platform sync completion status
+    Args:
+        account_name (str): name of the account to perform platform sync
+        timeout(int): max timeout to wait for platform sync to complete
+    Returns:
+        True if platform sync is success else False
+    """
+    client = get_api_client()
+    payload = {"length": 250, "offset": 0}
+    account_name_uuid_map = client.account.get_name_uuid_map(payload)
+    account_uuid = account_name_uuid_map.get(account_name, None)
+    timeout = time.time() + timeout
+
+    LOG.info("Polling to get platform sync status")
+
+    while timeout > time.time():
+        res, err = client.account.read(account_uuid)
+
+        if err:
+            LOG.error("Failed to read account details")
+            LOG.debug(err)
+            return False
+
+        response = res.json()
+        sync_status = response["status"]["resources"].get("sync_status", None)
+
+        if not sync_status:
+            continue
+        if sync_status == "Success":
+            LOG.info("Platform sync completed")
+            return True
+        elif sync_status == "Running":
+            LOG.debug("Platform sync is in progress")
+        else:
+            LOG.error("Platform sync failed to complete")
+            return False
+
+        LOG.info("Current status: {}".format(sync_status))
+
+    LOG.info("Maximum timeout reached to complete platform sync task")
+    return False
+
+
+def replace_host_port_in_tests_url(url):
+    ContextObj = get_context()
+    ncm_server_config = ContextObj.get_ncm_server_config()
+
+    # update host and port in url with NCM host and port if NCM is enabled
+    if ncm_server_config.get("ncm_enabled", False):
+        ncm_host = ncm_server_config.get("host", None)
+        ncm_port = ncm_server_config.get("port", None)
+        url = replace_host_port_in_url(url, ncm_host, ncm_port)
+
+    return url
+
+
+def get_subnet_details_from_config(config, account_name, vlan_name):
+    """returns subnet dict from config for a given (account_name, vlan_name)"""
+
+    account_details = config["ACCOUNTS"].get(account_name, None)
+
+    if not account_details:
+        return {}
+
+    for subnet in account_details.get("SUBNETS", []):
+        if subnet.get("NAME", "") == vlan_name:
+            return subnet

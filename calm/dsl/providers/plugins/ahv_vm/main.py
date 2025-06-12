@@ -1051,14 +1051,15 @@ class AhvNew(AhvBase):
         return {"entities": res}
 
     def categories(self, *args, **kwargs):
+
+        client = get_api_client()
         payload = copy.deepcopy(self.CATEGORIES_PAYLOAD)
         host_pc = kwargs.get("host_pc", False)
 
         # Note: Api response is bugged due to CALM-17213
         # TODO: Remove dependecy for host_pc after bug is resolved
         if host_pc:
-            Obj = get_resource_api("groups", self.connection)
-            res, err = Obj.create(payload)
+            res, err = client.groups.create(payload)
 
         else:
             Obj = get_resource_api(self.GROUPS, self.connection)

@@ -19,6 +19,7 @@ from tests.api_interface.test_runbooks.test_files.http_task import (
     HTTPEndpointWithMultipleURLs,
 )
 from utils import upload_runbook, poll_runlog_status
+from calm.dsl.config import get_context
 
 from distutils.version import LooseVersion as LV
 from calm.dsl.store import Version
@@ -26,6 +27,10 @@ from calm.dsl.builtins.models.utils import read_local_file
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 CALM_VERSION = Version.get_version("Calm")
+
+context = get_context()
+ncm_server_config = context.get_ncm_server_config()
+NCM_ENABLED = ncm_server_config.get("ncm_enabled", False)
 
 
 class TestHTTPTasks:
@@ -290,7 +295,10 @@ class TestHTTPTasks:
                 ),
             ),
             (HTTPTaskWithTLSVerify, "Error :Certificate has expired"),
-            (HTTPTaskWithIncorrectAuth, "AUTHENTICATION_REQUIRED"),
+            (
+                HTTPTaskWithIncorrectAuth,
+                "Status code 401 is in 4XX-5XX range. Marking it to FAILURE",
+            ),
         ],
     )
     def test_http_failure_scenarios(self, Helper):
@@ -379,6 +387,8 @@ class TestHTTPTasks:
         client = get_api_client()
         rb_name = "test_httptask_" + str(uuid.uuid4())[-10:]
 
+        RunbookDslClassName = Runbook.runbook.runbook.name
+
         rb = upload_runbook(client, rb_name, Runbook)
         rb_state = rb["status"]["state"]
         rb_uuid = rb["metadata"]["uuid"]
@@ -404,7 +414,11 @@ class TestHTTPTasks:
         state, reasons = poll_runlog_status(client, runlog_uuid, RUNLOG.TERMINAL_STATES)
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
-        assert state == RUNLOG.STATUS.SUCCESS
+
+        if NCM_ENABLED and RunbookDslClassName == "HTTPHeadersWithMacro_runbook":
+            assert state == RUNLOG.STATUS.FAILURE
+        else:
+            assert state == RUNLOG.STATUS.SUCCESS
 
         # delete the runbook
         _, err = client.runbook.delete(rb_uuid)

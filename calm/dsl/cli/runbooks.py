@@ -414,7 +414,7 @@ def create_runbook_command(runbook_file, name, description, force):
     server_config = ContextObj.get_server_config()
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(
+    link = "https://{}:{}/dm/self_service/runbooks/{}".format(
         pc_ip, pc_port, runbook_uuid
     )
     stdout_dict = {"name": runbook_name, "link": link, "state": runbook_state}
@@ -519,7 +519,7 @@ def update_runbook_command(runbook_file, name, description):
     server_config = ContextObj.get_server_config()
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(
+    link = "https://{}:{}/dm/self_service/runbooks/{}".format(
         pc_ip, pc_port, runbook_uuid
     )
     stdout_dict = {"name": runbook_name, "link": link, "state": runbook_state}
@@ -801,7 +801,7 @@ def run_runbook(screen, client, runbook_uuid, watch, input_data={}, payload={}):
     server_config = ContextObj.get_server_config()
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
-    run_url = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+    run_url = "https://{}:{}/dm/self_service/runbooks/runlogs/{}".format(
         pc_ip, pc_port, runlog_uuid
     )
     if not watch:
@@ -1019,7 +1019,7 @@ def pause_runbook_execution(runlog_uuid):
     server_config = ContextObj.get_server_config()
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+    link = "https://{}:{}/dm/self_service/runbooks/runlogs/{}".format(
         pc_ip, pc_port, runlog_uuid
     )
     stdout_dict = {"link": link, "state": state}
@@ -1043,7 +1043,7 @@ def resume_runbook_execution(runlog_uuid):
     server_config = ContextObj.get_server_config()
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+    link = "https://{}:{}/dm/self_service/runbooks/runlogs/{}".format(
         pc_ip, pc_port, runlog_uuid
     )
     stdout_dict = {"link": link, "state": state}
@@ -1079,7 +1079,7 @@ def abort_runbook_execution(runlog_uuid, poll_fn=None, abort_fn=None, link=None)
         server_config = ContextObj.get_server_config()
         pc_ip = server_config["pc_ip"]
         pc_port = server_config["pc_port"]
-        link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+        link = "https://{}:{}/dm/self_service/runbooks/runlogs/{}".format(
             pc_ip, pc_port, runlog_uuid
         )
     stdout_dict = {"link": link, "state": state}

@@ -199,7 +199,7 @@ def update_approval_command(name, state, comment="", uuid=""):
     server_config = ContextObj.get_server_config()
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/policies/approvals/requests/{}".format(
+    link = "https://{}:{}/dm/self_service/policies/approvals/requests/{}".format(
         pc_ip, pc_port, approval_uuid
     )
     stdout_dict = {"name": approval_name, "link": link, "state": approval_state}

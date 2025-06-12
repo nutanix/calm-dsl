@@ -56,8 +56,12 @@ class TestPolicyCommands:
     def setup_class(cls):
         context_obj = get_context()
         policy_config = context_obj.get_policy_config()
-        if policy_config.get("policy_status", "False") == "False":
-            pytest.skip("policy not enabled")
+        ncm_server_config = context_obj.get_ncm_server_config()
+
+        # check policy enablement in case of opt-out
+        if not ncm_server_config.get("ncm_enabled", False):
+            if policy_config.get("policy_status", "False") == "False":
+                pytest.skip("policy not enabled")
 
     def setup_method(self):
         ContextObj = get_context()

@@ -611,8 +611,9 @@ def add_vm_reference(vm_references):
                 project_name
             ),
         }
-        Obj = get_resource_api("groups", client.connection)
-        res, err = Obj.create(payload)
+
+        res, err = client.groups.create(payload)
+
         if err:
             LOG.error("[{}] - {}".format(err["code"], err["error"]))
 

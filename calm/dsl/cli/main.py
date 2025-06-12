@@ -13,7 +13,7 @@ from prettytable import PrettyTable
 from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.api import get_api_client, get_resource_api, reset_api_client_handle
 from calm.dsl.log import get_logging_handle
-from calm.dsl.config import get_context, get_default_config_file
+from calm.dsl.config import get_context, get_config_handle
 from calm.dsl.config.env_config import EnvConfig
 from calm.dsl.store import Cache
 from calm.dsl.constants import DSL_CONFIG
@@ -25,6 +25,7 @@ from .utils import FeatureFlagGroup, highlight_text
 from calm.dsl.store import Version
 from calm.dsl.config.init_config import get_init_config_handle
 from calm.dsl.cli.run_script import *
+from calm.dsl.api.util import is_ncm_enabled
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -51,7 +52,7 @@ LOG = get_logging_handle(__name__)
     default=False,
     help="Update cache before running command",
 )
-@click.version_option("4.1.0")
+@click.version_option("4.1.1")
 @click.pass_context
 def main(ctx, config_file, sync):
     """Calm CLI
@@ -85,6 +86,19 @@ def main(ctx, config_file, sync):
                 raise ValueError("config file passing is not supported in init command")
 
             ContextObj.update_config_file_context(config_file=config_file)
+
+        # Read presence of ncm server config from config file.
+        # Precedence > 1. config_file supplied 2. default config_file
+        init_obj = ContextObj.get_init_config()
+        config_file = init_obj["CONFIG"]["location"] if not config_file else config_file
+        config_handle = get_config_handle(config_file)
+
+        # Block all subsequent DSL command execution except `calm init dsl` if config is incompatible (doesn't contain ncm server config)
+        if not config_handle.ncm_server_config and ctx.invoked_subcommand != "init":
+            LOG.error(
+                "DSL config incompatible with latest configuration. Run `calm init dsl` to make DSL config compatible with latest DSL."
+            )
+            sys.exit("DSL config incompatible with latest configuration")
 
         if ctx.invoked_subcommand != "init":
             server_config = ContextObj.get_server_config()
@@ -329,17 +343,28 @@ def server():
 def get_server_status():
     """Get calm server connection status"""
 
-    LOG.info("Checking if Calm is enabled on Server")
-    client = get_api_client()
-    Obj = get_resource_api("services/nucalm/status", client.connection)
-    res, err = Obj.read()
+    context = get_context()
+    ncm_server_config = context.get_ncm_server_config()
 
-    if err:
-        click.echo("[Fail]")
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    if ncm_server_config.get("ncm_enabled", False):
+        LOG.info("Checking if NCM is enabled on Server")
+        client = get_api_client()
+        service_enablement_status, _ = is_ncm_enabled(client)
+        service_enablement_status = (
+            "ENABLED" if service_enablement_status else "DISABLED"
+        )
+    else:
+        LOG.info("Checking if Calm is enabled on Server")
+        client = get_api_client()
+        Obj = get_resource_api("services/nucalm/status", client.connection)
+        res, err = Obj.read()
 
-    result = json.loads(res.content)
-    service_enablement_status = result["service_enablement_status"]
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        result = json.loads(res.content)
+        service_enablement_status = result["service_enablement_status"]
 
     res, err = client.version.get_calm_version()
     calm_version = res.content.decode("utf-8")

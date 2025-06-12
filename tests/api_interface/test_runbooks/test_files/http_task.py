@@ -14,10 +14,13 @@ from utils import (
     update_tunnel_and_project,
 )
 from tests.utils import get_vpc_project, get_vpc_tunnel_using_account
+from tests.utils import replace_host_port_in_tests_url
 
 AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 URL = read_local_file(".tests/runbook_tests/url")
+
+URL = replace_host_port_in_tests_url(URL)
 
 ContextObj = get_context()
 server_config = ContextObj.get_server_config()

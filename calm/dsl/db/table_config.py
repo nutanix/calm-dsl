@@ -22,12 +22,17 @@ from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from calm.dsl.constants import CACHE
+from calm.dsl.api.util import is_policy_check_required
 
 LOG = get_logging_handle(__name__)
 NON_ALPHA_NUMERIC_CHARACTER = "[^0-9a-zA-Z]+"
 REPLACED_CLUSTER_NAME_CHARACTER = "_"
 # Proxy database
 dsl_database = SqliteDatabase(None)
+
+context = get_context()
+ncm_server_config = context.get_ncm_server_config()
+NCM_ENABLED = ncm_server_config.get("ncm_enabled", False)
 
 
 class BaseModel(Model):
@@ -3151,7 +3156,7 @@ class AppProtectionPolicyCache(CacheTableBase):
 class PolicyEventCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.POLICY_EVENT
     feature_min_version = "3.5.0"
-    is_policy_required = True
+    is_policy_required = is_policy_check_required()
     is_approval_policy_required = True
     entity_type = CharField()
     name = CharField()
@@ -3261,7 +3266,7 @@ class PolicyEventCache(CacheTableBase):
 class PolicyAttributesCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.POLICY_ATTRIBUTES
     feature_min_version = "3.5.0"
-    is_policy_required = True
+    is_policy_required = is_policy_check_required()
     is_approval_policy_required = True
     event_name = CharField()
     name = CharField()
@@ -3375,7 +3380,7 @@ class PolicyAttributesCache(CacheTableBase):
 class PolicyActionTypeCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.POLICY_ACTION_TYPE
     feature_min_version = "3.5.0"
-    is_policy_required = True
+    is_policy_required = is_policy_check_required()
     is_approval_policy_required = True
     name = CharField()
     uuid = CharField()
@@ -3475,7 +3480,7 @@ NDB Entities Cache
 class NDB_DatabaseCache(CacheTableBase):
     __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.DATABASE
     feature_min_version = "3.7.0"
-    is_policy_required = True
+    is_policy_required = True if not NCM_ENABLED else False
     name = CharField()
     uuid = CharField()
     account_name = CharField()
@@ -3658,7 +3663,7 @@ class NDB_DatabaseCache(CacheTableBase):
 class NDB_ProfileCache(CacheTableBase):
     __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.PROFILE
     feature_min_version = "3.7.0"
-    is_policy_required = True
+    is_policy_required = True if not NCM_ENABLED else False
     name = CharField()
     uuid = CharField()
     account_name = CharField()
@@ -3864,7 +3869,7 @@ class NDB_ProfileCache(CacheTableBase):
 class NDB_SLACache(CacheTableBase):
     __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.SLA
     feature_min_version = "3.7.0"
-    is_policy_required = True
+    is_policy_required = True if not NCM_ENABLED else False
     name = CharField()
     uuid = CharField()
     account_name = CharField()
@@ -4055,7 +4060,7 @@ class NDB_SLACache(CacheTableBase):
 class NDB_ClusterCache(CacheTableBase):
     __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.CLUSTER
     feature_min_version = "3.7.0"
-    is_policy_required = True
+    is_policy_required = True if not NCM_ENABLED else False
     name = CharField()
     uuid = CharField()
     account_name = CharField()
@@ -4232,7 +4237,7 @@ class NDB_ClusterCache(CacheTableBase):
 class NDB_TimeMachineCache(CacheTableBase):
     __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.TIME_MACHINE
     feature_min_version = "3.7.0"
-    is_policy_required = True
+    is_policy_required = True if not NCM_ENABLED else False
     name = CharField()
     uuid = CharField()
     account_name = CharField()
@@ -4416,7 +4421,7 @@ class NDB_TimeMachineCache(CacheTableBase):
 class NDB_SnapshotCache(CacheTableBase):
     __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.SNAPSHOT
     feature_min_version = "3.7.0"
-    is_policy_required = True
+    is_policy_required = True if not NCM_ENABLED else False
     name = CharField()
     uuid = CharField()
     account_name = CharField()
@@ -4613,7 +4618,7 @@ class NDB_SnapshotCache(CacheTableBase):
 class NDB_TagCache(CacheTableBase):
     __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.TAG
     feature_min_version = "3.7.0"
-    is_policy_required = True
+    is_policy_required = True if not NCM_ENABLED else False
     name = CharField()
     uuid = CharField()
     account_name = CharField()

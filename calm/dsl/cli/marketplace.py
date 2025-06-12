@@ -162,9 +162,7 @@ def get_mpis_group_call(
     if group_member_count:
         payload["group_member_count"] = group_member_count
 
-    # TODO Create GroupAPI separately for it.
-    Obj = get_resource_api("groups", client.connection)
-    res, err = Obj.create(payload=payload)
+    res, err = client.groups.create(payload=payload)
 
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
@@ -2140,7 +2138,7 @@ def execute_marketplace_runbook_renderer(screen, client, watch, payload={}):
 
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
-    run_url = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+    run_url = "https://{}:{}/dm/self_service/runbooks/runlogs/{}".format(
         pc_ip, pc_port, runlog_uuid
     )
     if not watch:

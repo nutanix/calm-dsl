@@ -1,4 +1,4 @@
-{% macro ConfigTemplate(ip, port, username, password, api_key_location, project_name, db_location, log_level, policy_status, approval_policy_status, stratos_status, retries_enabled, connection_timeout, read_timeout) -%}
+{% macro ConfigTemplate(ip, port, username, password, ncm_enabled, ncm_host, ncm_port, api_key_location, project_name, db_location, log_level, policy_status, approval_policy_status, stratos_status, retries_enabled, connection_timeout, read_timeout) -%}
 
 [SERVER]
 pc_ip = {{ip}}
@@ -6,6 +6,11 @@ pc_port = {{port}}
 pc_username = {{username}}
 pc_password = {{password}}
 api_key_location = {{api_key_location}}
+
+[NCM_SERVER]
+ncm_enabled = {{ncm_enabled}}
+host = {{ncm_host}}
+port = {{ncm_port}}
 
 [PROJECT]
 name = {{project_name}}
@@ -34,4 +39,4 @@ read_timeout = {{read_timeout}}
 {%- endmacro %}
 
 
-{{ConfigTemplate(ip, port, username, password, api_key_location, project_name, db_location, log_level, policy_status, approval_policy_status, stratos_status, retries_enabled, connection_timeout, read_timeout)}}
+{{ConfigTemplate(ip, port, username, password, ncm_enabled, ncm_host, ncm_port, api_key_location, project_name, db_location, log_level, policy_status, approval_policy_status, stratos_status, retries_enabled, connection_timeout, read_timeout)}}

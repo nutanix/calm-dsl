@@ -358,7 +358,8 @@ def create_endpoint_command(endpoint_file, name, description, force):
     server_config = ContextObj.get_server_config()
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/endpoints/{}".format(
+
+    link = "https://{}:{}/dm/self_service/endpoints/{}".format(
         pc_ip, pc_port, endpoint_uuid
     )
 

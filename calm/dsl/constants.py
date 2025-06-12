@@ -441,3 +441,165 @@ class CONFIG_TYPE:
 
 class PROJECT:
     INTERNAL = "_internal"
+
+
+# storing it as set because it optimizes the lookup to constant time.
+class RESOURCE:
+    """Stores and segregates resources based on their API type"""
+
+    NCM = {
+        "features/stratos/status",
+        "features/approval_policy",
+        "features/custom_provider/status",
+        "approvals",
+        "approval_requests",
+        "policies",
+        "policy_action_types",
+        "policy_events",
+        "blueprints",
+        "environments",
+        "endpoints",
+        "runbooks",
+        "app_tasks",
+        "apps",
+        "accounts",
+        "app_icons",
+        "app_showback",
+        "jobs",
+        "app_protection_policies",
+        "policy_attributes",
+        "network_groups",
+        "resource_types",
+        "providers",
+        "quotas",
+        "nutanix/v1/vm_recovery_points",
+        "tunnels",
+        "platform_dependent_fields",
+        "blueprints/brownfield_import/vms",
+        "calm_marketplace_items",
+        # AhvNew class resources
+        "nutanix/v1/subnets",
+        "nutanix/v1/images",
+        "nutanix/v1/clusters",
+        "nutanix/v1/vpcs",
+        "nutanix/v1/groups",
+        # AWS api's
+        "aws/machine_types",
+        "aws/volume_types",
+        "aws/availability_zones",
+        "aws/mixed_images",
+        "images",
+        "aws/roles",
+        "aws/key_pairs",
+        "aws/vpcs",
+        "aws/security_groups",
+        "aws/subnets",
+        "aws/v1/machine_types",
+        "aws/v1/volume_types",
+        "aws/v1/availability_zones",
+        "aws/v1/mixed_images",
+        "aws/v1/images",
+        "aws/v1/roles",
+        "aws/v1/key_pairs",
+        "aws/v1/vpcs",
+        "aws/v1/security_groups",
+        "aws/v1/subnets",
+        # Azure api's
+        "azure_rm/v1/availability_sets",
+        "azure_rm/v1/availability_zones",
+        "azure_rm/v1/security_groups",
+        "azure_rm/v1/virtual_networks",
+        "azure_rm/v1/subnets",
+        "azure_rm/v1/resource_groups",
+        "azure_rm/v1/locations",
+        "azure_rm/v1/vm_sizes",
+        "azure_rm/v1/image_publishers",
+        "azure_rm/v1/image_offers",
+        "azure_rm/v1/image_skus",
+        "azure_rm/v1/image_versions",
+        "azure_rm/v1/subscription_images",
+        "azure_rm/v1/subscriptions",
+        "azure_rm/v1/images",
+        # GCP api's
+        "gcp/v1/zones",
+        "gcp/v1/machine_types",
+        "gcp/v1/persistent_disks",
+        "gcp/v1/images",
+        "gcp/v1/networks",
+        "gcp/v1/subnetworks",
+        "gcp/v1/firewalls",
+        "gcp/v1/snapshots",
+        # VMWARE api's
+        "vmware/v6/datacenter",
+        "vmware/v6/template",
+        "vmware/v6/library",
+        "vmware/v6/library_items",
+        "vmware/v6/datastore",
+        "vmware/v6/host",
+        "vmware/v6/cluster",
+        "vmware/v6/storage_pod",
+        "vmware/v6/network",
+        "vmware/v6/network_adapter",
+        "vmware/v6/customization",
+        "vmware/v6/timezone",
+        "vmware/v6/accounts",
+        "vmware/v6/accounts/templates"  # TODO: make it flexible according to account uuid
+        "vmware/v6/file_paths",
+        "vmware/v6/vm_categories",
+        # k8s api's
+        "kubernetes/v1/karbon/clusters",
+    }
+
+    NON_NCM = {
+        "dm/v3/groups",
+        "features/policy",
+        "projects",
+        "projects_internal",
+        "tasks",
+        "users",
+        "user_groups",
+        "roles",
+        "directory_services",
+        "access_control_policies",
+        "network_function_chains",
+        "services/nucalm/status",
+        "categories/AppFamily",
+        "mh_vms",
+    }
+
+    class ENTITY:
+        NCM = {
+            "category",
+            "marketplace_item",
+        }
+
+        NON_NCM = {
+            "mh_vm",
+        }
+
+
+class MARKETPLACE:
+    """Standard names of marketplace apps"""
+
+    class APP_NAME:
+        INFRASTRUCTURE = "Infrastructure"
+        NCM = "Nutanix Cloud Manager"
+
+    FETCH_APP_DETAILS_PAYLOAD = {
+        "fields": ["app_name", "uuid", "source_marketplace_name", "state", "app_url"],
+        "filter": "categories==category_value:Nutanix;categories==category_name:AppFamily;state\u0021=deleted",
+    }
+
+
+class MULTICONNECT:
+    PC_OBJ = "pc_conn_obj"
+    NCM_OBJ = "ncm_conn_obj"
+
+
+class MULTIGROUP:
+    PC_OBJ = "pc_group"
+    NCM_OBJ = "ncm_group"
+
+
+class FLAGS:
+    POLICY_ON_SMSP = False

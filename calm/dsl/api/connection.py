@@ -24,6 +24,7 @@ from requests.packages.urllib3.util.retry import Retry
 
 from calm.dsl.log import get_logging_handle
 from calm.dsl.config import get_context
+from calm.dsl.constants import MULTICONNECT
 
 urllib3.disable_warnings()
 LOG = get_logging_handle(__name__)
@@ -76,6 +77,71 @@ def build_url(host, port, endpoint="", scheme=REQUEST.SCHEME.HTTPS):
         url += ":{port}".format(port=port)
     url += "/{endpoint}".format(endpoint=endpoint)
     return url
+
+
+class MultiConnection:
+    """
+    Encapsulates all type of connection objects here.
+    """
+
+    def __init__(self):
+        setattr(self, MULTICONNECT.PC_OBJ, None)
+        setattr(self, MULTICONNECT.NCM_OBJ, None)
+
+    def get_pc_object(self):
+        return getattr(self, MULTICONNECT.PC_OBJ, None)
+
+    def get_ncm_object(self):
+        return getattr(self, MULTICONNECT.NCM_OBJ, None)
+
+    @property
+    def base_url(self):
+        """
+        Dynamically fetch the base_url based on the connection type.
+
+        @property decorator:
+            - Provides a consistent interface for accessing base_url, regardless of
+              whether client.connection is a Connection or MultiConnection object.
+            - Improves flexibility and reduces the risk of errors when switching connection types.
+        """
+        context = get_context()
+        ncm_server_config = context.get_ncm_server_config()
+        try:
+            if ncm_server_config.get("ncm_enabled", False):
+                return self.get_ncm_object().base_url
+            else:
+                return self.get_pc_object().base_url
+        except:
+            LOG.debug("client.connection object does not exist or has no base_url.")
+        return None
+
+    def connect(self):
+
+        # Case for one host (single connection object)
+        if isinstance(self, Connection):
+            self.connect()
+            return
+
+        if isinstance(self.get_pc_object(), PcConnection):
+            self.get_pc_object().connect()
+        else:
+            LOG.debug("PC connection is not present")
+
+        if isinstance(self.get_ncm_object(), NcmConnection):
+            self.get_ncm_object().connect()
+        else:
+            LOG.debug("NCM connection is not present")
+
+    def close(self):
+        if isinstance(self.get_pc_object(), PcConnection):
+            self.get_pc_object().close()
+        else:
+            LOG.debug("PC connection is not present")
+
+        if isinstance(self.get_ncm_object(), NcmConnection):
+            self.get_ncm_object().close()
+        else:
+            LOG.debug("NCM connection is not present")
 
 
 class Connection:
@@ -330,6 +396,14 @@ class Connection:
         return res, err
 
 
+class PcConnection(Connection):
+    pass
+
+
+class NcmConnection(Connection):
+    pass
+
+
 _CONNECTION = None
 
 
@@ -345,7 +419,31 @@ def get_connection_obj(
     return Connection(host, port, auth_type, scheme, auth)
 
 
-def get_connection_handle(
+def get_pc_connection_obj(
+    host,
+    port,
+    auth_type=REQUEST.AUTH_TYPE.BASIC,
+    scheme=REQUEST.SCHEME.HTTPS,
+    auth=None,
+):
+    """Returns object of PcConnection class"""
+
+    return PcConnection(host, port, auth_type, scheme, auth)
+
+
+def get_ncm_connection_obj(
+    host,
+    port,
+    auth_type=REQUEST.AUTH_TYPE.BASIC,
+    scheme=REQUEST.SCHEME.HTTPS,
+    auth=None,
+):
+    """Returns object of NcmConnection class"""
+
+    return NcmConnection(host, port, auth_type, scheme, auth)
+
+
+def get_pc_connection_handle(
     host,
     port,
     auth_type=REQUEST.AUTH_TYPE.BASIC,
@@ -366,18 +464,56 @@ def get_connection_handle(
     Raises:
         Exception: If cannot connect
     """
-    global _CONNECTION
-    if not _CONNECTION:
-        update_connection_handle(host, port, auth_type, scheme, auth)
-    return _CONNECTION
+    global _PC_CONNECTION
+    if not _PC_CONNECTION:
+        update_pc_connection_handle(host, port, auth_type, scheme, auth)
+    return _PC_CONNECTION
 
 
-def update_connection_handle(
+def get_ncm_connection_handle(
     host,
     port,
     auth_type=REQUEST.AUTH_TYPE.BASIC,
     scheme=REQUEST.SCHEME.HTTPS,
     auth=None,
 ):
-    global _CONNECTION
-    _CONNECTION = Connection(host, port, auth_type, scheme=scheme, auth=auth)
+    """Get api server (aplos/styx) handle.
+
+    Args:
+        host (str): Hostname/IP address
+        port (int): Port to connect to
+        auth_type (str): auth type that needs to be used by the client
+        scheme (str): http scheme (http or https)
+        session_headers (dict): session headers dict
+        auth (tuple): authentication
+    Returns:
+        Client handle
+    Raises:
+        Exception: If cannot connect
+    """
+    global _NCM_CONNECTION
+    if not _NCM_CONNECTION:
+        update_ncm_connection_handle(host, port, auth_type, scheme, auth)
+    return _NCM_CONNECTION
+
+
+def update_pc_connection_handle(
+    host,
+    port,
+    auth_type=REQUEST.AUTH_TYPE.BASIC,
+    scheme=REQUEST.SCHEME.HTTPS,
+    auth=None,
+):
+    global _PC_CONNECTION
+    _PC_CONNECTION = PcConnection(host, port, auth_type, scheme=scheme, auth=auth)
+
+
+def update_ncm_connection_handle(
+    host,
+    port,
+    auth_type=REQUEST.AUTH_TYPE.BASIC,
+    scheme=REQUEST.SCHEME.HTTPS,
+    auth=None,
+):
+    global _NCM_CONNECTION
+    _NCM_CONNECTION = NcmConnection(host, port, auth_type, scheme=scheme, auth=auth)

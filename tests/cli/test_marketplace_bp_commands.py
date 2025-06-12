@@ -232,9 +232,8 @@ class TestMarketplaceBPCommands:
         }
 
         client = get_api_client()
-        Obj = get_resource_api("groups", client.connection)
 
-        res, err = Obj.create(payload=payload)
+        res, err = client.groups.create(payload=payload)
         if err:
             LOG.error("[{}] - {}".format(err["code"], err["error"]))
             sys.exit(-1)
@@ -286,9 +285,8 @@ class TestMarketplaceBPCommands:
         }
 
         client = get_api_client()
-        Obj = get_resource_api("groups", client.connection)
 
-        res, err = Obj.create(payload=payload)
+        res, err = client.groups.create(payload=payload)
         if err:
             LOG.error("[{}] - {}".format(err["code"], err["error"]))
             sys.exit(-1)
