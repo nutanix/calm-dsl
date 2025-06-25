@@ -28,6 +28,7 @@ class CACHE:
         POLICY_ACTION_TYPE = "policy_action_type"
         POLICY_ATTRIBUTES = "policy_attributes"
         PROTECTION_POLICY = "app_protection_policy"
+        TUNNEL = "tunnel"
 
     API_ENTITY_KIND_MAP = {
         "cluster": ENTITY.AHV_CLUSTER,

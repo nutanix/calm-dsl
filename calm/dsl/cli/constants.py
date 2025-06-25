@@ -811,3 +811,31 @@ class TEST_SCRIPTS:
 
     TERMINAL_STATES = [STATUS.SUCCESS, STATUS.ERROR]
     TYPE = ["escript", "shell", "powershell", "python"]
+
+
+class TUNNEL:
+    API_VERSION = "3.0"
+    FEATURE_MIN_VERSION = "4.3.0"
+
+    class STATES:
+        ACTIVE = "ACTIVE"
+        HEALTHY = "HEALTHY"
+        UNHEALTHY = "UNHEALTHY"
+        DELETED = "DELETED"
+
+    class UI_STATES:
+        VALIDATING = "VALIDATING"
+        ACTIVE = "ACTIVE"
+        ERROR = "ERROR"
+        DELETED = "DELETED"
+
+    # Mapping UI states to backend states
+    UI_TO_BACKEND_STATE_MAPPING = {
+        UI_STATES.VALIDATING: STATES.ACTIVE,
+        UI_STATES.ACTIVE: STATES.HEALTHY,
+        UI_STATES.ERROR: STATES.UNHEALTHY,
+        UI_STATES.DELETED: STATES.DELETED,
+    }
+
+    # Mapping backend states to UI states
+    BACKEND_TO_UI_STATE_MAPPING = {v: k for k, v in UI_TO_BACKEND_STATE_MAPPING.items()}
