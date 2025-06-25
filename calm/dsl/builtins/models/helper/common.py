@@ -10,18 +10,8 @@ from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from calm.dsl.constants import CACHE
 from calm.dsl.db.table_config import ResourceTypeCache
-from calm.dsl.api.util import is_policy_check_required
 
 LOG = get_logging_handle(__name__)
-
-
-def get_policy_status():
-    """get policy status"""
-    context_obj = get_context()
-    policy_config = context_obj.get_policy_config()
-    if policy_config.get("policy_status", "False") == "False":
-        return False
-    return True
 
 
 def _walk_to_parent_with_given_type(cls, parent_type):
@@ -494,22 +484,3 @@ def get_provider_uuid(name):
         sys.exit("No provider found with name {}".format(name))
 
     return provider["metadata"]["uuid"]
-
-
-def policy_required(func):
-    """Decorator to check if policy is required & enabled before executing the function"""
-
-    def wrapper(*args, **kwargs):
-        if not is_policy_check_required():
-            return True
-
-        ContextObj = get_context()
-        policy_status = ContextObj.get_policy_config()
-        if not policy_status:
-            LOG.error(
-                "This feature is supported only when Policy Engine is enabled, Please enable Policy Engine."
-            )
-            sys.exit("Policy Engine is not enabled")
-        return func(*args, **kwargs)
-
-    return wrapper
