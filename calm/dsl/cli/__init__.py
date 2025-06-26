@@ -32,5 +32,6 @@ from .network_group_commands import *  # NoQA
 from .policy_commands import *  # NoQA
 from .approval_commands import *  # NoQA
 from .approval_request_commands import *  # NoQA
+from .tunnel_commands import *  # NoQA
 
 __all__ = ["main", "get_api_client"]

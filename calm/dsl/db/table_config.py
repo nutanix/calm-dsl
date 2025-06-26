@@ -21,8 +21,9 @@ from prettytable import PrettyTable
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, TUNNEL
 from calm.dsl.api.util import is_policy_check_required
+
 
 LOG = get_logging_handle(__name__)
 NON_ALPHA_NUMERIC_CHARACTER = "[^0-9a-zA-Z]+"
@@ -3466,6 +3467,201 @@ class PolicyActionTypeCache(CacheTableBase):
 
         except DoesNotExist:
             return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
+class TunnelCache(CacheTableBase):
+    """This class is used to manage the cache for account tunnels."""
+
+    __cache_type__ = CACHE.ENTITY.TUNNEL
+    feature_min_version = TUNNEL.FEATURE_MIN_VERSION
+    is_policy_required = is_policy_check_required()
+    name = CharField()
+    description = CharField()
+    uuid = CharField()
+    state = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "uuid": self.uuid,
+            "state": self.state,
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes all entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        """creates a new entry in the tunnel cache table"""
+        state = kwargs.get("state", "")
+        description = kwargs.get("description", "")
+
+        super().create(
+            name=name,
+            description=description,
+            uuid=uuid,
+            state=state,
+        )
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if len(cls.select()) == 0:
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "DESCRIPTION",
+            "UUID",
+            "STATE",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["description"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["state"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def sync(cls):
+        """Sync the table from server"""
+
+        # Clear old data
+        cls.clear()
+
+        client = get_api_client()
+        length = 250
+        offset = 0
+        total_matches = None
+        all_entities = []
+
+        while total_matches is None or offset < total_matches:
+            payload = {
+                "length": length,
+                "offset": offset,
+                "filter": "(state!=DELETED);type!=network_group",
+            }
+
+            res, err = client.tunnel.list(payload)
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+            res = res.json()
+            if total_matches is None:
+                total_matches = res.get("metadata", {}).get("total_matches", 0)
+
+            all_entities.extend(res.get("entities", []))
+            offset += length
+
+        for entity in all_entities:
+            name = entity["status"]["name"]
+            backend_state = entity["status"].get("state", "")
+            state = TUNNEL.BACKEND_TO_UI_STATE_MAPPING.get(backend_state, "")
+            if not state:
+                LOG.warning(
+                    "Tunnel with name {} found with invalid state: {}".format(
+                        name, backend_state
+                    )
+                )
+
+            query_obj = {
+                "name": name,
+                "description": entity["status"].get("description", "-"),
+                "uuid": entity["metadata"]["uuid"],
+                "state": state,
+            }
+            cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+        try:
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def fetch_one(cls, uuid):
+        """returns tunnel data for tunnel uuid"""
+        # update by latest data
+        client = get_api_client()
+
+        res, err = client.tunnel.read(uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        # import here to avoid circular import issues
+        from calm.dsl.cli.tunnels import backend_to_ui_state_mapping
+
+        entity = res.json()
+        state = backend_to_ui_state_mapping(entity["status"].get("state", ""))
+        query_obj = {
+            "name": entity["status"]["name"],
+            "description": entity["status"].get("description", "-"),
+            "uuid": entity["metadata"]["uuid"],
+            "state": state,
+        }
+        return query_obj
+
+    @classmethod
+    def add_one(cls, uuid, **kwargs):
+        """adds one entry to tunnel table"""
+
+        query_obj = cls.fetch_one(uuid)
+        cls.create_entry(**query_obj)
+
+    @classmethod
+    def update_one(cls, uuid, **kwargs):
+        """updates single entry to tunnel table"""
+
+        query_obj = cls.fetch_one(uuid)
+        cls.update(
+            {
+                cls.name: query_obj["name"],
+                cls.description: query_obj["description"],
+                cls.state: query_obj["state"],
+                cls.last_update_time: datetime.datetime.now(),
+            }
+        ).where(cls.uuid == uuid).execute()
+
+    @classmethod
+    def delete_one(cls, uuid, **kwargs):
+        """deletes one entity from project"""
+
+        obj = cls.get(cls.uuid == uuid)
+        obj.delete_instance()
 
     class Meta:
         database = dsl_database
