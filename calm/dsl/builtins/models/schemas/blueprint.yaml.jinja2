@@ -52,6 +52,20 @@ properties:
   default_credential_local_reference:
     x-calm-dsl-display-name: default_cred
     {{ ref.Ref() | indent(4) }}
+  global_variable_reference_list:
+    type: array
+    x-calm-dsl-display-name: global_variables
+    x-calm-dsl-min-version: 4.3.0
+    items:
+      type: object
+      x-calm-dsl-type: object
+      properties:
+        kind:
+          type: string
+        name:
+          type: string
+        uuid:
+          type: string
 
 {%- endmacro %}
 

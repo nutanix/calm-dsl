@@ -811,3 +811,12 @@ class TEST_SCRIPTS:
 
     TERMINAL_STATES = [STATUS.SUCCESS, STATUS.ERROR]
     TYPE = ["escript", "shell", "powershell", "python"]
+
+
+class GLOBAL_VARIABLE:
+    class STATES:
+        ACTIVE = "ACTIVE"
+        DELETED = "DELETED"
+        DRAFT = "DRAFT"
+
+    DYNAMIC_VARIABLE_TYPES = ["EXEC_LOCAL", "HTTP_LOCAL", "EXEC_SECRET", "HTTP_SECRET"]

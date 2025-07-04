@@ -15,6 +15,7 @@ from tests.helper.status_map_helper import remove_status_map_from_bp
 from tests.helper.output_variables_helper import remove_output_variables_from_bp
 from tests.utils import get_local_az_overlay_details_from_dsl_config
 from tests.helper.vtpm_helper import remove_vtpm_config_from_bp
+from tests.helper.global_variables_helper import remove_global_variables_from_spec
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
@@ -139,6 +140,9 @@ class TestAppEditOverlaySubnetBlueprint:
         # remove vtpm config for version less than 4.2.0
         if LV(CALM_VERSION) < LV("4.2.0"):
             remove_vtpm_config_from_bp(known_json)
+
+        if LV(CALM_VERSION) < LV("4.3.0"):
+            remove_global_variables_from_spec(known_json)
 
         remove_output_variables_from_bp(known_json)
         remove_output_variables_from_bp(generated_json)

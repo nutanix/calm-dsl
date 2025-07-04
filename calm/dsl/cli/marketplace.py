@@ -3,6 +3,7 @@ import click
 import sys
 import json
 import os
+import time
 
 from prettytable import PrettyTable
 from distutils.version import LooseVersion as LV
@@ -20,6 +21,7 @@ from .apps import watch_app
 from .runlog import get_runlog_status
 from .accounts import get_account
 from .endpoints import get_endpoint
+from .global_variable import fetch_dynamic_global_variable_values
 from calm.dsl.builtins.models.helper.common import get_project
 from .environments import get_project_environment
 from calm.dsl.log import get_logging_handle
@@ -1250,6 +1252,7 @@ def approve_marketplace_item(
                     )
                 )
 
+    item_data["spec"]["resources"].pop("global_variable_list", None)
     if item_type == MARKETPLACE_ITEM.TYPES.BLUEPRINT:
         LOG.warning(MARKETPLACE_ITEM.WARN_MSG)
 
@@ -1366,6 +1369,8 @@ def publish_marketplace_item(
         LOG.error("To publish to the Marketplace, please provide a project first.")
         sys.exit(-1)
 
+    item_data["spec"]["resources"].pop("global_variable_list", None)
+
     res, err = client.market_place.update(uuid=item_uuid, payload=item_data)
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
@@ -1451,6 +1456,7 @@ def update_marketplace_item(
     if description:
         item_data["spec"]["description"] = description
 
+    item_data["spec"]["resources"].pop("global_variable_list", None)
     item_type = MARKETPLACE_ITEM.TYPES.BLUEPRINT
     CALM_VERSION = Version.get_version("Calm")
     if LV(CALM_VERSION) >= LV("3.2.0"):
@@ -1558,6 +1564,7 @@ def reject_marketplace_item(name, version, type=None):
     item_data.pop("status", None)
     item_data["api_version"] = "3.0"
     item_data["spec"]["resources"]["app_state"] = MARKETPLACE_ITEM.STATES.REJECTED
+    item_data["spec"]["resources"].pop("global_variable_list", None)
 
     res, err = client.market_place.update(uuid=item_uuid, payload=item_data)
     if err:
@@ -1662,6 +1669,8 @@ def unpublish_marketplace_item(
             item_data["spec"]["resources"][
                 "app_state"
             ] = MARKETPLACE_ITEM.STATES.ACCEPTED
+
+        item_data["spec"]["resources"].pop("global_variable_list", None)
 
         res, err = client.market_place.update(uuid=item_uuid, payload=item_data)
         if err:
@@ -2247,7 +2256,16 @@ def patch_runbook_runtime_editables(client, mpi_data, payload):
                     }
                 )
 
+    gv_names = [
+        var["name"]
+        for var in runbook["spec"]["resources"].get(
+            "global_variable_reference_list", []
+        )
+    ]
+    global_args = fetch_dynamic_global_variable_values(gv_names)
+
     payload["spec"]["resources"]["args"] = args
+    payload["spec"]["resources"]["global_args"] = global_args
     return payload
 
 

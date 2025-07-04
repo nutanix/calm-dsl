@@ -21,7 +21,7 @@ from prettytable import PrettyTable
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
-from calm.dsl.constants import CACHE, TUNNEL
+from calm.dsl.constants import CACHE, TUNNEL, GLOBAL_VARIABLE
 from calm.dsl.api.util import is_policy_check_required
 
 
@@ -4984,6 +4984,147 @@ class NDB_TagCache(CacheTableBase):
     class Meta:
         database = dsl_database
         primary_key = CompositeKey("name", "uuid", "account_name", "entity_type")
+
+
+class GlobalVariableCache(CacheTableBase):
+    __cache_type__ = CACHE.ENTITY.GLOBAL_VARIABLE
+    feature_min_version = GLOBAL_VARIABLE.MIN_SUPPORTED_VERSION
+    is_policy_required = False
+    name = CharField()
+    uuid = CharField()
+    _type = CharField()
+    state = CharField()
+    value = CharField()
+    project_reference_list = BlobField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "type": self._type,
+            "state": self.state,
+            "value": self.value,
+            "project_reference_list": json.loads(self.project_reference_list),
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def _get_dict_for_db_upsert(cls, entity):
+        return {
+            "name": entity["status"]["name"],
+            "uuid": entity["metadata"]["uuid"],
+            "_type": entity["status"]["resources"].get("type", ""),
+            "project_reference_list": json.dumps(
+                entity["status"]["resources"].get("project_reference_list", {})
+            ),
+            "state": entity["status"]["state"],
+        }
+
+    @classmethod
+    def add_one_by_entity_dict(cls, entity):
+        """adds one entry to global variable table"""
+        db_data = cls._get_dict_for_db_upsert(entity)
+        cls.create_entry(**db_data)
+
+    @classmethod
+    def delete_one(cls, uuid, **kwargs):
+        """deletes one global variable entity from cache"""
+        obj = cls.get(cls.uuid == uuid)
+        obj.delete_instance()
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["NAME", "UUID", "TYPE", "VALUE", "STATE", "LAST UPDATED"]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["type"]),
+                    highlight_text(entity_data["value"]),
+                    highlight_text(entity_data["state"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        _type = kwargs.get("type", "")
+        state = kwargs.get("state", "")
+        value = kwargs.get("value", "")
+        project_reference_list = kwargs.get("project_reference_list", "[]")
+
+        super().create(
+            name=name,
+            uuid=uuid,
+            _type=_type,
+            state=state,
+            value=value,
+            project_reference_list=project_reference_list,
+        )
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        payload = {"length": 250, "filter": ""}
+
+        res, err = client.global_variable.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res.get("entities", []):
+            query_obj = cls._get_dict_for_db_upsert(entity)
+            cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
 
 
 class VersionTable(BaseModel):

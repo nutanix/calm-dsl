@@ -1431,3 +1431,23 @@ class Ref:
                 "uuid": protection_policy_cache_data["uuid"],
                 "rule_uuid": protection_policy_cache_data["rule_uuid"],
             }
+
+    class GlobalVariable:
+        __ref_kind__ = CACHE.ENTITY.GLOBAL_VARIABLE
+
+        def __new__(cls, name, **kwargs):
+
+            global_variable_cache_data = Cache.get_entity_data(
+                entity_type=CACHE.ENTITY.GLOBAL_VARIABLE, name=name
+            )
+            if not global_variable_cache_data:
+                raise Exception(
+                    "Global Variable {} not found. Please run: calm update cache".format(
+                        name
+                    )
+                )
+            return {
+                "kind": "global_variable",
+                "name": name,
+                "uuid": global_variable_cache_data["uuid"],
+            }

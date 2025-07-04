@@ -8,6 +8,7 @@ from .models.ref import ref, RefType
 from .models.calm_ref import Ref, CalmRefType
 from .models.metadata import Metadata, MetadataType
 from .models.variable import Variable, setvar, CalmVariable, VariableType
+from .models.global_variable import GlobalVariable
 from .models.action import action, parallel, ActionType, get_runbook_action
 from .models.credential import basic_cred, secret_cred, dynamic_cred, CredentialType
 
@@ -326,4 +327,5 @@ __all__ = [
     "AhvUpdateConfigAttrs",
     "PatchField",
     "AppEdit",
+    "GlobalVariable",
 ]

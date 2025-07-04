@@ -42,6 +42,7 @@ from .utils import (
 from .constants import RUNBOOK, RUNLOG
 from .runlog import get_completion_func, get_runlog_status
 from .endpoints import get_endpoint
+from .global_variable import fetch_dynamic_global_variable_values
 
 from anytree import NodeMixin, RenderTree
 
@@ -263,6 +264,9 @@ def _decompile_runbook(runbook_payload, runbook_dir, prefix, no_format=False):
     default_endpoint = runbook_payload["status"]["resources"].get(
         "default_target_reference", None
     )
+    global_variable_list = runbook_payload["status"]["resources"].get(
+        "global_variable_list", []
+    )
     runbook_name = runbook_payload["status"].get("name", "DslRunbook")
     runbook_description = runbook_payload["status"].get("description", "")
 
@@ -287,6 +291,7 @@ def _decompile_runbook(runbook_payload, runbook_dir, prefix, no_format=False):
         metadata_obj=metadata_obj,
         credentials=credentials,
         default_endpoint=default_endpoint,
+        global_variable_list=global_variable_list,
         no_format=no_format,
     )
     click.echo(
@@ -689,7 +694,16 @@ def patch_runbook_runtime_editables(client, runbook):
                     }
                 )
 
-    payload = {"spec": {"args": args}}
+    rb_uuid = runbook["metadata"]["uuid"]
+    gv_names = [
+        var["name"]
+        for var in runbook["spec"]["resources"].get(
+            "global_variable_reference_list", []
+        )
+    ]
+    global_args = fetch_dynamic_global_variable_values("runbook", rb_uuid, gv_names)
+
+    payload = {"spec": {"args": args, "global_args": global_args}}
     default_target = (
         runbook["spec"]["resources"]
         .get("default_target_reference", {})
@@ -972,6 +986,15 @@ def describe_runbook(runbook_name, out):
         "name", "-"
     )
     click.echo("Default Endpoint Target: {}\n".format(highlight_text(default_target)))
+
+    global_variable_types = [
+        var["label"] if var.get("label", "") else var.get("name")
+        for var in runbook_resources.get("global_variable_list", [])
+    ]
+    click.echo(
+        "Global Variables [{}]:".format(highlight_text(len(global_variable_types)))
+    )
+    click.echo("\t{}\n".format(highlight_text(", ".join(global_variable_types))))
 
 
 def format_runbook_command(runbook_file):

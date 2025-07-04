@@ -1,0 +1,89 @@
+{
+    "endpoint_definition_list": [],
+    "credential_definition_list": [],
+    "client_attrs": {},
+    "runbook": {
+        "name": "DslCloudRunbook_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "DslCloudRunbook_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "DslCloudRunbook_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": []
+                },
+                "status_map_list": [],
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "name of the cloud task"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "name of the cloud task",
+                "description": "",
+                "type": "CLOUD",
+                "attrs": {
+                    "operation": "REST",
+                    "params": {
+                        "provider_operation_payload": {
+                            "type": "",
+                            "method": "POST",
+                            "connection_timeout": 120,
+                            "content_type": "application\\/json",
+                            "header_references": [
+                                "26b2edb0-62f3-4003-a49c-6f63532229f4"
+                            ],
+                            "authentication": {
+                                "auth_type": "none"
+                            },
+                            "request_body": "{}",
+                            "url": "",
+                            "expected_response_params": [
+                                {
+                                    "status": "SUCCESS",
+                                    "code": 200
+                                }
+                            ],
+                            "response_paths": {
+                                "endpoints_count": "$.metadata.total_matches"
+                            },
+                            "tls_verify": false,
+                            "proxy_type": "",
+                            "retry_count": 1,
+                            "retry_interval": 10,
+                            "relative_url": "\\/endpoints\\/list",
+                            "internal_service": "",
+                            "internal_service_method": "",
+                            "headers": [
+                                {
+                                    "name": "Authorization",
+                                    "value": "Bearer @@{calm_jwt}@@",
+                                    "secret": false
+                                }
+                            ],
+                            "proxy_config": {}
+                        }
+                    }
+                },
+                "status_map_list": [],
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": [],
+        "output_variable_list": []
+    },
+    "global_variable_reference_list": []
+}

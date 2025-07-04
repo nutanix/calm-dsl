@@ -68,6 +68,7 @@
 {% import "cloud_provider_payload.yaml.jinja2" as cloud_provider_payload %}
 {% import "cloud_provider.yaml.jinja2" as cloud_provider %}
 {% import "resource_type.yaml.jinja2" as resource_type %}
+{% import "global_variable.yaml.jinja2" as global_variable %}
 {% macro Schemas() -%}
 
 {{ config_attrs.AhvDiskRulesetSchema() }}
@@ -145,6 +146,7 @@
 {{ resource_type.ResourceTypeSchema() }}
 {{ cloud_provider_payload.CloudProviderPayloadSchema() }}
 {{ cloud_provider.CloudProviderSchema() }}
+{{ global_variable.GlobalVariableSchema() }}
 
 {%- endmacro %}
 

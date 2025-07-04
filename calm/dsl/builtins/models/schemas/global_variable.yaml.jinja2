@@ -1,0 +1,23 @@
+{% macro GlobalVariable() -%}
+
+title: Global Variable
+x-calm-dsl-type: global_variable
+x-calm-dsl-min-version: 4.3.0
+type: object
+properties:
+  definition:
+    $ref: '#/components/schemas/Variable'
+  project_reference_list:
+    x-calm-dsl-display-name: projects
+    type: array
+    items:
+      type: string
+
+{%- endmacro %}
+
+{% macro GlobalVariableSchema() -%}
+
+GlobalVariable:
+  {{ GlobalVariable()|indent(2) }}
+
+{%- endmacro %}

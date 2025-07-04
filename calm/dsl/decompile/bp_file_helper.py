@@ -38,7 +38,11 @@ SECRETS_FILE_ENCRYPTION_KEY = (
 
 
 def render_bp_file_template(
-    cls, with_secrets=False, metadata_obj=None, contains_encrypted_secrets=False
+    cls,
+    with_secrets=False,
+    metadata_obj=None,
+    contains_encrypted_secrets=False,
+    global_variable_list=[],
 ):
 
     if not isinstance(cls, BlueprintType):
@@ -267,7 +271,9 @@ def render_bp_file_template(
         LOG.info("Creating secret metadata file")
         encrypt_decompile_secrets(secrets_dict=secrets_dict)
 
-    blueprint = render_blueprint_template(cls)
+    blueprint = render_blueprint_template(
+        cls, global_variable_list=global_variable_list
+    )
 
     # Render blueprint metadata
     metadata_str = render_metadata_template(metadata_obj)

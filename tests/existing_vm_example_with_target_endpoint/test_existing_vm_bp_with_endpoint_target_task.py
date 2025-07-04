@@ -20,6 +20,7 @@ from calm.dsl.store import Version
 from distutils.version import LooseVersion as LV
 from tests.helper.status_map_helper import remove_status_map_from_bp
 from tests.helper.output_variables_helper import remove_output_variables_from_bp
+from tests.helper.global_variables_helper import remove_global_variables_from_spec
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 TEST_PC_IP = DSL_CONFIG["EXISTING_MACHINE"]["IP_1"]
@@ -538,6 +539,8 @@ def test_json():
             for variable in profile.get("variable_list", []):
                 if variable.get("options"):
                     variable["options"].pop("exec_target_reference", None)
+    if LV(CALM_VERSION) < LV("4.3.0"):
+        remove_global_variables_from_spec(known_json)
 
     remove_output_variables_from_bp(known_json)
     remove_output_variables_from_bp(generated_json)

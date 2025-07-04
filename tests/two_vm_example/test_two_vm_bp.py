@@ -13,6 +13,7 @@ from calm.dsl.store import Version
 from distutils.version import LooseVersion as LV
 from tests.helper.status_map_helper import remove_status_map_from_bp
 from tests.helper.output_variables_helper import remove_output_variables_from_bp
+from tests.helper.global_variables_helper import remove_global_variables_from_spec
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
@@ -155,6 +156,8 @@ def test_json():
 
     if LV(CALM_VERSION) < LV("3.9.0"):
         remove_status_map_from_bp(known_json)
+    if LV(CALM_VERSION) < LV("4.3.0"):
+        remove_global_variables_from_spec(known_json)
 
     remove_output_variables_from_bp(known_json)
     remove_output_variables_from_bp(generated_json)

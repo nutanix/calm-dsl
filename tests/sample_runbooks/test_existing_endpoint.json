@@ -49,5 +49,6 @@
         ],
         "variable_list": [],
         "output_variables": []
-    }
+    },
+    "global_variable_reference_list": []
 }

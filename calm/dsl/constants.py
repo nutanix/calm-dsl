@@ -29,6 +29,7 @@ class CACHE:
         POLICY_ATTRIBUTES = "policy_attributes"
         PROTECTION_POLICY = "app_protection_policy"
         TUNNEL = "tunnel"
+        GLOBAL_VARIABLE = "global_variable"
 
     API_ENTITY_KIND_MAP = {
         "cluster": ENTITY.AHV_CLUSTER,
@@ -123,6 +124,10 @@ class STRATOS:
 
 class CLOUD_PROVIDERS:
     MIN_SUPPORTED_VERSION = "4.0.0"
+
+
+class GLOBAL_VARIABLE:
+    MIN_SUPPORTED_VERSION = "4.3.0"
 
 
 class NETWORK_GROUP_TUNNEL_TASK:
@@ -478,6 +483,7 @@ class RESOURCE:
         "platform_dependent_fields",
         "blueprints/brownfield_import/vms",
         "calm_marketplace_items",
+        "global_variables",
         # AhvNew class resources
         "nutanix/v1/subnets",
         "nutanix/v1/images",

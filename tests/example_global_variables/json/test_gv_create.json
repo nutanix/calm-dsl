@@ -1,0 +1,35 @@
+{
+    "spec": {
+        "description": "",
+        "resources": {
+            "val_type": "STRING",
+            "regex": {
+                "should_validate": false
+            },
+            "data_type": "BASE",
+            "label": "",
+            "value": "abc",
+            "type": "LOCAL",
+            "options": {
+                "type": "PREDEFINED",
+                "choices": []
+            },
+            "attrs": {
+                "type": "LOCAL"
+            },
+            "project_reference_list": []
+        },
+        "name": "SimpleGlobalVar1"
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "spec_version": 0,
+        "name": "SimpleGlobalVar1",
+        "kind": "global_variable",
+        "owner_reference": {
+            "kind": "user",
+            "uuid": "00000000-0000-0000-0000-000000000000",
+            "name": "admin"
+        }
+    }
+}

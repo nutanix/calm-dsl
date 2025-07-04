@@ -674,3 +674,9 @@ def run_script(script_type, script_file, project_name, endpoint_file):
 def clone():
     """Clone entities"""
     pass
+
+
+@get.group(cls=FeatureFlagGroup)
+def usage():
+    """Usage entities"""
+    pass

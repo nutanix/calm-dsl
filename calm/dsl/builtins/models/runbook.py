@@ -15,6 +15,7 @@ from .node_visitor import GetCallNodes
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store.version import Version
 from calm.dsl.constants import RESOURCE_TYPE, CLOUD_PROVIDER as PROVIDER
+from calm.dsl.builtins import Ref
 
 
 from _ast import AST
@@ -156,7 +157,13 @@ class runbook(metaclass=DescriptorType):
             LOG.exception(ex)
             sys.exit(-1)
 
-        tasks, variables, task_list, outputs = node_visitor.get_objects()
+        (
+            tasks,
+            variables,
+            task_list,
+            outputs,
+            global_variables,
+        ) = node_visitor.get_objects()
         edges = []
         child_tasks = []
 
@@ -283,6 +290,9 @@ class runbook(metaclass=DescriptorType):
 
             self.runbook.credentials = credentials
             self.runbook.endpoints = endpoints
+
+            if LV(CALM_VERSION) >= LV("4.3.0"):
+                self.runbook.global_variables = global_variables
             return self.runbook
 
         else:
