@@ -1,7 +1,7 @@
-FROM python:3.7-alpine
+FROM python:3.8-alpine
 
 # Upgrade to latest pip and install setuptools
-RUN pip3 install --no-cache-dir --upgrade pip setuptools
+RUN pip3 install --no-cache-dir --upgrade pip setuptools==70.0.0
 
 # Alpine is not manylinux compatible, so any package containing C extensions
 # must be built from source [PEP 513].
@@ -31,6 +31,10 @@ RUN pip3 install --no-cache-dir calm.dsl*.whl && rm calm.dsl*.whl
 
 # Install bash and auto-completion for calm commands
 RUN apk add --no-cache bash bash-completion
+
+# Upgrade libraries to latest versions
+RUN apk add --upgrade libexpat
+
 COPY .bashrc /root/.bashrc
 COPY .bash_completion /root/.bash_completion
 

@@ -84,8 +84,16 @@ _init_centos:
 
 	# Install docker
 	which docker || { curl -fsSL https://get.docker.com/ | sh; sudo systemctl start docker; sudo systemctl enable docker; sudo usermod -aG docker $(whoami); }
+	
+	sudo yum-config-manager --enable centos-sclo-rh || :
+	sudo yum-config-manager --enable centos-sclo-sclo || :
+	sudo yum install -y centos-release-scl-rh || :
+	sudo sed -i '/^mirrorlist/d' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || :
+	sudo sed -i 's|#baseurl|baseurl|g' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || :
+	sudo sed -i 's|mirror.centos.org|vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+	sudo sed -i 's|mirrorlist.centos.org|vault.centos.org|g' /etc/yum.repos.d/CentOS-* || :
+	sudo yum install -y rh-python38 rh-python38-python-devel
+	. /opt/rh/rh-python38/enable
 
-	rpm -q python3 || sudo yum -y install python3-devel python3-pip python3-venv python3-wheel
-	sudo ln -sf /bin/pip3.6 /bin/pip3
-
-	sudo pip3 install wheel
+	python3 --version
+	python3 -m pip install --upgrade pip wheel

@@ -11,6 +11,7 @@ class {{obj.name}}(AhvVmResources):
     {% if obj.serial_ports %}serial_ports = {{obj.serial_ports}}{% endif %}
     {% if obj.power_state %}power_state = "{{obj.power_state}}"{% endif %}
     {% if obj.boot_type %}boot_type = "{{obj.boot_type}}"{% endif %}
+    {% if obj.vtpm_enabled %}vtpm_enabled = {{obj.vtpm_enabled}}{% endif %}
 {% endmacro %}
 
 {{ ahv_vm_resources(obj) }}

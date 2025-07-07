@@ -20,6 +20,7 @@ CENTOS_CI = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
 SUBNET = DSL_CONFIG["ACCOUNTS"]["NUTANIX_PC"][0]["SUBNETS"][0]["NAME"]
 CLUSTER = DSL_CONFIG["ACCOUNTS"]["NUTANIX_PC"][0]["SUBNETS"][0]["CLUSTER"]
 NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
+ACCOUNT_NAME = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]["NAME"]
 
 NETWORK1, VPC1, CLUSTER1 = get_local_az_overlay_details_from_dsl_config(DSL_CONFIG)
 VPC_PROJECT = get_vpc_project(DSL_CONFIG)
@@ -77,6 +78,7 @@ class AhvSubstrate(Substrate):
 
     provider_spec = MyAhvVm
     provider_spec_editables = read_spec("specs/ahv_overlay_substrate_editable.yaml")
+    account = Ref.Account(name=ACCOUNT_NAME)
 
     readiness_probe = readiness_probe(
         connection_type="SSH",

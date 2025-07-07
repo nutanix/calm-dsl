@@ -13,8 +13,14 @@ from calm.dsl.cli.constants import APPLICATION
 from calm.dsl.tools import make_file_dir
 from calm.dsl.log import get_logging_handle
 from tests.utils import Application as ApplicationHelper
+from calm.dsl.builtins import read_local_file
+from calm.dsl.api import get_api_client
+from tests.utils import verify_platform_sync_task
 
 LOG = get_logging_handle(__name__)
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+ACCOUNT_NAME = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]["NAME"]
 
 DSL_BP_FILEPATH = "tests/brownfield/separate_file_example/blueprint.py"
 DSL_BP_BD_FILEPATH = "tests/brownfield/separate_file_example/brownfield.py"
@@ -164,6 +170,37 @@ class TestBrownFieldCommands:
         with open(LOCAL_VM_IP_PATH, "w") as f:
             f.write(vm_ip)
 
+        # Platform sync account to create brownfield vms
+        time.sleep(
+            10
+        )  # to avoid triggering platform sync at same time of default system sync
+        LOG.info("Triggering '{}' account sync".format(ACCOUNT_NAME))
+        result = runner.invoke(
+            cli,
+            [
+                "sync",
+                "account",
+                "{}".format(ACCOUNT_NAME),
+            ],
+        )
+
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("'{}' account sync failed".format(ACCOUNT_NAME))
+
+        if not verify_platform_sync_task(ACCOUNT_NAME):
+            pytest.fail("Platform sync task failed")
+
         # Creating brownfield blueprint
         app_name = "BrownfieldApplication{}".format(str(uuid.uuid4())[:10])
         LOG.info("Creating Brownfield Application {}".format(app_name))
@@ -305,6 +342,37 @@ class TestBrownFieldCommands:
         make_file_dir(LOCAL_VM_IP_PATH)
         with open(LOCAL_VM_IP_PATH, "w") as f:
             f.write(vm_ip)
+
+        # Platform sync account to create brownfield vms
+        time.sleep(
+            10
+        )  # to avoid triggering platform sync at same time of default system sync
+        LOG.info("Triggering '{}' account sync".format(ACCOUNT_NAME))
+        result = runner.invoke(
+            cli,
+            [
+                "sync",
+                "account",
+                "{}".format(ACCOUNT_NAME),
+            ],
+        )
+
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("'{}' account sync failed".format(ACCOUNT_NAME))
+
+        if not verify_platform_sync_task(ACCOUNT_NAME):
+            pytest.fail("Platform sync task failed")
 
         # Creating brownfield blueprint
         app_name_2 = "BrownfieldApplication{}".format(str(uuid.uuid4())[:10])

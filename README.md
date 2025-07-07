@@ -2,9 +2,16 @@
 
 ![Build](https://github.com/nutanix/calm-dsl/workflows/Setup%20&%20build%20calm-dsl/badge.svg)
 
-`Latest release version: 4.1.1, Latest-release-tag: v4.1.1`
+### Supported Python Versions
 
-`Latest Release Notes:` [read here](release-notes/4.1.1)
+![Python 3.8](https://img.shields.io/badge/python-3.8-blue)
+![Python 3.9](https://img.shields.io/badge/python-3.9-blue)
+![Python 3.10](https://img.shields.io/badge/python-3.10-blue)
+![Python 3.11](https://img.shields.io/badge/python-3.11-blue)
+
+`Latest release version: 4.2.0, Latest-release-tag: v4.2.0`
+
+`Latest Release Notes:` [read here](release-notes/4.2.0)
 
 
 # Nutanix Cloud Manager (NCM) Self Service (formerly Calm) DSL
