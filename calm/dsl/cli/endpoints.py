@@ -421,15 +421,19 @@ def describe_endpoint(endpoint_name, out):
     endpoint_attrs = endpoint_resources.get("attrs", {})
     click.echo("Type: {}".format(highlight_text(endpoint_type)))
     if endpoint_type == ENDPOINT.TYPES.HTTP:
-        url = endpoint_attrs.get("url", "")
-        click.echo("URL: {}\n".format(highlight_text(url)))
+        urls = endpoint_attrs.get("urls", [])
+        element_count = endpoint_resources.get("element_count")
+        click.echo("URL Count: {}".format(highlight_text(element_count)))
+        click.echo("URLs: {}".format(highlight_text(urls)))
     else:
         value_type = endpoint_attrs.get("value_type", "IP")
         value_type += "s"
         values = endpoint_attrs.get("values", [])
         element_count = endpoint_resources.get("element_count")
         click.echo("VM Count: {}".format(highlight_text(element_count)))
-        click.echo("{}: {}\n".format(value_type, highlight_text(values)))
+        click.echo("{}: {}".format(value_type, highlight_text(values)))
+    tunnel_name = endpoint_resources.get("tunnel_reference", {}).get("name", "-")
+    click.echo("{}: {}\n".format("Tunnel", highlight_text(tunnel_name)))
 
 
 def delete_endpoint(endpoint_names):

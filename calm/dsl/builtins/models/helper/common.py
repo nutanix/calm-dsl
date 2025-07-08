@@ -8,7 +8,7 @@ from calm.dsl.api import get_api_client
 from calm.dsl.store import Cache
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, TUNNEL
 from calm.dsl.db.table_config import ResourceTypeCache
 from calm.dsl.api.util import is_policy_check_required
 
@@ -513,3 +513,93 @@ def policy_required(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def custom_decompile_for_tunnels(cls, cdict, tunnel_kind):
+    """
+    Decompiles a tunnel object by resolving its name from the provided dictionary
+    or cache, based on the tunnel kind.
+    """
+    cache_data = None
+    if cdict.get("uuid"):
+        cache_data = get_tunnel_cache_from_uuid(cdict["uuid"], tunnel_kind)
+    elif cdict.get("name"):
+        cache_data = get_tunnel_cache_from_name(cdict["name"], tunnel_kind)
+
+    name = cdict.get("name") if cdict.get("name") else cache_data["name"]
+    return cls.__new__(cls, name=name)
+
+
+def custom_compile_for_tunnels(cls, name, tunnel_kind):
+    """
+    Compiles a tunnel object by resolving its details from the provided name
+    based on the tunnel kind.
+    """
+    if not name:
+        LOG.error(
+            "{} Tunnel name not passed, please pass tunnel name".format(tunnel_kind)
+        )
+        sys.exit("{} Tunnel name is mandatory".format(tunnel_kind))
+
+    tunnel_cache = get_tunnel_cache_from_name(name, tunnel_kind)
+    return {
+        "uuid": tunnel_cache.get("uuid"),
+        "name": name,
+        "kind": tunnel_kind,
+    }
+
+
+def get_tunnel_cache_from_name(name, tunnel_kind):
+    """Retrieve tunnel cache details based on the provided name."""
+    tunnel_cache = None
+    if tunnel_kind == TUNNEL.KIND.NETWORK_GROUP:
+        tunnel_cache = Cache.get_entity_data(
+            CACHE.ENTITY.AHV_VPC, None, tunnel_name=name
+        )
+    elif tunnel_kind == TUNNEL.KIND.ACCOUNT:
+        tunnel_cache = Cache.get_entity_data(CACHE.ENTITY.TUNNEL, name=name)
+    else:
+        LOG.error(
+            "Invalid tunnel kind: {}. Supported kinds are: {}".format(
+                tunnel_kind, [TUNNEL.KIND.NETWORK_GROUP, TUNNEL.KIND.ACCOUNT]
+            )
+        )
+        sys.exit("Invalid tunnel kind: {}".format(tunnel_kind))
+
+    if not tunnel_cache:
+        LOG.error(
+            "Failed to find {} Tunnel with name: {}. Please run: calm update cache".format(
+                tunnel_kind, name
+            )
+        )
+        sys.exit("Failed to find {} Tunnel with name: {}.".format(tunnel_kind, name))
+    return tunnel_cache
+
+
+def get_tunnel_cache_from_uuid(uuid, tunnel_kind):
+    """Retrieve tunnel cache details based on the provided UUID."""
+    tunnel_cache = None
+    if tunnel_kind == TUNNEL.KIND.NETWORK_GROUP:
+        tunnel_cache = Cache.get_entity_data_using_uuid(
+            entity_type=CACHE.ENTITY.AHV_VPC, uuid=uuid
+        )
+    elif tunnel_kind == TUNNEL.KIND.ACCOUNT:
+        tunnel_cache = Cache.get_entity_data_using_uuid(
+            entity_type=CACHE.ENTITY.TUNNEL, uuid=uuid
+        )
+    else:
+        LOG.error(
+            "Invalid tunnel kind: {}. Supported kinds are: {}".format(
+                tunnel_kind, [TUNNEL.KIND.NETWORK_GROUP, TUNNEL.KIND.ACCOUNT]
+            )
+        )
+        sys.exit("Invalid tunnel kind: {}".format(tunnel_kind))
+
+    if not tunnel_cache:
+        LOG.error(
+            "Entity with type {} and uuid {} not found in cache. Please update cache".format(
+                tunnel_kind, uuid
+            )
+        )
+        sys.exit("Invalid {} entity (uuid='')".format(tunnel_kind, uuid))
+    return tunnel_cache

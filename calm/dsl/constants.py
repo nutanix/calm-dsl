@@ -616,6 +616,10 @@ class TUNNEL:
     API_VERSION = "3.0"
     FEATURE_MIN_VERSION = "4.3.0"
 
+    class KIND:
+        ACCOUNT = "tunnel"
+        NETWORK_GROUP = "network_group"
+
     class STATES:
         ACTIVE = "ACTIVE"
         HEALTHY = "HEALTHY"

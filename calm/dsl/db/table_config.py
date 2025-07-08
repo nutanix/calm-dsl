@@ -3622,11 +3622,9 @@ class TunnelCache(CacheTableBase):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        # import here to avoid circular import issues
-        from calm.dsl.cli.tunnels import backend_to_ui_state_mapping
-
         entity = res.json()
-        state = backend_to_ui_state_mapping(entity["status"].get("state", ""))
+        backend_state = entity["status"].get("state", "")
+        state = TUNNEL.BACKEND_TO_UI_STATE_MAPPING.get(backend_state, "")
         query_obj = {
             "name": entity["status"]["name"],
             "description": entity["status"].get("description", "-"),

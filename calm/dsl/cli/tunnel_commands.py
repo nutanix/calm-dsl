@@ -59,10 +59,17 @@ def _get_tunnels(name, filter_by, limit, offset, quiet, all_items, out):
     "tunnels", feature_min_version=TUNNEL.FEATURE_MIN_VERSION, experimental=True
 )
 @click.argument("tunnel_names", nargs=-1)
-def _delete_tunnels(tunnel_names):
+@click.option(
+    "--no-cache-update",
+    "no_cache_update",
+    is_flag=True,
+    default=False,
+    help="if true, cache is not updated for tunnels",
+)
+def _delete_tunnels(tunnel_names, no_cache_update):
     """Deletes a Tunnel"""
 
-    delete_tunnel(tunnel_names)
+    delete_tunnel(tunnel_names, no_cache_update=no_cache_update)
 
 
 @describe.command("tunnel", feature_min_version=TUNNEL.FEATURE_MIN_VERSION)
@@ -99,10 +106,17 @@ def _describe_tunnel(tunnel_name, out):
     default="",
     help="Tunnel description (Optional)",
 )
-def _create_tunnel(name, description):
+@click.option(
+    "--no-cache-update",
+    "no_cache_update",
+    is_flag=True,
+    default=False,
+    help="if true, cache is not updated for tunnels",
+)
+def _create_tunnel(name, description, no_cache_update):
     """Creates Tunnel"""
 
-    create_tunnel(name, description)
+    create_tunnel(name, description, no_cache_update=no_cache_update)
 
 
 @update.command("tunnel", feature_min_version=TUNNEL.FEATURE_MIN_VERSION)
@@ -123,7 +137,14 @@ def _create_tunnel(name, description):
     default=None,
     help="Tunnel description (Optional), if not provided, original description will be used",
 )
-def _update_tunnel(name, new_name, description):
+@click.option(
+    "--no-cache-update",
+    "no_cache_update",
+    is_flag=True,
+    default=False,
+    help="if true, cache is not updated for tunnels",
+)
+def _update_tunnel(name, new_name, description, no_cache_update):
     """Updates Tunnel"""
 
-    update_tunnel(name, new_name, description)
+    update_tunnel(name, new_name, description, no_cache_update=no_cache_update)

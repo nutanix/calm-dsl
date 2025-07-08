@@ -47,7 +47,18 @@
         }
       ],
       "is_default": false,
-      "tunnel_reference_list": [],
+      "tunnel_reference_list": [
+        {
+          "kind": "tunnel",
+          "name": "Tunnel_1",
+          "uuid": ""
+        },
+        {
+          "kind": "tunnel",
+          "name": "Tunnel_2",
+          "uuid": ""
+        }
+      ],
       "external_user_group_reference_list": [],
       "default_environment_reference": {
         "kind": "environment",
@@ -111,7 +122,16 @@
           "uuid": ""
         }
       ],
-      "tunnel_reference_list": [],
+      "tunnel_reference_list": [
+        {
+          "kind": "tunnel",
+          "uuid": ""
+        },
+        {
+          "kind": "tunnel",
+          "uuid": ""
+        }
+      ],
       "external_user_group_reference_list": [],
       "cluster_reference_list": [
         { "kind": "cluster", "uuid": "" }

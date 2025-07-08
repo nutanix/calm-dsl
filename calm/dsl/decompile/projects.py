@@ -35,7 +35,13 @@ def render_project_template(
 
     user_attrs = {
         "name": project_cls.__name__,
+        "tunnels": [],
     }
+
+    tunnel_refs = project_cls.get_dict().get("tunnel_reference_list", [])
+    if tunnel_refs:
+        for tunnel in tunnel_refs:
+            user_attrs["tunnels"].append(tunnel)
 
     rendered_providers_list = []
     if project_cls.providers:

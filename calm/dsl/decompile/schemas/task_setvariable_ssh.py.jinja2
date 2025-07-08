@@ -1,7 +1,8 @@
 {% import "status_handle.py.jinja2" as status_handle %}
+{% import "tunnel_ref_handle.py.jinja2" as tunnel_ref_handle %}
 
 {%- macro common_details(obj) -%}
-name='{{obj.name}}', filename={{obj.attrs.script_file}} {%- if obj.attrs.ip %}, ip='{{obj.attrs.ip}}'{%- endif %} {%- if obj.attrs.port %}, port={{obj.attrs.port}}{%- endif %} {%- if obj.target_endpoint %}, target_endpoint={{obj.target_endpoint}} {%- endif %} {%- if obj.status_map_list %}, status_map_list=[{%- for status_map in obj.status_map_list %}{%- if status_map.type == "exit_code" %}{{ status_handle.exit_code(status_map) }}{% endif %}{%- if status_map.type == "status" %}{{ status_handle.task_status(status_map) }}{% endif %}{%- endfor %}] {%- endif %}
+name='{{obj.name}}', filename={{obj.attrs.script_file}} {%- if obj.attrs.ip %}, ip='{{obj.attrs.ip}}'{%- endif %} {%- if obj.attrs.port %}, port={{obj.attrs.port}}{%- endif %} {%- if obj.attrs.tunnel_reference %} , tunnel={{ tunnel_ref_handle.tunnel_reference(obj.attrs.tunnel_reference) }} {%- endif %} {%- if obj.target_endpoint %}, target_endpoint={{obj.target_endpoint}} {%- endif %} {%- if obj.status_map_list %}, status_map_list=[{%- for status_map in obj.status_map_list %}{%- if status_map.type == "exit_code" %}{{ status_handle.exit_code(status_map) }}{% endif %}{%- if status_map.type == "status" %}{{ status_handle.task_status(status_map) }}{% endif %}{%- endfor %}] {%- endif %}
 {%- endmacro %}
 
 {%- macro setvariable_ssh_task(obj) -%}

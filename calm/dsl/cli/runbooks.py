@@ -1131,11 +1131,12 @@ def poll_action(poll_func, completion_func, poll_interval=10, **kwargs):
 
 
 class TaskNode(NodeMixin):
-    def __init__(self, name, task_type=None, target=None, parent=None):
+    def __init__(self, name, task_type=None, target=None, parent=None, tunnel=None):
         self.name = name
         self.type = task_type
         self.target = target
         self.parent = parent
+        self.tunnel = tunnel
 
 
 def addTaskNodes(task_uuid, task_map, parent=None):
@@ -1143,12 +1144,17 @@ def addTaskNodes(task_uuid, task_map, parent=None):
     task_name = task.get("name", "")
     task_target = task.get("target_any_local_reference", {}).get("name", "")
     task_type = task.get("type", "")
+    task_tunnel = task.get("attrs", {}).get("tunnel_reference", {}).get("name", "")
 
     if task_type == "DAG":
         node = TaskNode("ROOT")
     elif task_type != "META":
         node = TaskNode(
-            task_name, task_type=task_type, target=task_target, parent=parent
+            task_name,
+            task_type=task_type,
+            target=task_target,
+            parent=parent,
+            tunnel=task_tunnel,
         )
     else:
         node = parent
@@ -1175,23 +1181,15 @@ def addTaskNodes(task_uuid, task_map, parent=None):
 
 
 def displayTaskNode(node, pre):
-    if node.type and node.target:
-        click.echo(
-            "\t{}{} (Type: {}, Target: {})".format(
-                pre,
-                highlight_text(node.name),
-                highlight_text(node.type),
-                highlight_text(node.target),
-            )
-        )
-    elif node.type:
-        click.echo(
-            "\t{}{} (Type: {})".format(
-                pre, highlight_text(node.name), highlight_text(node.type)
-            )
-        )
-    else:
-        click.echo("\t{}{}".format(pre, highlight_text(node.name)))
+    task_str = "\t{}{} (".format(pre, highlight_text(node.name))
+    if node.type:
+        task_str += "Type: {},".format(highlight_text(node.type))
+    if node.target:
+        task_str += " Target: {},".format(highlight_text(node.target))
+    if node.tunnel:
+        task_str += " Tunnel: {},".format(highlight_text(node.tunnel))
+    task_str = task_str.rstrip(",") + ")"
+    click.echo(task_str)
 
 
 def clone_runbook(original_runbook_name, cloned_runbook_name):

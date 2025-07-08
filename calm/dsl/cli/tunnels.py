@@ -10,8 +10,9 @@ from calm.dsl.api import get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins.models.helper.common import policy_required
+from calm.dsl.store import Cache
 
-from calm.dsl.constants import TUNNEL
+from calm.dsl.constants import TUNNEL, CACHE
 from .utils import (
     get_name_query,
     highlight_text,
@@ -204,9 +205,10 @@ def get_tunnel(client, tunnel_name):
 
 
 @policy_required
-def delete_tunnel(tunnel_names):
+def delete_tunnel(tunnel_names, no_cache_update=False):
     """Deletes all the tunnels with the given names"""
     client = get_api_client()
+    deleted_tunnel_uuids = []
 
     for tunnel_name in tunnel_names:
         tunnel = get_tunnel(client, tunnel_name)
@@ -214,7 +216,16 @@ def delete_tunnel(tunnel_names):
         resp, err = client.tunnel.delete(uuid=tunnel_uuid)
         if err:
             handle_err("Error deleting tunnel {}: {}".format(tunnel_name, err))
+        deleted_tunnel_uuids.append(tunnel_uuid)
         LOG.info("Tunnel {} deleted successfully.".format(tunnel_name))
+    if deleted_tunnel_uuids:
+        if no_cache_update:
+            LOG.info("Skipping tunnels cach update.")
+        else:
+            LOG.info("Updating Tunnels cache ...")
+            for _tunnel_id in deleted_tunnel_uuids:
+                Cache.delete_one(entity_type=CACHE.ENTITY.TUNNEL, uuid=_tunnel_id)
+            LOG.info("[Done]")
 
 
 @policy_required
@@ -289,7 +300,7 @@ def create_tunnel_payload(name, description):
 
 
 @policy_required
-def create_tunnel(name="", description=""):
+def create_tunnel(name="", description="", no_cache_update=False):
     """Creates a Tunnel"""
     client = get_api_client()
     LOG.info("Creating Tunnel with name: {}".format(name))
@@ -345,9 +356,16 @@ def create_tunnel(name="", description=""):
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
+    if no_cache_update:
+        LOG.info("Skipping tunnels cache update.")
+    else:
+        LOG.info("Updating Tunnels cache ...")
+        Cache.add_one(entity_type=CACHE.ENTITY.TUNNEL, uuid=tunnel_uuid)
+        LOG.info("[Done]")
+
 
 @policy_required
-def update_tunnel(name, new_name="", description=""):
+def update_tunnel(name, new_name="", description="", no_cache_update=False):
     """Updates a Tunnel"""
     client = get_api_client()
     LOG.info("Updating Tunnel with name: {}".format(name))
@@ -418,3 +436,10 @@ def update_tunnel(name, new_name="", description=""):
         "state": tunnel_state,
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+    if no_cache_update:
+        LOG.info("Skipping tunnels cache update.")
+    else:
+        LOG.info("Updating Tunnels cache ...")
+        Cache.update_one(entity_type=CACHE.ENTITY.TUNNEL, uuid=tunnel_uuid)
+        LOG.info("[Done]")
