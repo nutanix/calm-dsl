@@ -331,6 +331,8 @@ def _exec_create(
         raise ValueError("Tunnel is supported only for Escript script types")
 
     if filename is not None:
+        if cls_type and issubclass(cls_type, ProviderTask):
+            depth += 1
         file_path = os.path.join(
             os.path.dirname(sys._getframe(depth).f_globals.get("__file__")), filename
         )
@@ -385,7 +387,10 @@ def _decision_create(
             + (name or "")
         )
 
+    cls_type = kwargs.get("cls_type", None)
     if filename is not None:
+        if cls_type and issubclass(cls_type, ProviderTask):
+            depth += 1
         file_path = os.path.join(
             os.path.dirname(sys._getframe(depth).f_globals.get("__file__")), filename
         )
@@ -398,7 +403,6 @@ def _decision_create(
             "One of script or filename is required for decision task " + (name or "")
         )
 
-    cls_type = kwargs.get("cls_type", None)
     if (
         not (cls_type and issubclass(cls_type, ProviderTask))
         and script_type not in ["static", "static_py3"]
