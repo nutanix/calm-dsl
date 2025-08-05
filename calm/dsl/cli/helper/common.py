@@ -21,11 +21,11 @@ def get_variable_value_options(
 
     payload = {}
     if is_global:
-        payload["is_global"] = is_global
-
-    res, _ = ENTITY_TYPE_TO_API_CLIENT_MAP[entity_type].variable_values(
-        uuid=entity_uuid, var_uuid=var_uuid, payload=payload
-    )
+        res, _ = client.global_variable.values(uuid=var_uuid, payload=payload)
+    else:
+        res, _ = ENTITY_TYPE_TO_API_CLIENT_MAP[entity_type].variable_values(
+            uuid=entity_uuid, var_uuid=var_uuid, payload=payload
+        )
 
     var_task_data = res.json()
 
@@ -33,15 +33,17 @@ def get_variable_value_options(
     payload = {
         "requestId": var_task_data["request_id"],
         "trlId": var_task_data["trl_id"],
-        "is_global": is_global,
     }
     # Poll till completion of epsilon task
     maxWait = 5 * 60
     count = 0
     while count < maxWait:
-        res, err = ENTITY_TYPE_TO_API_CLIENT_MAP[entity_type].variable_values(
-            uuid=entity_uuid, var_uuid=var_uuid, payload=payload
-        )
+        if is_global:
+            res, err = client.global_variable.values(uuid=var_uuid, payload=payload)
+        else:
+            res, err = ENTITY_TYPE_TO_API_CLIENT_MAP[entity_type].variable_values(
+                uuid=entity_uuid, var_uuid=var_uuid, payload=payload
+            )
 
         # If there is exception during variable api call, it would be silently ignored
         if err:
