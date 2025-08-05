@@ -131,6 +131,7 @@ def create_runbook_dir(
     credentials=None,
     default_endpoint=None,
     global_variable_list=None,
+    execution_name=None,
     no_format=False,
 ):
     if not runbook_dir:
@@ -145,6 +146,7 @@ def create_runbook_dir(
         metadata_obj=metadata_obj,
         default_endpoint=default_endpoint,
         global_variable_list=global_variable_list,
+        execution_name=execution_name,
     )
 
     if not no_format:

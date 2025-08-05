@@ -13,6 +13,7 @@ from calm.dsl.constants import STRATOS
 from calm.dsl.config import get_context
 from calm.dsl.api.util import is_policy_check_required
 from tests.helper.global_variables_helper import remove_global_variables_from_spec
+from tests.helper.execution_name_helper import remove_execution_name_from_spec
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
@@ -191,6 +192,7 @@ def _test_compare_compile_result(Runbook, json_file, action_name):
 
     if LV(CALM_VERSION) < LV("4.3.0"):
         remove_global_variables_from_spec(known_json)
+        remove_execution_name_from_spec(known_json)
 
     assert sorted(known_json.items()) == sorted(generated_json.items())
     print("JSON compilation successful for {}".format(Runbook.action_name))

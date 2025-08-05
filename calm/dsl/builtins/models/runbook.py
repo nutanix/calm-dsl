@@ -246,6 +246,7 @@ class runbook(metaclass=DescriptorType):
             credentials = args.pop("credentials", [])
             endpoints = args.pop("endpoints", [])
             default_target = args.pop("default", 0)
+            execution_name = args.pop("execution_name", "")
 
             for arg in args:
                 raise ValueError("{} is an unexpected argument.".format(arg))
@@ -293,6 +294,8 @@ class runbook(metaclass=DescriptorType):
 
             if LV(CALM_VERSION) >= LV("4.3.0"):
                 self.runbook.global_variables = global_variables
+                self.runbook.execution_name = execution_name
+
             return self.runbook
 
         else:

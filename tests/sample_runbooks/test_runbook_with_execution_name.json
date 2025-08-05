@@ -1,0 +1,51 @@
+{
+  "endpoint_definition_list": [],
+  "credential_definition_list": [],
+  "client_attrs": {},
+  "runbook": {
+    "name": "DslExecutionRunbook_runbook",
+    "description": "",
+    "main_task_local_reference": {
+      "kind": "app_task",
+      "name": "DslExecutionRunbook_dag"
+    },
+    "task_definition_list": [
+      {
+        "name": "DslExecutionRunbook_dag",
+        "description": "",
+        "type": "DAG",
+        "attrs": {
+          "edges": []
+        },
+        "status_map_list": [],
+        "child_tasks_local_reference_list": [
+          {
+            "kind": "app_task",
+            "name": "Task1"
+          }
+        ],
+        "variable_list": [],
+        "retries": "",
+        "timeout_secs": ""
+      },
+      {
+        "name": "Task1",
+        "description": "",
+        "type": "EXEC",
+        "attrs": {
+          "script_type": "static_py3",
+          "script": "print(\"Start\")\nsleep(2)\nprint(\"End\")"
+        },
+        "status_map_list": [],
+        "child_tasks_local_reference_list": [],
+        "variable_list": [],
+        "retries": "",
+        "timeout_secs": ""
+      }
+    ],
+    "variable_list": [],
+    "output_variable_list": []
+  },
+  "global_variable_reference_list": [],
+  "execution_name": "@@{calm_runbook_name}@@_custom_name"
+}

@@ -30,7 +30,11 @@ from calm.dsl.builtins import CalmTask as CalmVarTask{% if obj.project_name %}, 
 
 # Runbook
 @runbook
-def {{obj.name}}({% if obj.credentials_list %}credentials={{obj.credentials_list | replace("'","")}}{% endif %}{% if obj.default_endpoint_name %}{% if obj.credentials_list %},{% endif %}default=ref({{obj.default_endpoint_name | replace("'","")}}){% endif %}):
+def {{obj.name}}(
+    {% if obj.credentials_list %}credentials={{obj.credentials_list | replace("'","")}}{% endif %}
+    {% if obj.default_endpoint_name %}{% if obj.credentials_list %},{% endif %}default=ref({{obj.default_endpoint_name | replace("'","")}}){% endif %}
+    {% if obj.execution_name %}{% if obj.credentials_list or obj.default_endpoint_name %},{% endif %}execution_name="{{ obj.execution_name | replace('"', '\\"') }}"{% endif %}
+):
 {% if obj.description %}
     """{{obj.description}}"""
 {% endif %}

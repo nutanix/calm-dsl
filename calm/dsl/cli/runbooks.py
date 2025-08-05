@@ -4,7 +4,6 @@ import time
 import sys
 import uuid
 import pathlib
-
 from distutils.version import LooseVersion as LV
 from ruamel import yaml
 import arrow
@@ -153,7 +152,6 @@ def compile_runbook(runbook_file):
     # Note: Metadata should be constructed before loading runbook module. As metadata
     # will be used while verifying vm reference in endpoint used withing runbook.
     metadata_payload = get_metadata_payload(runbook_file)
-
     user_runbook_module = get_runbook_module_from_file(runbook_file)
     UserRunbook = get_runbook_class_from_module(user_runbook_module)
     if UserRunbook is None:
@@ -267,6 +265,7 @@ def _decompile_runbook(runbook_payload, runbook_dir, prefix, no_format=False):
     global_variable_list = runbook_payload["status"]["resources"].get(
         "global_variable_list", []
     )
+    execution_name = runbook_payload["status"]["resources"].get("execution_name", "")
     runbook_name = runbook_payload["status"].get("name", "DslRunbook")
     runbook_description = runbook_payload["status"].get("description", "")
 
@@ -292,6 +291,7 @@ def _decompile_runbook(runbook_payload, runbook_dir, prefix, no_format=False):
         credentials=credentials,
         default_endpoint=default_endpoint,
         global_variable_list=global_variable_list,
+        execution_name=execution_name,
         no_format=no_format,
     )
     click.echo(
@@ -725,8 +725,32 @@ def patch_runbook_runtime_editables(client, runbook):
     return payload
 
 
+def patch_runbook_execution_editables(payload, default_execution_name):
+    execution_name = input(
+        "Execution name (Optional) for the Runbook Run (default name={}) : ".format(
+            default_execution_name
+        )
+    )
+
+    if execution_name:
+        payload["spec"]["execution_name"] = execution_name
+    else:
+        if not default_execution_name:
+            LOG.info(
+                "Execution name (Optional) is not set for the Runbook Run (default name=runbookname-createdtime) will be shown in UI ."
+            )
+        payload["spec"]["execution_name"] = default_execution_name
+
+    return payload
+
+
 def run_runbook_command(
-    runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None
+    runbook_name,
+    watch,
+    ignore_runtime_variables,
+    runbook_file=None,
+    input_file=None,
+    execution_name="",
 ):
 
     if runbook_file is None and runbook_name is None:
@@ -737,7 +761,6 @@ def run_runbook_command(
 
     client = get_api_client()
     runbook = None
-
     if runbook_file:
         LOG.info("Uploading runbook: {}".format(runbook_file))
         name = "runbook" + "_" + str(uuid.uuid4())[:8]
@@ -763,12 +786,26 @@ def run_runbook_command(
             LOG.error(err["error"])
             return
         runbook = res.json()
-
     payload = {}
     if input_file is None and not ignore_runtime_variables:
         payload = patch_runbook_runtime_editables(client, runbook)
     if input_file:
         payload = parse_input_file(client, runbook, input_file)
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV("4.3.0"):
+        if execution_name:
+            LOG.info(
+                "Execution name (Optional) set for the Runbook Run: {}".format(
+                    execution_name
+                )
+            )
+            payload["spec"]["execution_name"] = execution_name
+        else:
+            default_execution_name = runbook["spec"]["resources"].get(
+                "execution_name", ""
+            )
+            patch_runbook_execution_editables(payload, default_execution_name)
 
     def render_runbook(screen):
         screen.clear()
@@ -918,7 +955,6 @@ def describe_runbook(runbook_name, out):
         runbook.pop("status", None)
         click.echo(json.dumps(runbook, indent=4, separators=(",", ": ")))
         return
-
     click.echo("\n----Runbook Summary----\n")
     click.echo(
         "Name: "
@@ -995,6 +1031,11 @@ def describe_runbook(runbook_name, out):
         "Global Variables [{}]:".format(highlight_text(len(global_variable_types)))
     )
     click.echo("\t{}\n".format(highlight_text(", ".join(global_variable_types))))
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV("4.3.0"):
+        execution_name = runbook["spec"]["resources"].get("execution_name", "")
+        click.echo("Execution Name (Optional) : " + highlight_text(execution_name))
 
 
 def format_runbook_command(runbook_file):

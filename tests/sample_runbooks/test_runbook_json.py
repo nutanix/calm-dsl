@@ -18,8 +18,10 @@ from .parallel import DslParallelRunbook
 from .runbook_variables import DslRunbookWithVariables
 from .simple_runbook import DslSimpleRunbook
 from .while_loop import DslWhileLoopRunbook
+from .execution_name_runbook import DslExecutionRunbook
 
 from tests.helper.global_variables_helper import remove_global_variables_from_spec
+from tests.helper.execution_name_helper import remove_execution_name_from_spec
 
 # calm_version
 CALM_VERSION = Version.get_version("Calm")
@@ -60,6 +62,19 @@ def test_runbook_json_inherit_task():
     _test_compare_compile_result(Runbook, json_file)
 
 
+@pytest.mark.skipif(
+    LV(CALM_VERSION) < LV("4.3.0"), reason="execution name introduced in for v4.3.0"
+)
+def test_runbook_json_execution_name():
+    """
+    Test the generated json for a runbook having execution_name
+    """
+    Runbook = DslExecutionRunbook
+    json_file = "test_runbook_with_execution_name.json"
+
+    _test_compare_compile_result(Runbook, json_file)
+
+
 @pytest.mark.global_variables
 @pytest.mark.skipif(
     LV(CALM_VERSION) < LV("4.3.0"), reason="Global variable is for v4.3.0"
@@ -91,7 +106,6 @@ def test_runbook_json_global_variable():
 
 def _test_compare_compile_result(Runbook, json_file):
     """compares the runbook compilation and known output"""
-
     print("JSON compilation test for {}".format(Runbook.action_name))
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(dir_path, json_file)
@@ -109,6 +123,7 @@ def _test_compare_compile_result(Runbook, json_file):
                 task.pop("status_map_list")
     if LV(CALM_VERSION) < LV("4.3.0"):
         remove_global_variables_from_spec(known_json)
+        remove_execution_name_from_spec(known_json)
 
     known_json["runbook"].pop("output_variables", None)
     known_json["runbook"].pop("output_variable_list", None)

@@ -34,6 +34,7 @@ def render_runbook_template(
     credentials=[],
     default_endpoint=None,
     global_variable_list=[],
+    execution_name="",
 ):
     global RUNBOOK_ACTION_MAP
     LOG.debug("Rendering {} runbook template".format(runbook_cls.__name__))
@@ -132,6 +133,7 @@ def render_runbook_template(
         "import_status": import_status,
         "default_endpoint_name": default_endpoint_name,
         "global_variables": global_variables,
+        "execution_name": execution_name,
     }
 
     runbook_outputs = getattr(runbook_cls, "outputs", [])

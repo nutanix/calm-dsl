@@ -64,5 +64,6 @@
             "kind": "global_variable",
             "name": "GlobalVar"
         }
-    ]
+    ],
+    "execution_name": ""
 }
