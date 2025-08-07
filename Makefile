@@ -10,17 +10,25 @@ dev:
 	# This step assumes python3 is installed on your dev machine
 	[ -f venv/bin/python3 ] || (python3 -m venv venv && \
 		venv/bin/pip3 install --upgrade pip "setuptools<=70.3.0")
+	venv/bin/pip3 install "setuptools>=61.0,<70.4.0" # version lesser than 61.0 doesn't support pyproject.toml based builds
+	
 	venv/bin/pip3 install --no-cache -r requirements.txt -r dev-requirements.txt
-	venv/bin/python3 setup.py develop
+	venv/bin/pip3 install --upgrade pip>=21.3
+
+	# build package using pyproject.toml
+	venv/bin/pip3 install -e . -vvv	
+
 
 windev:
 	# Setup our python3 based virtualenv in windows machine
 	# This step assumes python3 is installed on your dev machine
 	[ -f venv/Scripts/python3 ] || python -m venv venv
-	venv/Scripts/python -m pip install --upgrade pip
-	venv/Scripts/pip install setuptools --upgrade --ignore-installed
+	venv/Scripts/python -m pip install --upgrade pip>=21.3
+	venv/Scripts/pip install "setuptools>=61.0,<70.4.0" --upgrade --ignore-installed # version lesser than 61.0 doesn't support pyproject.toml based builds
 	venv/Scripts/pip install --no-cache -r requirements.txt -r dev-requirements.txt
-	venv/Scripts/python setup.py develop
+
+	# build package using pyproject.toml
+	venv/Scripts/pip install -e . -vvv	
 
 test-bed: dev
 	venv/bin/python3 tests/testprep.py
@@ -54,7 +62,8 @@ test-verbose: dev
 	venv/bin/py.test -s -vv
 
 dist: dev
-	venv/bin/python3 setup.py sdist bdist_wheel
+	venv/bin/pip3 install build
+	venv/bin/python3 -m build
 
 docker: dist
 
