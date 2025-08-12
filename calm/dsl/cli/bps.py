@@ -2127,7 +2127,7 @@ def poll_launch_status(client, blueprint_uuid, launch_req_id):
             click.echo("Successfully launched. App uuid is: {}".format(app_uuid))
 
             LOG.info(
-                "App url: https://{}:{}/console/#page/explore/calm/applications/{}".format(
+                "App url: https://{}:{}/dm/self_service/applications/{}".format(
                     pc_ip, pc_port, app_uuid
                 )
             )
