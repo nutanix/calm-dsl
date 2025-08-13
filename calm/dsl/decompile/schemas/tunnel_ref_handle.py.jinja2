@@ -1,12 +1,12 @@
 {%- macro tunnel_reference(tunnel_reference) -%}
-{% if tunnel_reference %}
-    {% set tunnel_kind = tunnel_reference.kind %}
-    {% if tunnel_kind == "network-group" %}
+{%- if tunnel_reference -%}
+    {%- set tunnel_kind = tunnel_reference.kind -%}
+    {%- if tunnel_kind == "network-group" -%}
         Ref.Tunnel.VPC(name="{{ tunnel_reference.name }}")
-    {% elif tunnel_kind == "tunnel" %}
+    {%- elif tunnel_kind == "tunnel" -%}
         Ref.Tunnel.Account(name="{{ tunnel_reference.name }}")
-    {% else %}
+    {%- else -%}
         Ref.Tunnel(name="{{ tunnel_reference.name }}")
-    {% endif %}
-{% endif %}
+    {%- endif -%}
+{%- endif -%}
 {%- endmacro %}

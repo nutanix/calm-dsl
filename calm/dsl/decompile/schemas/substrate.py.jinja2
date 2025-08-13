@@ -1,3 +1,5 @@
+{% import "tunnel_ref_handle.py.jinja2" as tunnel_ref_handle %}
+
 {%- macro substrate(obj) %}
 class {{obj.name}}(Substrate):
     {% if obj.description -%}"""{{obj.description}}"""{%- endif %}
@@ -7,6 +9,7 @@ class {{obj.name}}(Substrate):
     os_type = '{{obj.os_type}}'
     provider_type = '{{obj.provider_type}}'
     provider_spec = {{obj.provider_spec}}
+    {% if obj.tunnel_reference -%}tunnel = {{tunnel_ref_handle.tunnel_reference(obj.tunnel_reference)}}{%- endif %}
     {% if obj.provider_spec_editables%}provider_spec_editables = {{obj.provider_spec_editables}}{%- endif %}
     readiness_probe = {{obj.readiness_probe}}
     {% if obj.readiness_probe_cred -%}readiness_probe["credential"] =  {{obj.readiness_probe_cred}}{%- endif %}
