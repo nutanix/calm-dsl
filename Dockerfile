@@ -26,8 +26,8 @@ RUN pip3 install --no-cache-dir -r /requirements.txt && rm /requirements.txt
 RUN apk del $BUILD_PACKAGES
 
 # Install calm-dsl
-COPY dist/calm_dsl*.whl .
-RUN pip3 install --no-cache-dir calm_dsl*.whl && rm calm_dsl*.whl
+COPY dist/ntnx_ncm_dsl*.whl .
+RUN pip3 install --no-cache-dir ntnx_ncm_dsl*.whl && rm ntnx_ncm_dsl*.whl
 
 # Install bash and auto-completion for calm commands
 RUN apk add --no-cache bash bash-completion
