@@ -2256,13 +2256,16 @@ def patch_runbook_runtime_editables(client, mpi_data, payload):
                     }
                 )
 
+    mpi_uuid = mpi_data["metadata"]["uuid"]
     gv_names = [
         var["name"]
         for var in runbook["spec"]["resources"].get(
             "global_variable_reference_list", []
         )
     ]
-    global_args = fetch_dynamic_global_variable_values(gv_names)
+    global_args = fetch_dynamic_global_variable_values(
+        "marketplace_item", mpi_uuid, gv_names
+    )
 
     payload["spec"]["resources"]["args"] = args
     payload["spec"]["resources"]["global_args"] = global_args
