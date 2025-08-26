@@ -45,7 +45,7 @@ zip-safe = false
 
 [tool.setuptools.packages.find]
 where = ["."]
-include=["calm.*", "examples*", "tests*"]
+include=["calm.*"]
 
 [tool.black]
 line-length = 88
