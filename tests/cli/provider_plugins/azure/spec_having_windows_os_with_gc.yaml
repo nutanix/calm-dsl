@@ -7,7 +7,7 @@ input:
 - "1"   # resource group = calmrg
 - "5"   # Location = East US 2
 - "n"   # Want Availability set
-- "11"  # Hardware Profile = Standard_D1_v2
+- "11"  # Hardware Profile = Standard_DS1_v2
 - "y"   # Want secrets
 - "vault1"  # Vault id
 - "y"   # Want to add vault certificate
@@ -44,9 +44,9 @@ input:
 - "n"   # Want to add more win rm listeners
 - "n"   # Use custom image
 - "137"   # Publisher = Canonical
-- "19"    # Image Offer = UbuntuServer
-- "18"    # Image Sku = 18.04-LTS
-- "27"    # Image Version = 18.04.202401161
+- "19"    # Image Offer = 0001-com-ubuntu-server-jammy
+- "18"    # Image Sku = 22_04-lts-gen2
+- "27"    # Image Version = 22.04.202506200
 - "os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk"   # OS Disk Name
 - "n"   # Want to add storage type
 - "1"   # Cache type = None
@@ -61,7 +61,7 @@ cli_assertions:
 
 spec_assertions:
 - "eastus2"   # Location
-- "Standard_D1_v2"  # Hardware Profile
+- "Standard_DS1_v2"  # Hardware Profile
 - "vault1"    # Vault1 id
 - "vault1-cert1"    # Vault-1 CertificateURL-1
 - "vault1-cert2"    # Vault-1 CertificateURL-2
@@ -83,10 +83,10 @@ spec_assertions:
 - "protocol: Http"    # Protocol for 1st winrm listener
 - "calmrg"    # Resource group
 - "Canonical"   # Publisher
-- "18.04-LTS"   # Image Sku
-- "18.04.202401161"   # Image Version
+- "22_04-lts-gen2"   # Image Sku
+- "22.04.202506200"   # Image Version
 - "Attach"    # Os disk create option
-- "UbuntuServer"  # Image offer
+- "0001-com-ubuntu-server-jammy"  # Image offer
 - "data_disk_list: []"   # Data disks = No
 - "os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk"   # Os disk name
 
@@ -94,9 +94,9 @@ dependencies:
  # For changing indexes of resource in input as per the setup
 - [0, projects/default]
 - [5, accounts/azure_primary/locations/East US 2/index]
-- [7, accounts/azure_primary/locations/East US 2/hw_profiles/Standard_D1_v2/index]
+- [7, accounts/azure_primary/locations/East US 2/hw_profiles/Standard_DS1_v2/index]
 - [4, accounts/azure_primary/resource_groups/calmrg/index]
 - [43, accounts/azure_primary/locations/East US 2/publishers/Canonical/index]
-- [45, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/UbuntuServer/image_skus/18.04-LTS/index]
-- [46, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/UbuntuServer/image_skus/18.04-LTS/image_versions/18.04.202401161/index]
-- [44, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/UbuntuServer/index]
+- [45, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/0001-com-ubuntu-server-jammy/image_skus/22_04-lts-gen2/index]
+- [46, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/0001-com-ubuntu-server-jammy/image_skus/22_04-lts-gen2/image_versions/22.04.202506200/index]
+- [44, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/0001-com-ubuntu-server-jammy/index]
