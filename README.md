@@ -9,9 +9,9 @@
 ![Python 3.10](https://img.shields.io/badge/python-3.10-blue)
 ![Python 3.11](https://img.shields.io/badge/python-3.11-blue)
 
-`Latest release version: 4.2.0, Latest-release-tag: v4.2.0`
+`Latest release version: 4.2.1, Latest-release-tag: v4.2.1`
 
-`Latest Release Notes:` [read here](release-notes/4.2.0)
+`Latest Release Notes:` [read here](https://github.com/nutanix/calm-dsl/tree/master/release-notes/4.2.1)
 
 
 # Nutanix Cloud Manager (NCM) Self Service (formerly Calm) DSL
@@ -33,7 +33,7 @@ Language design is black art, and building upon a well-established language is d
  - [DSL Initialization](https://www.nutanix.dev/docs/self-service-dsl/initialization/)
  - [DSL CLI commands](https://www.nutanix.dev/docs/self-service-dsl/getting-started/commands/)
  - [DSL Release Notes](https://github.com/nutanix/calm-dsl/tree/master/release-notes)
- - [NCM Self Service Terminology](docs/01-Calm-Terminology/)
+ - [NCM Self Service Terminology](https://github.com/nutanix/calm-dsl/tree/master/docs/01-Calm-Terminology)
  - [DSL Blueprint Architecture](https://www.nutanix.dev/docs/self-service-dsl/models/Blueprint/)
 
  ### Tutorials

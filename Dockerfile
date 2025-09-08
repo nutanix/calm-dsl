@@ -18,16 +18,16 @@ ENV BUILD_PACKAGES="\
 # Install build packages for building from source
 RUN apk update && apk add --no-cache $BUILD_PACKAGES
 
-# Install calm.dsl requirements
+# Install calm-dsl requirements
 COPY requirements.txt /requirements.txt
 RUN pip3 install --no-cache-dir -r /requirements.txt && rm /requirements.txt
 
 # Remove build packages
 RUN apk del $BUILD_PACKAGES
 
-# Install calm.dsl
-COPY dist/calm.dsl*.whl .
-RUN pip3 install --no-cache-dir calm.dsl*.whl && rm calm.dsl*.whl
+# Install calm-dsl
+COPY dist/ntnx_ncm_dsl*.whl .
+RUN pip3 install --no-cache-dir ntnx_ncm_dsl*.whl && rm ntnx_ncm_dsl*.whl
 
 # Install bash and auto-completion for calm commands
 RUN apk add --no-cache bash bash-completion

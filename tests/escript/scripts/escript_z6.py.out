@@ -1,1 +1,1 @@
-Error in script: name 'pnt' is not defined
+Error in script: At line 3, NameError: name 'pnt' is not defined

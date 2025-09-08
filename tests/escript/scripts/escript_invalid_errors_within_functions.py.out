@@ -1,0 +1,3 @@
+Hello, Escript!
+The result is: 8
+Error in script: At line 16, line 13 in main, line 8 in buggy_function, ZeroDivisionError: division by zero
