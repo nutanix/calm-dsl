@@ -1,0 +1,18 @@
+<html>
+<head>
+    <title>SAML Single Sign On failed</title>
+    
+    <meta name="decorator" content="atl.general">
+</head>
+<body class="aui-page-focused aui-page-medium" >
+<div class="aui-page-panel">
+    <div class="aui-page-panel-inner">
+        <section class="aui-page-panel-content">
+            <h1>SAML Single Sign On failed</h1>
+            <div>Please contact your administrator  or log in at the <a href="/login.jsp?nosso">login page</a>.</div>
+                                    <div class="aui-message error">Processing regex / with value /plugins/servlet/samlsso?redirectTo=%2Fsecure%2Fattachment%2F1261470%2FNutanix%2BCalm-dsl%2B4.2.1%2BOSS%2BDisclosure.txt exceeded the timeout of 5000 millisenconds. </div>
+                    </section>
+    </div>
+</div>
+</body>
+</html>
