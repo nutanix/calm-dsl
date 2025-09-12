@@ -174,7 +174,7 @@ class ACCOUNT:
     class CRED_TYPE:
         BASIC_AUTH = "basic_auth"
         SERVICE_ACCOUNT = "service_account"
-    
+
     class SERVICE_ACCOUNT:
         FEATURE_MIN_VERSION = "4.3.0"
 
