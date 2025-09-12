@@ -83,8 +83,8 @@ class AccountType(EntityType):
                 cdict["parent_reference"] = parent_reference
                 delattr(cdict["data"], "parent_reference")
 
-        if cdict["tunnel_reference"] is None:
-            cdict.pop("tunnel_reference")
+        if cdict.get("tunnel_reference", None) is None:
+            cdict.pop("tunnel_reference", None)
 
         return cdict
 
