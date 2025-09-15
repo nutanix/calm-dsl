@@ -725,7 +725,31 @@ def patch_runbook_runtime_editables(client, runbook):
     return payload
 
 
-def patch_runbook_execution_editables(payload, default_execution_name):
+def patch_execution_name(payload, runbook, execution_name, ignore_runtime_variables):
+    if "spec" not in payload:
+        payload["spec"] = {}
+    if execution_name:
+        LOG.info(
+            "Execution name (Optional) set for the Runbook Run: {}".format(
+                execution_name
+            )
+        )
+        payload["spec"]["execution_name"] = execution_name
+    else:
+        default_execution_name = runbook["spec"]["resources"].get("execution_name", "")
+        patch_runbook_execution_editables(
+            payload, default_execution_name, ignore_runtime_variables
+        )
+
+
+def patch_runbook_execution_editables(
+    payload, default_execution_name, ignore_runtime_variables
+):
+
+    if ignore_runtime_variables:
+        payload["spec"]["execution_name"] = default_execution_name
+        return payload
+
     execution_name = input(
         "Execution name (Optional) for the Runbook Run (default name={}) : ".format(
             default_execution_name
@@ -794,18 +818,7 @@ def run_runbook_command(
 
     CALM_VERSION = Version.get_version("Calm")
     if LV(CALM_VERSION) >= LV("4.3.0"):
-        if execution_name:
-            LOG.info(
-                "Execution name (Optional) set for the Runbook Run: {}".format(
-                    execution_name
-                )
-            )
-            payload["spec"]["execution_name"] = execution_name
-        else:
-            default_execution_name = runbook["spec"]["resources"].get(
-                "execution_name", ""
-            )
-            patch_runbook_execution_editables(payload, default_execution_name)
+        patch_execution_name(payload, runbook, execution_name, ignore_runtime_variables)
 
     def render_runbook(screen):
         screen.clear()
