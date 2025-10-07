@@ -23,6 +23,7 @@ def render_variable_template(
     endpoints=[],
     ep_list=[],
     ignore_cred_dereference_error=False,
+    is_global_variable=False,
 ):
 
     LOG.debug("Rendering {} variable template".format(cls.__name__))
@@ -86,6 +87,9 @@ def render_variable_template(
         user_attrs["runtime"] = cls.editables["value"]
     else:
         user_attrs["runtime"] = False
+
+    if is_global_variable:
+        user_attrs["is_global_variable"] = True
 
     user_attrs["name"] = cls.__name__
 

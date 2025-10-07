@@ -15,9 +15,6 @@ SimpleGlobalVar1 = GlobalVariable(
     definition=CalmVariable.Simple(
         "abc",
         label="",
-        is_mandatory=False,
-        is_hidden=False,
-        runtime=False,
         description="",
     ),
     projects=["test_project"],

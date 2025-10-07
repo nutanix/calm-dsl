@@ -1,4 +1,30 @@
 {
+    "status": {
+        "name": "SimpleGlobalVar1",
+        "description": "",
+        "resources": {
+            "type": "LOCAL",
+            "label": "",
+            "data_type": "BASE",
+            "val_type": "STRING",
+            "value": "abc",
+            "regex": {
+                "value": "",
+                "should_validate": false
+            },
+            "options": {
+                "type": "PREDEFINED",
+                "choices": []
+            },
+            "attrs": {
+                "type": "LOCAL"
+            },
+            "project_reference_list": [],
+            "created_by": "admin"
+        },
+        "state": "ACTIVE",
+        "message_list": []
+    },
     "spec": {
         "description": "",
         "resources": {

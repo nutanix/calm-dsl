@@ -29,8 +29,6 @@ HttpGlobalVar1 = GlobalVariable(
             name="",
         ),
         label="",
-        is_mandatory=False,
-        is_hidden=False,
         description="",
     ),
     projects=[],

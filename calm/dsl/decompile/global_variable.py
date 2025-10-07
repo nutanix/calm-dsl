@@ -37,7 +37,7 @@ def render_global_variable_template(
     var_definition = global_variable_cls.definition
     setattr(var_definition, "__name__", "definition")
     calmvar = render_variable_template(
-        var_definition, entity_context, endpoints=endpoints
+        var_definition, entity_context, endpoints=endpoints, is_global_variable=True
     )
     secret_files = get_secret_variable_files()
 

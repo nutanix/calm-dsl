@@ -617,9 +617,11 @@ def _decompile_global_variable(
 ):
     """decompiles the global variable from payload"""
 
-    global_variable = global_variable_payload["spec"]["resources"]
-    global_variable_name = global_variable_payload["spec"].get("name", "")
-    global_variable_description = global_variable_payload["spec"].get("description", "")
+    global_variable = global_variable_payload["status"]["resources"]
+    global_variable_name = global_variable_payload["status"].get("name", "")
+    global_variable_description = global_variable_payload["status"].get(
+        "description", ""
+    )
     global_variable["name"] = global_variable_name
     global_variable["description"] = global_variable_description
 
