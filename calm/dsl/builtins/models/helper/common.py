@@ -133,10 +133,10 @@ def get_project(name=None, project_uuid=""):
     return project
 
 
-def get_vmware_account_from_datacenter(datacenter="Sabine59-DC"):
+def get_vmware_account_from_datacenter(datacenter="Strong-DC"):
     """
     Returns the datacenter attached to given datacenter.
-    Default datacenter = Sabine59-DC
+    Default datacenter = Strong-DC
     """
 
     client = get_api_client()
