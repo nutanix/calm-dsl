@@ -197,11 +197,61 @@ def get_tunnel(client, tunnel_name):
                 )
             )
 
-        LOG.info("{} found.".format(tunnel_name))
+        LOG.info("Tunnel with name {} found.".format(tunnel_name))
         tunnel = entities[0]
     else:
         handle_err("Tunnel with name {} not found.".format(tunnel_name))
     return tunnel
+
+
+def check_tunnel_usage(client, tunnel_name, tunnel_uuid):
+    """
+    Calls tunnel entity_references and returns (in_use: bool, err_out: dict or None)
+    """
+    res, err = client.tunnel.entity_references(tunnel_uuid, ignore_error=True)
+    if err is not None:
+        LOG.warning(
+            "Could not fetch tunnel {} entity references. Proceeding with delete.".format(
+                tunnel_name
+            )
+        )
+        return False, err
+
+    try:
+        refs = res.json() or {}
+    except Exception:
+        refs = {}
+
+    LOG.info(
+        "Tunnel with name {} entity references found:\n{}".format(
+            tunnel_name, json.dumps(refs, indent=4, separators=(",", ": "))
+        )
+    )
+    in_use = {k: v for k, v in refs.items() if isinstance(v, list) and v}
+    if in_use:
+        message_list = [
+            {
+                "message": "Tunnel is associated with '{}' {}".format(str(len(lst)), k),
+                "reason": "ACTION_NOT_SUPPORTED",
+            }
+            for k, lst in in_use.items()
+        ]
+        err_body = {
+            "api_version": "3.1",
+            "code": 405,
+            "kind": "tunnel",
+            "message_list": message_list,
+            "state": "ERROR",
+        }
+        err_out = {"error": err_body, "code": 405}
+        LOG.info(
+            "Tunnel {} can't be deleted:\n{}".format(
+                tunnel_name, json.dumps(err_out, indent=4, separators=(",", ": "))
+            )
+        )
+        return True, err_out
+
+    return False, None
 
 
 @policy_required
@@ -213,9 +263,18 @@ def delete_tunnel(tunnel_names, no_cache_update=False):
     for tunnel_name in tunnel_names:
         tunnel = get_tunnel(client, tunnel_name)
         tunnel_uuid = tunnel["metadata"]["uuid"]
+        in_use, err = check_tunnel_usage(client, tunnel_name, tunnel_uuid)
+        if in_use:
+            LOG.info("Tunnel delete skipped for {}".format(tunnel_name))
+            continue
         resp, err = client.tunnel.delete(uuid=tunnel_uuid)
         if err:
-            handle_err("Error deleting tunnel {}: {}".format(tunnel_name, err))
+            LOG.exception(
+                "Tunnel delete failed for {}: [{}] - {}".format(
+                    tunnel_name, err["code"], err["error"]
+                )
+            )
+            continue
         deleted_tunnel_uuids.append(tunnel_uuid)
         LOG.info("Tunnel {} deleted successfully.".format(tunnel_name))
     if deleted_tunnel_uuids:
