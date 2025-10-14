@@ -181,7 +181,7 @@ def get_tunnels_list(name, filter_by, limit, offset, quiet, all_items, out):
 def get_tunnel(client, tunnel_name):
     """Fetches a tunnel by name"""
 
-    params = {"filter": get_name_query([tunnel_name])}
+    params = {"filter": "name=={}".format(tunnel_name)}
     res, err = client.tunnel.list(params=params)
     if err:
         handle_err("Error fetching tunnel {}: {}".format(tunnel_name, err))
