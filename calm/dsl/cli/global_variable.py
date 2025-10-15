@@ -51,7 +51,7 @@ def get_global_variable_list(name, filter_by, limit, offset, quiet, all_items, o
     if name:
         filter_query = get_name_query([name])
     if filter_by:
-        filter_query = filter_query + ";(" + filter_by + ")"
+        filter_query = filter_query + ";" + filter_by
 
     # Check the states queryable
     if all_items:
@@ -70,7 +70,7 @@ def get_global_variable_list(name, filter_by, limit, offset, quiet, all_items, o
         return
 
     if out == "json":
-        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
+        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
         return
 
     json_rows = res.json()["entities"]
@@ -217,6 +217,9 @@ def create_update_global_variable(
     else:
         global_variable = get_global_variable(client, name)
         gv_uuid = global_variable["metadata"]["uuid"]
+        global_variable_payload["metadata"]["spec_version"] = global_variable[
+            "metadata"
+        ]["spec_version"]
 
         res, err = client.global_variable.update(gv_uuid, global_variable_payload)
         if err:
@@ -622,8 +625,13 @@ def _decompile_global_variable(
     global_variable_description = global_variable_payload["status"].get(
         "description", ""
     )
+    gv_shared_projects = global_variable.get("project_reference_list", [])
+
     global_variable["name"] = global_variable_name
     global_variable["description"] = global_variable_description
+    global_variable["project_reference_list"] = [
+        proj["uuid"] for proj in gv_shared_projects
+    ]
 
     LOG.info("Decompiling global variable {}".format(global_variable_name))
 
