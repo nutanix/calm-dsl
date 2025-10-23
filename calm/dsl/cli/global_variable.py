@@ -97,6 +97,12 @@ def get_global_variable_list(name, filter_by, limit, offset, quiet, all_items, o
         "LAST UPDATED",
         "UUID",
     ]
+
+    EXEC_SCRIPT_TYPE_TO_DISPLAY_MAP = {
+        "sh": "Shell",
+        "npsscript": "Powershell",
+        "static_py3": "eScript",
+    }
     for _row in json_rows:
         row = _row["status"]
         metadata = _row["metadata"]
@@ -109,13 +115,45 @@ def get_global_variable_list(name, filter_by, limit, offset, quiet, all_items, o
         owner_project = (
             row["resources"].get("owner_project_reference", {}).get("name", "")
         )
+        var_type = row["resources"]["type"]
+        var_options = row["resources"].get("options", {})
+        display_var_type = ""
+        if var_options:
+            if (
+                var_options.get("type", VARIABLE.OPTIONS.TYPE.PREDEFINED)
+                == VARIABLE.OPTIONS.TYPE.PREDEFINED
+            ):
+                display_var_type = (
+                    "Predefined"
+                    if len(var_options.get("choices", [])) > 0
+                    else "Simple"
+                )
+            elif (
+                var_options.get("type", VARIABLE.OPTIONS.TYPE.PREDEFINED)
+                == VARIABLE.OPTIONS.TYPE.EXEC
+            ):
+                script_type = var_options.get("attrs", {}).get("script_type", "")
+                display_var_type = (
+                    EXEC_SCRIPT_TYPE_TO_DISPLAY_MAP[script_type]
+                    if script_type
+                    else "EXEC"
+                )
+            else:
+                display_var_type = "HTTP"
+
+        if var_type in [
+            VARIABLE.TYPE.SECRET,
+            VARIABLE.TYPE.EXEC_SECRET,
+            VARIABLE.TYPE.HTTP_SECRET,
+        ]:
+            display_var_type = display_var_type + " (SECRET)"
 
         table.add_row(
             [
                 highlight_text(row["name"]),
                 highlight_text(row["description"]),
                 highlight_text(row["state"]),
-                highlight_text(row["resources"]["type"]),
+                highlight_text(display_var_type),
                 highlight_text(row["resources"]["value"]),
                 highlight_text(owner_project),
                 highlight_text(",".join(projects)),
