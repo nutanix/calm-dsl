@@ -896,7 +896,10 @@ def get_global_variable_list_by_names(names):
 
     res, err = client.global_variable.list(params=params)
     if err:
-        return None, err
+        LOG.warning(
+            "Cannot fetch global variables from server for names {}".format(names)
+        )
+        return []
 
     response = res.json()
     entities = response.get("entities", [])

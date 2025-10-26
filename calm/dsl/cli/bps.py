@@ -56,6 +56,7 @@ from calm.dsl.builtins.models.calm_ref import Ref
 from calm.dsl.decompile.ref_dependency import update_power_action_target_substrate
 from calm.dsl.store.version import Version
 from calm.dsl.cli.helper.common import get_variable_value_options
+from calm.dsl.constants import GLOBAL_VARIABLE
 
 LOG = get_logging_handle(__name__)
 
@@ -1722,9 +1723,6 @@ def launch_blueprint_simple(
         var["name"]
         for var in bp_status_data["resources"].get("global_variable_list", [])
     ]
-    global_args = fetch_dynamic_global_variable_values(
-        "blueprint", blueprint_uuid, gv_names
-    )
 
     launch_payload = {
         "spec": {
@@ -1734,9 +1732,15 @@ def launch_blueprint_simple(
             "app_description": "",
             "app_profile_reference": profile.get("app_profile_reference", {}),
             "runtime_editables": runtime_editables,
-            "global_args": global_args,
         }
     }
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV(GLOBAL_VARIABLE.MIN_SUPPORTED_VERSION):
+        global_args = fetch_dynamic_global_variable_values(
+            "blueprint", blueprint_uuid, gv_names
+        )
+        launch_payload["spec"]["global_args"] = global_args
 
     # (CALM-39565) Block bp launch if:
     # 1. Snapshot config present in bp but protection policy/rule not specified

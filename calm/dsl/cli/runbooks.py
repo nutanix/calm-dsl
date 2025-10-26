@@ -30,6 +30,7 @@ from calm.dsl.constants import CACHE, DSL_CONFIG
 from calm.dsl.store import Cache
 from calm.dsl.store.version import Version
 from calm.dsl.tools import get_module_from_file
+from calm.dsl.constants import GLOBAL_VARIABLE
 from .utils import (
     Display,
     get_name_query,
@@ -701,9 +702,14 @@ def patch_runbook_runtime_editables(client, runbook):
             "global_variable_reference_list", []
         )
     ]
-    global_args = fetch_dynamic_global_variable_values("runbook", rb_uuid, gv_names)
 
-    payload = {"spec": {"args": args, "global_args": global_args}}
+    payload = {"spec": {"args": args}}
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV(GLOBAL_VARIABLE.MIN_SUPPORTED_VERSION):
+        global_args = fetch_dynamic_global_variable_values("runbook", rb_uuid, gv_names)
+        payload["spec"]["global_args"] = global_args
+
     default_target = (
         runbook["spec"]["resources"]
         .get("default_target_reference", {})

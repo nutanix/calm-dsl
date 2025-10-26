@@ -27,7 +27,7 @@ from .environments import get_project_environment
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Version
 from .constants import MARKETPLACE_ITEM, TASKS
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import PROVIDER, GLOBAL_VARIABLE
 
 LOG = get_logging_handle(__name__)
 APP_STATES = [
@@ -2263,12 +2263,15 @@ def patch_runbook_runtime_editables(client, mpi_data, payload):
             "global_variable_reference_list", []
         )
     ]
-    global_args = fetch_dynamic_global_variable_values(
-        "marketplace_item", mpi_uuid, gv_names
-    )
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV(GLOBAL_VARIABLE.MIN_SUPPORTED_VERSION):
+        global_args = fetch_dynamic_global_variable_values(
+            "marketplace_item", mpi_uuid, gv_names
+        )
+        payload["spec"]["resources"]["global_args"] = global_args
 
     payload["spec"]["resources"]["args"] = args
-    payload["spec"]["resources"]["global_args"] = global_args
     return payload
 
 
