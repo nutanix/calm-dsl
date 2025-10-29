@@ -365,6 +365,7 @@ class VARIABLE:
         class TYPE:
             EXEC = "EXEC"
             HTTP = "HTTP"
+            PREDEFINED = "PREDEFINED"
 
     SECRET_TYPES = [
         TYPE.SECRET,
@@ -373,6 +374,13 @@ class VARIABLE:
         TYPE.SYS_SECRET,
         TYPE.SYS_EXEC_SECRET,
         TYPE.SYS_HTTP_SECRET,
+    ]
+
+    DYNAMIC_TYPES = [
+        TYPE.EXEC_LOCAL,
+        TYPE.EXEC_SECRET,
+        TYPE.HTTP_LOCAL,
+        TYPE.HTTP_SECRET,
     ]
 
     SECRET_ATTRS_TYPE = "SECRET"

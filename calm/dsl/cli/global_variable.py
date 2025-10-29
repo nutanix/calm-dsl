@@ -314,6 +314,14 @@ def create_global_variable_payload(gv_dict, metadata_payload):
             endpoint = fetch_endpoint(ep.get("name", ""))
             ep["uuid"] = endpoint["metadata"]["uuid"]
 
+    if (
+        gv_dict["type"] in [VARIABLE.TYPE.LOCAL, VARIABLE.TYPE.SECRET]
+        and "options" not in gv_dict
+    ):
+        gv_dict["options"] = {}
+        gv_dict["options"]["type"] = VARIABLE.OPTIONS.TYPE.PREDEFINED
+        gv_dict["options"]["choices"] = []
+
     gv_payload = {
         "spec": {
             "name": name,

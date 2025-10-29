@@ -21,7 +21,7 @@ from prettytable import PrettyTable
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
-from calm.dsl.constants import CACHE, TUNNEL, GLOBAL_VARIABLE
+from calm.dsl.constants import CACHE, TUNNEL, GLOBAL_VARIABLE, VARIABLE
 from calm.dsl.api.util import is_policy_check_required
 
 
@@ -4990,7 +4990,8 @@ class GlobalVariableCache(CacheTableBase):
     is_policy_required = False
     name = CharField()
     uuid = CharField()
-    _type = CharField()
+    val_type = CharField()
+    var_type = CharField()
     state = CharField()
     value = CharField()
     project_reference_list = BlobField()
@@ -5000,11 +5001,12 @@ class GlobalVariableCache(CacheTableBase):
         return {
             "name": self.name,
             "uuid": self.uuid,
-            "type": self._type,
+            "val_type": self.val_type,
             "state": self.state,
             "value": self.value,
             "project_reference_list": json.loads(self.project_reference_list),
             "last_update_time": self.last_update_time,
+            "var_type": self.var_type,
         }
 
     @classmethod
@@ -5012,11 +5014,13 @@ class GlobalVariableCache(CacheTableBase):
         return {
             "name": entity["status"]["name"],
             "uuid": entity["metadata"]["uuid"],
-            "_type": entity["status"]["resources"].get("type", ""),
+            "val_type": entity["status"]["resources"].get("val_type", ""),
+            "value": entity["status"]["resources"].get("value", ""),
             "project_reference_list": json.dumps(
                 entity["status"]["resources"].get("project_reference_list", {})
             ),
             "state": entity["status"]["state"],
+            "var_type": entity["status"]["resources"].get("type", ""),
         }
 
     @classmethod
@@ -5052,12 +5056,15 @@ class GlobalVariableCache(CacheTableBase):
             last_update_time = arrow.get(
                 entity_data["last_update_time"].astimezone(datetime.timezone.utc)
             ).humanize()
+            value = entity_data["value"]
+            if entity_data["var_type"] in VARIABLE.DYNAMIC_TYPES:
+                value = "DYNAMIC VALUE"
             table.add_row(
                 [
                     highlight_text(entity_data["name"]),
                     highlight_text(entity_data["uuid"]),
-                    highlight_text(entity_data["type"]),
-                    highlight_text(entity_data["value"]),
+                    highlight_text(entity_data["val_type"]),
+                    highlight_text(value),
                     highlight_text(entity_data["state"]),
                     highlight_text(last_update_time),
                 ]
@@ -5066,18 +5073,20 @@ class GlobalVariableCache(CacheTableBase):
 
     @classmethod
     def create_entry(cls, name, uuid, **kwargs):
-        _type = kwargs.get("type", "")
+        val_type = kwargs.get("val_type", "")
         state = kwargs.get("state", "")
         value = kwargs.get("value", "")
         project_reference_list = kwargs.get("project_reference_list", "[]")
+        var_type = kwargs.get("var_type", "")
 
         super().create(
             name=name,
             uuid=uuid,
-            _type=_type,
+            val_type=val_type,
             state=state,
             value=value,
             project_reference_list=project_reference_list,
+            var_type=var_type,
         )
 
     @classmethod
