@@ -148,13 +148,17 @@ def get_global_variable_list(name, filter_by, limit, offset, quiet, all_items, o
         ]:
             display_var_type = display_var_type + " (SECRET)"
 
+        value = row["resources"]["value"]
+        if var_type in VARIABLE.DYNAMIC_TYPES:
+            value = "DYNAMIC VALUE"
+
         table.add_row(
             [
                 highlight_text(row["name"]),
                 highlight_text(row["description"]),
                 highlight_text(row["state"]),
                 highlight_text(display_var_type),
-                highlight_text(row["resources"]["value"]),
+                highlight_text(value),
                 highlight_text(owner_project),
                 highlight_text(",".join(projects)),
                 highlight_text(created_by),
