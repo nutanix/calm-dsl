@@ -74,7 +74,11 @@ def add_account_details(config):
             account_data["SUBNETS"] = []
             account_data["OVERLAY_SUBNETS"] = []
             Obj = get_resource_api("nutanix/v1/subnets", client.connection)
-            payload = {"filter": "account_uuid=={}".format(account_data["UUID"])}
+            payload = {
+                "length": 250,
+                "offset": 0,
+                "filter": "account_uuid=={}".format(account_data["UUID"]),
+            }
             result, er = Obj.list(payload)
             if er:
                 pass
