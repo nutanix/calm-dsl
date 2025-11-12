@@ -513,7 +513,7 @@ class SubstrateType(EntityType):
         cdict.pop("account_reference", None)
         cdict["readiness_probe"] = readiness_probe_dict
 
-        if not cdict["tunnel_reference"]:
+        if not cdict.get("tunnel_reference"):
             cdict.pop("tunnel_reference", None)
 
         return cdict
