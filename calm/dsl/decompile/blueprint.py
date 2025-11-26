@@ -6,7 +6,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_blueprint_template(cls):
+def render_blueprint_template(cls, global_variable_list=[]):
 
     LOG.debug("Rendering {} blueprint template".format(cls.__name__))
     if not isinstance(cls, BlueprintType):
@@ -38,6 +38,7 @@ def render_blueprint_template(cls):
     for profile in cls.profiles:
         profile_list.append(profile.__name__)
 
+    global_variables = [var["name"] for var in global_variable_list]
     user_attrs.update(
         {
             "services": ", ".join(service_list),
@@ -45,6 +46,7 @@ def render_blueprint_template(cls):
             "substrates": ", ".join(substrate_list),
             "profiles": ", ".join(profile_list),
             "credentials": ", ".join(credential_list),
+            "global_variables": global_variables,
         }
     )
 

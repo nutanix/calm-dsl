@@ -1,0 +1,40 @@
+{
+    "spec": {
+        "description": "",
+        "resources": {
+            "val_type": "STRING",
+            "regex": {
+                "should_validate": false
+            },
+            "data_type": "BASE",
+            "label": "",
+            "value": "abc",
+            "type": "LOCAL",
+            "options": {
+                "type": "PREDEFINED",
+                "choices": []
+            },
+            "attrs": {
+                "type": "LOCAL"
+            },
+            "project_reference_list": ["502ba543-7aa5-4b93-a7d6-c4b658026385"]
+        },
+        "name": "SimpleGlobalVar1"
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "spec_version": 0,
+        "name": "SimpleGlobalVar1",
+        "kind": "global_variable",
+        "owner_reference": {
+            "kind": "user",
+            "uuid": "00000000-0000-0000-0000-000000000000",
+            "name": "admin"
+        },
+        "project_reference": {
+            "uuid": "471c6a4c-c87d-4f85-9cf4-51e14477a565",
+            "name": "Default",
+            "kind": "project"
+        }
+    }
+}

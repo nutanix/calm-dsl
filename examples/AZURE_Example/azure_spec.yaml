@@ -3,7 +3,7 @@ resources:
   account_uuid: 6ce0c2e9-d776-5c34-ba3e-8df7e542dd29
   hw_profile:
     max_data_disk_count: 4
-    vm_size: Standard_D1_v2
+    vm_size: Standard_DS1_v2
   location: eastus2
   nw_profile:
     nic_list:
@@ -37,11 +37,11 @@ resources:
       size_in_gb: 2
       storage_type: ''
     image_details:
-      offer: UbuntuServer
+      offer: 0001-com-ubuntu-server-jammy
       publisher: Canonical
-      sku: 18.04-LTS
+      sku: 22_04-lts-gen2
       use_custom_image: false
-      version: 18.04.202401161
+      version: 22.04.202506200
     is_managed: true
     os_disk_details:
       caching_type: None

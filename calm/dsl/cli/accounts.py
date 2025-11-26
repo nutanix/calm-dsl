@@ -491,6 +491,11 @@ def create_credential_provider_account_payload(UserAccount):
             "variable_list": variable_list,
         },
     }
+
+    if UserAccount.tunnel:
+        tunnel_reference = getattr(UserAccount, "tunnel", None).get_dict()
+        account_resources["tunnel_reference"] = tunnel_reference
+
     spec = {"name": account_name, "resources": account_resources}
 
     account_payload["spec"] = spec
@@ -879,7 +884,7 @@ def describe_cred_provider_account(client, spec):
     Obj = client.resource_types
 
     params = {"filter": "name=={}".format(resource_type_name)}
-    res, err = Obj.list(params=params)
+    res, err = Obj.list(payload=params)
     if err:
         LOG.exception("[{}] - {}".format(err["code"], err["error"]))
         sys.exit(-1)
@@ -960,6 +965,10 @@ def describe_account(account_name):
             highlight_text(time.ctime(created_on)), highlight_text(past)
         )
     )
+    tunnel_name = (
+        account["status"]["resources"].get("tunnel_reference", {}).get("name", "-")
+    )
+    click.echo("Tunnel: {}".format(highlight_text(tunnel_name)))
 
     provider_data = account["status"]["resources"]["data"]
 

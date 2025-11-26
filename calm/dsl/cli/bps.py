@@ -45,6 +45,7 @@ from .utils import (
 from .secrets import find_secret, create_secret
 from .constants import BLUEPRINT
 from .environments import get_project_environment
+from .global_variable import fetch_dynamic_global_variable_values
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.builtins import Brownfield as BF
 from calm.dsl.providers import get_provider
@@ -53,6 +54,9 @@ from calm.dsl.constants import CACHE, DSL_CONFIG
 from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins.models.calm_ref import Ref
 from calm.dsl.decompile.ref_dependency import update_power_action_target_substrate
+from calm.dsl.store.version import Version
+from calm.dsl.cli.helper.common import get_variable_value_options
+from calm.dsl.constants import GLOBAL_VARIABLE
 
 LOG = get_logging_handle(__name__)
 
@@ -247,6 +251,12 @@ def describe_bp(blueprint_name, out):
         service_name = service["name"]
         click.echo("\t" + highlight_text(service_name))
         # click.echo("\tActions:")
+
+    gv_list = bp.get("status").get("resources", {}).get("global_variable_list", [])
+    click.echo("Global Variables [{}]:".format(highlight_text(len(gv_list))))
+    for gv in gv_list:
+        gv_name = gv["name"]
+        click.echo("\t" + highlight_text(gv_name))
 
 
 def get_blueprint_module_from_file(bp_file):
@@ -609,7 +619,10 @@ def decompile_bp_from_server(
     kwargs = {
         "reference_runbook_to_substrate_map": vm_power_action_target_map(
             blueprint, exported_bp_res_payload
-        )
+        ),
+        "global_variable_list": blueprint["spec"]["resources"].get(
+            "global_variable_reference_list", []
+        ),
     }
 
     _decompile_bp(
@@ -652,7 +665,10 @@ def decompile_bp_from_server_with_secrets(
     kwargs = {
         "reference_runbook_to_substrate_map": vm_power_action_target_map(
             blueprint, exported_bp_res_payload
-        )
+        ),
+        "global_variable_list": blueprint["spec"]["resources"].get(
+            "global_variable_reference_list", []
+        ),
     }
 
     _decompile_bp(
@@ -677,6 +693,11 @@ def decompile_bp_from_file(
 
     # Filter out system created tasks in patch config
     filter_patch_config_tasks(bp_payload["spec"]["resources"])
+    kwargs = {
+        "global_variable_list": bp_payload["spec"]["resources"].get(
+            "global_variable_reference_list", []
+        )
+    }
 
     _decompile_bp(
         bp_payload=bp_payload,
@@ -684,6 +705,7 @@ def decompile_bp_from_file(
         prefix=prefix,
         bp_dir=bp_dir,
         no_format=no_format,
+        **kwargs,
     )
 
 
@@ -739,6 +761,8 @@ def _decompile_bp(
             )
             break
 
+    global_variable_list = kwargs.get("global_variable_list", [])
+
     prefix = get_valid_identifier(prefix)
     bp_cls = BlueprintType.decompile(blueprint, prefix=prefix)
     bp_cls.__name__ = get_valid_identifier(blueprint_name)
@@ -751,6 +775,7 @@ def _decompile_bp(
         bp_dir=bp_dir,
         contains_encrypted_secrets=contains_encrypted_secrets,
         no_format=no_format,
+        global_variable_list=global_variable_list,
     )
     click.echo(
         "\nSuccessfully decompiled. Directory location: {}. Blueprint location: {}".format(
@@ -881,7 +906,9 @@ def get_variable_value(variable, bp_data, launch_runtime_vars):
     # Fetch the options for value of dynamic variables
     if variable["type"] in ["HTTP_LOCAL", "EXEC_LOCAL", "HTTP_SECRET", "EXEC_SECRET"]:
         choices, err = get_variable_value_options(
-            bp_uuid=bp_data["metadata"]["uuid"], var_uuid=variable["uuid"]
+            entity_type="blueprint",
+            entity_uuid=bp_data["metadata"]["uuid"],
+            var_uuid=variable["uuid"],
         )
         if err:
             click.echo("")
@@ -1132,41 +1159,6 @@ def parse_launch_runtime_configs(launch_params, config_type):
     return parse_launch_params_attribute(
         launch_params=launch_params, parse_attribute=config_type + "_config_list"
     )
-
-
-def get_variable_value_options(bp_uuid, var_uuid, poll_interval=10):
-    """returns dynamic variable values and api exception if occured"""
-
-    client = get_api_client()
-    res, _ = client.blueprint.variable_values(uuid=bp_uuid, var_uuid=var_uuid)
-
-    var_task_data = res.json()
-
-    # req_id and trl_id are necessary
-    req_id = var_task_data["request_id"]
-    trl_id = var_task_data["trl_id"]
-
-    # Poll till completion of epsilon task
-    maxWait = 5 * 60
-    count = 0
-    while count < maxWait:
-        res, err = client.blueprint.variable_values_from_trlid(
-            uuid=bp_uuid, var_uuid=var_uuid, req_id=req_id, trl_id=trl_id
-        )
-
-        # If there is exception during variable api call, it would be silently ignored
-        if err:
-            return list(), err
-
-        var_val_data = res.json()
-        if var_val_data["state"] == "SUCCESS":
-            return var_val_data["values"], None
-
-        count += poll_interval
-        time.sleep(poll_interval)
-
-    LOG.error("Waited for 5 minutes for dynamic variable evaludation")
-    sys.exit(-1)
 
 
 def get_protection_policy_rule(
@@ -1727,6 +1719,11 @@ def launch_blueprint_simple(
 
     runtime_editables = profile.pop("runtime_editables", [])
 
+    gv_names = [
+        var["name"]
+        for var in bp_status_data["resources"].get("global_variable_list", [])
+    ]
+
     launch_payload = {
         "spec": {
             "app_name": app_name
@@ -1737,6 +1734,13 @@ def launch_blueprint_simple(
             "runtime_editables": runtime_editables,
         }
     }
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV(GLOBAL_VARIABLE.MIN_SUPPORTED_VERSION):
+        global_args = fetch_dynamic_global_variable_values(
+            "blueprint", blueprint_uuid, gv_names
+        )
+        launch_payload["spec"]["global_args"] = global_args
 
     # (CALM-39565) Block bp launch if:
     # 1. Snapshot config present in bp but protection policy/rule not specified

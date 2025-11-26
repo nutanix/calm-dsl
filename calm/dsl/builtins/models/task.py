@@ -322,10 +322,17 @@ def _exec_create(
             "Only one of script or filename should be given for exec task "
             + (name or "")
         )
-    if script_type not in ["static", "static_py3"] and tunnel is not None:
+    cls_type = kwargs.get("cls_type", None)
+    if (
+        not (cls_type and issubclass(cls_type, ProviderTask))
+        and script_type not in ["static", "static_py3"]
+        and tunnel is not None
+    ):
         raise ValueError("Tunnel is supported only for Escript script types")
 
     if filename is not None:
+        if cls_type and issubclass(cls_type, ProviderTask):
+            depth += 1
         file_path = os.path.join(
             os.path.dirname(sys._getframe(depth).f_globals.get("__file__")), filename
         )
@@ -380,7 +387,10 @@ def _decision_create(
             + (name or "")
         )
 
+    cls_type = kwargs.get("cls_type", None)
     if filename is not None:
+        if cls_type and issubclass(cls_type, ProviderTask):
+            depth += 1
         file_path = os.path.join(
             os.path.dirname(sys._getframe(depth).f_globals.get("__file__")), filename
         )
@@ -393,7 +403,11 @@ def _decision_create(
             "One of script or filename is required for decision task " + (name or "")
         )
 
-    if script_type not in ["static", "static_py3"] and tunnel is not None:
+    if (
+        not (cls_type and issubclass(cls_type, ProviderTask))
+        and script_type not in ["static", "static_py3"]
+        and tunnel is not None
+    ):
         raise ValueError("Tunnel is support only for Escript script types")
 
     params = {
@@ -2233,14 +2247,64 @@ class CalmTask(BaseTask):
 
 
 class ProviderTask(CalmTask):
+    class Exec:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = lambda **kwargs: exec_task_ssh(cls_type=ProviderTask, **kwargs)
+        powershell = lambda **kwargs: exec_task_powershell(
+            cls_type=ProviderTask, **kwargs
+        )
+        escript = lambda **kwargs: EscriptTaskType.ExecTask(
+            cls_type=ProviderTask, **kwargs
+        )
+        escript.py2 = lambda **kwargs: EscriptTaskType.ExecTask.py2(
+            cls_type=ProviderTask, **kwargs
+        )
+        escript.py3 = lambda **kwargs: EscriptTaskType.ExecTask.py3(
+            cls_type=ProviderTask, **kwargs
+        )
+        python = lambda **kwargs: exec_task_python(cls_type=ProviderTask, **kwargs)
+
+    class SetVariable:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = lambda **kwargs: set_variable_task_ssh(cls_type=ProviderTask, **kwargs)
+        powershell = lambda **kwargs: set_variable_task_powershell(
+            cls_type=ProviderTask, **kwargs
+        )
+        escript = lambda **kwargs: EscriptTaskType.SetVariableTask(
+            cls_type=ProviderTask, **kwargs
+        )
+        escript.py2 = lambda **kwargs: EscriptTaskType.SetVariableTask.py2(
+            cls_type=ProviderTask, **kwargs
+        )
+        escript.py3 = lambda **kwargs: EscriptTaskType.SetVariableTask.py3(
+            cls_type=ProviderTask, **kwargs
+        )
+        python = lambda **kwargs: set_variable_task_python(
+            cls_type=ProviderTask, **kwargs
+        )
+
     class Decision:
         def __new__(cls, *args, **kwargs):
             raise TypeError("'{}' is not callable".format(cls.__name__))
 
-        ssh = decision_task_ssh
-        powershell = decision_task_powershell
-        escript = EscriptTaskType.DecisionTask
-        python = decision_task_python
+        ssh = lambda **kwargs: decision_task_ssh(cls_type=ProviderTask, **kwargs)
+        powershell = lambda **kwargs: decision_task_powershell(
+            cls_type=ProviderTask, **kwargs
+        )
+        escript = lambda **kwargs: EscriptTaskType.DecisionTask(
+            cls_type=ProviderTask, **kwargs
+        )
+        escript.py2 = lambda **kwargs: EscriptTaskType.DecisionTask.py2(
+            cls_type=ProviderTask, **kwargs
+        )
+        escript.py3 = lambda **kwargs: EscriptTaskType.DecisionTask.py3(
+            cls_type=ProviderTask, **kwargs
+        )
+        python = lambda **kwargs: decision_task_python(cls_type=ProviderTask, **kwargs)
 
     class Loop:
         def __new__(

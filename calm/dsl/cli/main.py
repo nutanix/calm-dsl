@@ -52,7 +52,7 @@ LOG = get_logging_handle(__name__)
     default=False,
     help="Update cache before running command",
 )
-@click.version_option("4.2.1")
+@click.version_option("4.3.0")
 @click.pass_context
 def main(ctx, config_file, sync):
     """Calm CLI
@@ -651,10 +651,24 @@ def verify():
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Endpoint to be used while testing shell scripts, powershell scripts and python remote tasks",
 )
-def run_script(script_type, script_file, project_name, endpoint_file):
+@click.option(
+    "--tunnel",
+    "-tn",
+    "tunnel_name",
+    default=None,
+    help="Tunnel to be used while testing eScript scripts.",
+)
+def run_script(script_type, script_file, project_name, endpoint_file, tunnel_name):
     """Tests escripts/shell_scripts/powershell/python scripts for syntactical errors"""
+
+    if tunnel_name and script_type != "escript":
+        LOG.error(
+            "Tunnel option is only applicable for escript scripts. To use tunnel in other scripts, configure in endpoint instead."
+        )
+        sys.exit("Tunnel option is only applicable for escript scripts.")
+
     if script_type == "escript":
-        test_escript(script_file, project_name)
+        test_escript(script_file, project_name, tunnel_name=tunnel_name)
 
     elif script_type == "shell":
         test_shell_script(script_file, endpoint_file, project_name)
@@ -673,4 +687,10 @@ def run_script(script_type, script_file, project_name, endpoint_file):
 @main.group(cls=FeatureFlagGroup)
 def clone():
     """Clone entities"""
+    pass
+
+
+@get.group(cls=FeatureFlagGroup)
+def usage():
+    """Usage entities"""
     pass

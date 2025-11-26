@@ -8,6 +8,13 @@ properties:
     type: string
   password:
     type: string
+  service_account:
+    x-calm-dsl-min-version: 4.3.0
+    type: string
+  cred_type:
+    x-calm-dsl-min-version: 4.3.0
+    type: string
+    enum: ["basic_auth", "service_account"]
   server:
     type: string
   port:

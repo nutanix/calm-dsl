@@ -1,0 +1,588 @@
+{
+    "spec": {
+        "name": "SimpleBlueprintWithGlobalVariable",
+        "description": "",
+        "resources": {
+            "type": "USER",
+            "service_definition_list": [
+                {
+                    "name": "Service1",
+                    "description": "",
+                    "port_list": [],
+                    "singleton": false,
+                    "tier": "",
+                    "depends_on_list": [],
+                    "variable_list": [],
+                    "action_list": [
+                        {
+                            "name": "action_create",
+                            "description": "",
+                            "type": "system",
+                            "critical": true,
+                            "runbook": {
+                                "name": "Service1___create___runbook",
+                                "description": "",
+                                "main_task_local_reference": {
+                                    "kind": "app_task",
+                                    "name": "Service1___create___dag"
+                                },
+                                "task_definition_list": [
+                                    {
+                                        "name": "Service1___create___dag",
+                                        "description": "",
+                                        "type": "DAG",
+                                        "target_any_local_reference": {
+                                            "kind": "app_service",
+                                            "name": "Service1"
+                                        },
+                                        "attrs": {
+                                            "edges": []
+                                        },
+                                        "status_map_list": [],
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "retries": "",
+                                        "timeout_secs": ""
+                                    }
+                                ],
+                                "variable_list": [],
+                                "output_variable_list": []
+                            }
+                        },
+                        {
+                            "name": "action_start",
+                            "description": "",
+                            "type": "system",
+                            "critical": true,
+                            "runbook": {
+                                "name": "Service1___start___runbook",
+                                "description": "",
+                                "main_task_local_reference": {
+                                    "kind": "app_task",
+                                    "name": "Service1___start___dag"
+                                },
+                                "task_definition_list": [
+                                    {
+                                        "name": "Service1___start___dag",
+                                        "description": "",
+                                        "type": "DAG",
+                                        "target_any_local_reference": {
+                                            "kind": "app_service",
+                                            "name": "Service1"
+                                        },
+                                        "attrs": {
+                                            "edges": []
+                                        },
+                                        "status_map_list": [],
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "retries": "",
+                                        "timeout_secs": ""
+                                    }
+                                ],
+                                "variable_list": [],
+                                "output_variable_list": []
+                            }
+                        },
+                        {
+                            "name": "action_stop",
+                            "description": "",
+                            "type": "system",
+                            "critical": true,
+                            "runbook": {
+                                "name": "Service1___stop___runbook",
+                                "description": "",
+                                "main_task_local_reference": {
+                                    "kind": "app_task",
+                                    "name": "Service1___stop___dag"
+                                },
+                                "task_definition_list": [
+                                    {
+                                        "name": "Service1___stop___dag",
+                                        "description": "",
+                                        "type": "DAG",
+                                        "target_any_local_reference": {
+                                            "kind": "app_service",
+                                            "name": "Service1"
+                                        },
+                                        "attrs": {
+                                            "edges": []
+                                        },
+                                        "status_map_list": [],
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "retries": "",
+                                        "timeout_secs": ""
+                                    }
+                                ],
+                                "variable_list": [],
+                                "output_variable_list": []
+                            }
+                        },
+                        {
+                            "name": "action_delete",
+                            "description": "",
+                            "type": "system",
+                            "critical": true,
+                            "runbook": {
+                                "name": "Service1___delete___runbook",
+                                "description": "",
+                                "main_task_local_reference": {
+                                    "kind": "app_task",
+                                    "name": "Service1___delete___dag"
+                                },
+                                "task_definition_list": [
+                                    {
+                                        "name": "Service1___delete___dag",
+                                        "description": "",
+                                        "type": "DAG",
+                                        "target_any_local_reference": {
+                                            "kind": "app_service",
+                                            "name": "Service1"
+                                        },
+                                        "attrs": {
+                                            "edges": []
+                                        },
+                                        "status_map_list": [],
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "retries": "",
+                                        "timeout_secs": ""
+                                    }
+                                ],
+                                "variable_list": [],
+                                "output_variable_list": []
+                            }
+                        },
+                        {
+                            "name": "action_restart",
+                            "description": "",
+                            "type": "system",
+                            "critical": true,
+                            "runbook": {
+                                "name": "Service1___restart___runbook",
+                                "description": "",
+                                "main_task_local_reference": {
+                                    "kind": "app_task",
+                                    "name": "Service1___restart___dag"
+                                },
+                                "task_definition_list": [
+                                    {
+                                        "name": "Service1___restart___dag",
+                                        "description": "",
+                                        "type": "DAG",
+                                        "target_any_local_reference": {
+                                            "kind": "app_service",
+                                            "name": "Service1"
+                                        },
+                                        "attrs": {
+                                            "edges": []
+                                        },
+                                        "status_map_list": [],
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "retries": "",
+                                        "timeout_secs": ""
+                                    }
+                                ],
+                                "variable_list": [],
+                                "output_variable_list": []
+                            }
+                        },
+                        {
+                            "name": "action_soft_delete",
+                            "description": "",
+                            "type": "system",
+                            "critical": true,
+                            "runbook": {
+                                "name": "Service1___soft_delete___runbook",
+                                "description": "",
+                                "main_task_local_reference": {
+                                    "kind": "app_task",
+                                    "name": "Service1___soft_delete___dag"
+                                },
+                                "task_definition_list": [
+                                    {
+                                        "name": "Service1___soft_delete___dag",
+                                        "description": "",
+                                        "type": "DAG",
+                                        "target_any_local_reference": {
+                                            "kind": "app_service",
+                                            "name": "Service1"
+                                        },
+                                        "attrs": {
+                                            "edges": []
+                                        },
+                                        "status_map_list": [],
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "retries": "",
+                                        "timeout_secs": ""
+                                    }
+                                ],
+                                "variable_list": [],
+                                "output_variable_list": []
+                            }
+                        }
+                    ],
+                    "container_spec": {}
+                }
+            ],
+            "package_definition_list": [
+                {
+                    "name": "Package1",
+                    "description": "",
+                    "type": "CUSTOM",
+                    "options": {
+                        "install_runbook": {
+                            "name": "Runbook_for_Package_Package1_action_install",
+                            "description": "",
+                            "main_task_local_reference": {
+                                "kind": "app_task",
+                                "name": "DAG_Task_for_Package_Package1_action_install"
+                            },
+                            "task_definition_list": [
+                                {
+                                    "name": "DAG_Task_for_Package_Package1_action_install",
+                                    "description": "",
+                                    "type": "DAG",
+                                    "target_any_local_reference": {
+                                        "kind": "app_service",
+                                        "name": "Service1"
+                                    },
+                                    "attrs": {
+                                        "edges": []
+                                    },
+                                    "status_map_list": [],
+                                    "child_tasks_local_reference_list": [],
+                                    "variable_list": [],
+                                    "retries": "",
+                                    "timeout_secs": ""
+                                }
+                            ],
+                            "variable_list": [],
+                            "output_variable_list": []
+                        },
+                        "uninstall_runbook": {
+                            "name": "Runbook_for_Package_Package1_action_uninstall",
+                            "description": "",
+                            "main_task_local_reference": {
+                                "kind": "app_task",
+                                "name": "DAG_Task_for_Package_Package1_action_uninstall"
+                            },
+                            "task_definition_list": [
+                                {
+                                    "name": "DAG_Task_for_Package_Package1_action_uninstall",
+                                    "description": "",
+                                    "type": "DAG",
+                                    "target_any_local_reference": {
+                                        "kind": "app_service",
+                                        "name": "Service1"
+                                    },
+                                    "attrs": {
+                                        "edges": []
+                                    },
+                                    "status_map_list": [],
+                                    "child_tasks_local_reference_list": [],
+                                    "variable_list": [],
+                                    "retries": "",
+                                    "timeout_secs": ""
+                                }
+                            ],
+                            "variable_list": [],
+                            "output_variable_list": []
+                        }
+                    },
+                    "service_local_reference_list": [
+                        {
+                            "kind": "app_service",
+                            "name": "Service1"
+                        }
+                    ],
+                    "variable_list": [],
+                    "version": ""
+                }
+            ],
+            "published_service_definition_list": [],
+            "substrate_definition_list": [
+                {
+                    "name": "VM1",
+                    "description": "",
+                    "type": "AHV_VM",
+                    "os_type": "Linux",
+                    "create_spec": {
+                        "name": "vm-@@{calm_time}@@-@@{global.gv_var}@@",
+                        "categories": {},
+                        "cluster_reference": {
+                            "kind": "cluster",
+                            "name": "auto_cluster_prod_e9093c2aff01",
+                            "uuid": "00063887-ddcd-b63a-0000-000000028eb8"
+                        },
+                        "resources": {
+                            "nic_list": [
+                                {
+                                    "network_function_nic_type": "INGRESS",
+                                    "nic_type": "NORMAL_NIC",
+                                    "subnet_reference": {
+                                        "kind": "subnet",
+                                        "name": "vlan1211",
+                                        "uuid": "f66b6e94-a38f-4236-bf7a-b52aeb49d0eb"
+                                    },
+                                    "network_function_chain_reference": null,
+                                    "mac_address": "",
+                                    "ip_endpoint_list": []
+                                }
+                            ],
+                            "num_vcpus_per_socket": 1,
+                            "num_sockets": 1,
+                            "memory_size_mib": 1024,
+                            "power_state": "ON",
+                            "account_uuid": "d802a0e1-79d9-4f64-8cc3-f8afad022352",
+                            "gpu_list": [],
+                            "disk_list": [
+                                {
+                                    "data_source_reference": {
+                                        "kind": "image",
+                                        "name": "Centos7HadoopMaster",
+                                        "uuid": "3deac39c-82e3-46c4-95b2-687b02925f98"
+                                    },
+                                    "device_properties": {
+                                        "device_type": "DISK",
+                                        "disk_address": {
+                                            "device_index": 0,
+                                            "adapter_type": "SCSI"
+                                        }
+                                    },
+                                    "disk_size_mib": 0
+                                }
+                            ],
+                            "guest_customization": null,
+                            "serial_port_list": [],
+                            "boot_config": {
+                                "boot_device": {
+                                    "disk_address": {
+                                        "device_index": 0,
+                                        "adapter_type": "SCSI"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "variable_list": [],
+                    "action_list": [],
+                    "readiness_probe": {
+                        "connection_type": "SSH",
+                        "connection_port": 22,
+                        "connection_protocol": "",
+                        "timeout_secs": "",
+                        "delay_secs": "60",
+                        "retries": "5",
+                        "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+                        "disable_readiness_probe": true,
+                        "login_credential_local_reference": {
+                            "kind": "app_credential",
+                            "name": "cred"
+                        }
+                    },
+                    "editables": {}
+                }
+            ],
+            "credential_definition_list": [
+                {
+                    "name": "cred",
+                    "description": "",
+                    "type": "PASSWORD",
+                    "username": "admin",
+                    "secret": {
+                        "attrs": {
+                            "is_secret_modified": true
+                        },
+                        "value": ""
+                    },
+                    "cred_class": "static",
+                    "editables": {}
+                }
+            ],
+            "app_profile_list": [
+                {
+                    "name": "Default",
+                    "deployment_create_list": [
+                        {
+                            "published_service_local_reference_list": [],
+                            "package_local_reference_list": [
+                                {
+                                    "kind": "app_package",
+                                    "name": "Package1"
+                                }
+                            ],
+                            "substrate_local_reference": {
+                                "kind": "app_substrate",
+                                "name": "VM1"
+                            },
+                            "depends_on_list": [],
+                            "variable_list": [],
+                            "action_list": [],
+                            "min_replicas": "1",
+                            "default_replicas": "1",
+                            "max_replicas": "1",
+                            "type": "GREENFIELD",
+                            "name": "deployment_d07d576f",
+                            "options": {},
+                            "description": "",
+                            "editables": {}
+                        }
+                    ],
+                    "variable_list": [
+                        {
+                            "name": "app_var",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "one",
+                            "data_type": "BASE",
+                            "regex": {
+                                "value": "^.*$",
+                                "should_validate": false
+                            },
+                            "is_hidden": false,
+                            "is_mandatory": false
+                        }
+                    ],
+                    "patch_list": [],
+                    "action_list": [
+                        {
+                            "name": "CustomAction1",
+                            "description": "",
+                            "type": "user",
+                            "critical": false,
+                            "runbook": {
+                                "name": "Default_CustomAction1_runbook",
+                                "description": "",
+                                "main_task_local_reference": {
+                                    "kind": "app_task",
+                                    "name": "Default_CustomAction1_dag"
+                                },
+                                "task_definition_list": [
+                                    {
+                                        "name": "Default_CustomAction1_dag",
+                                        "description": "",
+                                        "type": "DAG",
+                                        "attrs": {
+                                            "edges": []
+                                        },
+                                        "status_map_list": [],
+                                        "child_tasks_local_reference_list": [
+                                            {
+                                                "kind": "app_task",
+                                                "name": "Task1"
+                                            }
+                                        ],
+                                        "variable_list": [],
+                                        "retries": "",
+                                        "timeout_secs": ""
+                                    },
+                                    {
+                                        "name": "Task1",
+                                        "description": "",
+                                        "type": "EXEC",
+                                        "target_any_local_reference": {
+                                            "kind": "app_service",
+                                            "name": "Service1"
+                                        },
+                                        "attrs": {
+                                            "script_type": "static_py3",
+                                            "script": "print(\"@@{global.gv_var}@@\")\n"
+                                        },
+                                        "status_map_list": [],
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "retries": "",
+                                        "timeout_secs": ""
+                                    }
+                                ],
+                                "variable_list": [],
+                                "output_variable_list": []
+                            }
+                        }
+                    ],
+                    "snapshot_config_list": [],
+                    "restore_config_list": [],
+                    "environment_reference_list": [
+                        "05f46fb6-e6f4-43d0-aa12-838559b00837"
+                    ]
+                }
+            ],
+            "client_attrs": {
+                "None": {
+                    "Service": {
+                        "Service1": {
+                            "dsl_name": "Service1",
+                            "Action": {}
+                        }
+                    },
+                    "Package": {
+                        "Package1": {
+                            "dsl_name": "Package1",
+                            "Action": {}
+                        }
+                    },
+                    "Deployment": {
+                        "deployment_d07d576f": {
+                            "dsl_name": "deployment_d07d576f",
+                            "Action": {}
+                        }
+                    },
+                    "Profile": {
+                        "Default": {
+                            "dsl_name": "Default",
+                            "Action": {}
+                        }
+                    },
+                    "Substrate": {
+                        "VM1": {
+                            "dsl_name": "VM1",
+                            "Action": {},
+                            "AhvVm": {
+                                "vm-@@{calm_time}@@-@@{global.gv_var}@@": {
+                                    "dsl_name": "vmcalm_timeglobalgv_var"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "global_variable_reference_list": [
+                {
+                    "kind": "global_variable",
+                    "name": "gv_var",
+                    "uuid": "7dbf3390-b214-4191-3eb5-8ea0ea4ae511"
+                }
+            ],
+            "default_credential_local_reference": {
+                "kind": "app_credential",
+                "name": "cred"
+            }
+        }
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "name": "SimpleBlueprintWithGlobalVariable",
+        "kind": "blueprint",
+        "project_reference": {
+            "name": "default",
+            "kind": "project",
+            "uuid": "e75bd16c-c40f-42f9-9f2c-7f55935d3efd"
+        },
+        "categories": {
+            "TemplateType": "Vm"
+        },
+        "spec_version": 1,
+        "owner_reference": {
+            "kind": "user",
+            "name": "admin",
+            "uuid": "00000000-0000-0000-0000-000000000000"
+        }
+    }
+}

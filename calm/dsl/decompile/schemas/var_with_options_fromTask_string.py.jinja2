@@ -1,5 +1,5 @@
 {%- macro common_details(obj) -%}
-{{obj.value}}, label='{{obj.label}}', is_mandatory={{obj.is_mandatory}}, is_hidden={{obj.is_hidden}}, description='{{obj.description}}'{%- if obj.default_value %}, value='{{obj.default_value}}'{%- endif %}
+{{obj.value}}, label='{{obj.label}}'{%- if not obj.is_global_variable %}, is_mandatory={{obj.is_mandatory}}, is_hidden={{obj.is_hidden}}{%- endif %}, description='{{obj.description}}'{%- if obj.default_value %}, value='{{obj.default_value}}'{%- endif %}
 {%- endmacro %}
 
 {%- macro with_options_from_task_string_var(obj) -%}

@@ -1,5 +1,4 @@
-{% import "ref.yaml.jinja2" as ref %}
-
+{% import "calm_ref.yaml.jinja2" as ref %}
 {% macro ProviderTestAccount() -%}
 
 title: Provider Test Account
@@ -13,6 +12,10 @@ properties:
     description:
         type: string
         description: "Notes of account"
+    tunnel_reference:
+        x-calm-dsl-min-version: 4.3.0
+        {{ ref.CalmRef() | indent(8) }}
+        x-calm-dsl-display-name: tunnel
     variable_list:
         type: array
         description: List of variables

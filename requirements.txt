@@ -25,3 +25,4 @@ importlib-metadata==4.6.0   # version greater than this will require python >= 3
 backports.zoneinfo==0.2.1;python_version<"3.9"
 pytz==2022.7.1
 pillow==10.3.0 # requires python >= 3.8
+pyyaml<=6.0.1; python_version<"3.9" # for version < 3.9 there is hard stop at 6.0.1 (ENG-837302)

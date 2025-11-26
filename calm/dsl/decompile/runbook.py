@@ -33,6 +33,8 @@ def render_runbook_template(
     CONFIG_SPEC_MAP={},
     credentials=[],
     default_endpoint=None,
+    global_variable_list=[],
+    execution_name="",
 ):
     global RUNBOOK_ACTION_MAP
     LOG.debug("Rendering {} runbook template".format(runbook_cls.__name__))
@@ -114,6 +116,8 @@ def render_runbook_template(
 
     credential_names.extend([cred["name_in_file"] for cred in credentials_list])
 
+    global_variables = [var["name"] for var in global_variable_list]
+
     # runbook project reference
     project_name = metadata_obj.project["name"]
     user_attrs = {
@@ -128,6 +132,8 @@ def render_runbook_template(
         "project_name": project_name,
         "import_status": import_status,
         "default_endpoint_name": default_endpoint_name,
+        "global_variables": global_variables,
+        "execution_name": execution_name,
     }
 
     runbook_outputs = getattr(runbook_cls, "outputs", [])

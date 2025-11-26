@@ -1,0 +1,69 @@
+{
+    "endpoint_definition_list": [],
+    "credential_definition_list": [],
+    "client_attrs": {},
+    "runbook": {
+        "name": "DslRunbookWithGlobalVariables_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "DslRunbookWithGlobalVariables_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "DslRunbookWithGlobalVariables_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": []
+                },
+                "status_map_list": [],
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "Exec_Task"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Exec_Task",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static_py3",
+                    "script": "\nprint(\"@@{var1}@@\")\nprint(\"@@{global.GlobalVar}@@\")\n"
+                },
+                "status_map_list": [],
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": [
+            {
+                "name": "var1",
+                "description": "",
+                "type": "SECRET",
+                "label": "",
+                "attrs": {},
+                "val_type": "STRING",
+                "value": "test",
+                "data_type": "BASE",
+                "is_hidden": false,
+                "is_mandatory": false
+            }
+        ],
+        "output_variables": []
+    },
+    "global_variable_reference_list": [
+        {
+            "kind": "global_variable",
+            "name": "GlobalVar"
+        }
+    ],
+    "execution_name": ""
+}

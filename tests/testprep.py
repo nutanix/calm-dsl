@@ -74,7 +74,11 @@ def add_account_details(config):
             account_data["SUBNETS"] = []
             account_data["OVERLAY_SUBNETS"] = []
             Obj = get_resource_api("nutanix/v1/subnets", client.connection)
-            payload = {"filter": "account_uuid=={}".format(account_data["UUID"])}
+            payload = {
+                "length": 250,
+                "offset": 0,
+                "filter": "account_uuid=={}".format(account_data["UUID"]),
+            }
             result, er = Obj.list(payload)
             if er:
                 pass
@@ -591,6 +595,67 @@ def add_http_endpoint(config):
         )
 
 
+def add_tunnels(config):
+    config["TUNNELS"] = {
+        "TUNNEL_1": {
+            "NAME": "Tunnel_1",
+            "DESCRIPTION": "Test tunnel description 1",
+        },
+        "TUNNEL_2": {
+            "NAME": "Tunnel_2",
+            "DESCRIPTION": "Test tunnel description 2",
+        },
+    }
+    tunnels_list = []
+
+    client = get_api_client()
+    params = {"length": 250, "offset": 0, "filter": "type!=network_group"}
+
+    res, err = client.tunnel.list(params=params)
+    if err:
+        LOG.debug("Failed to fetch tunnels: {}".format(err))
+    else:
+        res = res.json()
+        for _row in res.get("entities", []):
+            row = _row["status"]
+            name = row.get("name", "")
+            if name in ["Tunnel_1", "Tunnel_2"]:
+                tunnels_list.append(name)
+                LOG.info(
+                    "Tunnel with name {} already exists, skipping creation".format(name)
+                )
+
+    runner = CliRunner()
+    for _, tunnel in config["TUNNELS"].items():
+        if tunnel["NAME"] in tunnels_list:
+            continue
+        result = runner.invoke(
+            cli,
+            [
+                "create",
+                "tunnel",
+                "--name={}".format(tunnel["NAME"]),
+                "--description={}".format(tunnel["DESCRIPTION"]),
+            ],
+        )
+        LOG.info(result.output)
+        if result.exit_code:
+            cli_res_dict = {
+                "Output": result.output,
+                "Exception": str(result.exception),
+            }
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+
+
 def add_provider_constants(config):
     provider_config = {
         "provider": {
@@ -634,6 +699,7 @@ add_rerun_report_portal(config)
 add_vpc_endpoints(config)
 add_provider_constants(config)
 add_http_endpoint(config)
+add_tunnels(config)
 f = open(dsl_config_file_location, "w")
 f.write(json.dumps(config, indent=4))
 f.close()

@@ -6,6 +6,10 @@ from distutils.version import LooseVersion as LV
 
 from calm.dsl.db.table_config import AhvSubnetsCache
 from calm.dsl.builtins.models.constants import NutanixDB as NutanixDBConst
+from calm.dsl.builtins.models.helper.common import (
+    custom_compile_for_tunnels,
+    custom_decompile_for_tunnels,
+)
 
 from .entity import Entity, EntityType, EntityDict
 from .validator import PropertyValidator
@@ -15,7 +19,7 @@ from .ahv_vm_cluster import AhvCluster
 from .ahv_vm_vpc import AhvVpc
 
 from calm.dsl.store import Cache, Version
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, TUNNEL
 from calm.dsl.api.handle import get_api_client
 from calm.dsl.log import get_logging_handle
 
@@ -847,35 +851,64 @@ class Ref:
             sys.exit("Invalid reference data".format(json.dumps(cdict)))
 
     class Tunnel:
-        __ref_kind__ = "tunnel"
+        __ref_kind__ = CACHE.ENTITY.TUNNEL
 
         def __new__(cls, name, **kwargs):
-            kwargs["__ref_cls__"] = cls
+            kwargs["__ref_cls__"] = cls.VPC
             kwargs["name"] = name
             return _calm_ref(**kwargs)
 
-        def compile(cls, name, **kwargs):
-            tunnel_uuid = ""
-            if name:
-                cache_vpc_data = Cache.get_entity_data(
-                    CACHE.ENTITY.AHV_VPC, None, tunnel_name=name
-                )
-                if not cache_vpc_data:
-                    LOG.error("Failed to find Tunnel with name: {}".format(name))
-                    sys.exit("Tunnel name={} not found".format(name))
-                tunnel_uuid = cache_vpc_data.get("tunnel_uuid")
-                LOG.debug("Tunnel UUID: {}".format(tunnel_uuid))
+        @classmethod
+        def decompile(cls, cdict):
+            """return decompile class"""
+            kind = cdict.get("kind", "")
+            if kind == TUNNEL.KIND.NETWORK_GROUP:
+                return cls.VPC.decompile(cls.VPC, cdict)
+            elif kind == TUNNEL.KIND.ACCOUNT:
+                return cls.Account.decompile(cls.Account, cdict)
             else:
-                LOG.error("Tunnel name not passed, please pass Tunnel name")
-                sys.exit(-1)
+                LOG.error("Invalid tunnel reference data".format(json.dumps(cdict)))
+                sys.exit("Invalid tunnel reference data".format(json.dumps(cdict)))
 
-            tunnel_ref = {
-                "uuid": tunnel_uuid,
-                "name": name,
-                "kind": "tunnel",
-            }
+        class VPC:
+            """Calm Ref Class for VPC Tunnel entity"""
 
-            return tunnel_ref
+            __ref_kind__ = CACHE.ENTITY.AHV_VPC
+
+            def __new__(cls, name, **kwargs):
+                kwargs["__ref_cls__"] = cls
+                kwargs["name"] = name
+                return _calm_ref(**kwargs)
+
+            def compile(cls, name, **kwargs):
+                return custom_compile_for_tunnels(
+                    cls, name=name, tunnel_kind=TUNNEL.KIND.NETWORK_GROUP
+                )
+
+            def decompile(cls, cdict):
+                return custom_decompile_for_tunnels(
+                    cls, cdict=cdict, tunnel_kind=TUNNEL.KIND.NETWORK_GROUP
+                )
+
+        class Account:
+            """Calm Ref Class for Account Tunnel entity"""
+
+            __ref_kind__ = CACHE.ENTITY.TUNNEL
+
+            def __new__(cls, name, **kwargs):
+                kwargs["__ref_cls__"] = cls
+                kwargs["name"] = name
+                return _calm_ref(**kwargs)
+
+            def compile(cls, name, **kwargs):
+                return custom_compile_for_tunnels(
+                    cls, name=name, tunnel_kind=TUNNEL.KIND.ACCOUNT
+                )
+
+            def decompile(cls, cdict):
+                return custom_decompile_for_tunnels(
+                    cls, cdict=cdict, tunnel_kind=TUNNEL.KIND.ACCOUNT
+                )
 
     class NutanixDB:
         """Base Calm Ref Class for Nutanix DB entitites (Not Callable)"""
@@ -1430,4 +1463,24 @@ class Ref:
                 "name": protection_policy_cache_data["name"],
                 "uuid": protection_policy_cache_data["uuid"],
                 "rule_uuid": protection_policy_cache_data["rule_uuid"],
+            }
+
+    class GlobalVariable:
+        __ref_kind__ = CACHE.ENTITY.GLOBAL_VARIABLE
+
+        def __new__(cls, name, **kwargs):
+
+            global_variable_cache_data = Cache.get_entity_data(
+                entity_type=CACHE.ENTITY.GLOBAL_VARIABLE, name=name
+            )
+            if not global_variable_cache_data:
+                raise Exception(
+                    "Global Variable {} not found. Please run: calm update cache".format(
+                        name
+                    )
+                )
+            return {
+                "kind": "global_variable",
+                "name": name,
+                "uuid": global_variable_cache_data["uuid"],
             }

@@ -1,3 +1,4 @@
+{% import "calm_ref.yaml.jinja2" as ref %}
 {% macro Substrate() -%}
 
 title: Substrate
@@ -32,6 +33,10 @@ properties:
     x-calm-dsl-display-name: provider_spec
     type: object
     x-calm-dsl-type: app_provider_spec
+  tunnel_reference:
+    x-calm-dsl-min-version: 4.3.0
+    {{ ref.CalmRef() | indent(4) }}
+    x-calm-dsl-display-name: tunnel
   editables:
     x-calm-dsl-display-name: provider_spec_editables
     type: object

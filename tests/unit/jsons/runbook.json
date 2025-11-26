@@ -1,0 +1,987 @@
+{
+    "status": {
+        "name": "TestRunbook",
+        "description": "",
+        "critical": false,
+        "attrs": {},
+        "state": "ACTIVE",
+        "message_list": [],
+        "resources": {
+            "runbook": {
+                "name": "fef6be92_runbook",
+                "uuid": "",
+                "description": "",
+                "task_definition_list": [
+                    {
+                        "type": "DAG",
+                        "name": "e31416c3_dag",
+                        "uuid": "",
+                        "description": "",
+                        "state": "ACTIVE",
+                        "message_list": [],
+                        "attrs": {
+                            "type": "",
+                            "edges": [
+                                {
+                                    "type": "",
+                                    "uuid": "",
+                                    "from_task_reference": {
+                                        "name": "Execute Escript",
+                                        "uuid": "",
+                                        "kind": "app_task"
+                                    },
+                                    "to_task_reference": {
+                                        "name": "Set_Variable Escript",
+                                        "uuid": "",
+                                        "kind": "app_task"
+                                    },
+                                    "edge_type": "user_defined"
+                                },
+                                {
+                                    "type": "",
+                                    "uuid": "",
+                                    "from_task_reference": {
+                                        "name": "Set_Variable Escript",
+                                        "uuid": "",
+                                        "kind": "app_task"
+                                    },
+                                    "to_task_reference": {
+                                        "name": "Decision Escript",
+                                        "uuid": "",
+                                        "kind": "app_task"
+                                    },
+                                    "edge_type": "user_defined"
+                                }
+                            ]
+                        },
+                        "child_tasks_local_reference_list": [
+                            {
+                                "name": "Execute Escript",
+                                "uuid": "",
+                                "kind": "app_task"
+                            },
+                            {
+                                "name": "Set_Variable Escript",
+                                "uuid": "",
+                                "kind": "app_task"
+                            },
+                            {
+                                "name": "Decision Escript",
+                                "uuid": "",
+                                "kind": "app_task"
+                            }
+                        ],
+                        "variable_list": [],
+                        "timeout_secs": "0",
+                        "retries": "0",
+                        "inherit_target": false,
+                        "status_map_list": []
+                    },
+                    {
+                        "type": "EXEC",
+                        "name": "Execute Escript",
+                        "uuid": "",
+                        "description": "",
+                        "state": "ACTIVE",
+                        "message_list": [],
+                        "attrs": {
+                            "type": "",
+                            "script": "print('Hello world')",
+                            "script_type": "static_py3",
+                            "command_line_args": "",
+                            "exit_status": [],
+                            "tunnel_reference": {
+                                "name": "Tunnel_1",
+                                "uuid": "",
+                                "kind": "tunnel"
+                            }
+                        },
+                        "child_tasks_local_reference_list": [],
+                        "variable_list": [],
+                        "timeout_secs": "0",
+                        "retries": "0",
+                        "inherit_target": false,
+                        "status_map_list": []
+                    },
+                    {
+                        "type": "SET_VARIABLE",
+                        "name": "Set_Variable Escript",
+                        "uuid": "",
+                        "description": "",
+                        "state": "ACTIVE",
+                        "message_list": [],
+                        "attrs": {
+                            "type": "",
+                            "script": "print('Hello world')",
+                            "script_type": "static_py3",
+                            "exit_status": [],
+                            "eval_scope": "local",
+                            "eval_variables": [
+                                "var1"
+                            ],
+                            "tunnel_reference": {
+                                "name": "Tunnel_1",
+                                "uuid": "",
+                                "kind": "tunnel"
+                            }
+                        },
+                        "child_tasks_local_reference_list": [],
+                        "variable_list": [],
+                        "timeout_secs": "0",
+                        "retries": "0",
+                        "inherit_target": false,
+                        "status_map_list": []
+                    },
+                    {
+                        "type": "DECISION",
+                        "name": "Decision Escript",
+                        "uuid": "",
+                        "description": "",
+                        "state": "ACTIVE",
+                        "message_list": [],
+                        "attrs": {
+                            "type": "",
+                            "script": "print('Hello world')",
+                            "script_type": "static_py3",
+                            "command_line_args": "",
+                            "exit_status": [],
+                            "tunnel_reference": {
+                                "name": "Tunnel_1",
+                                "uuid": "",
+                                "kind": "tunnel"
+                            },
+                            "success_child_reference": {
+                                "name": "38a7504d_SUCCESS_META",
+                                "uuid": "",
+                                "kind": "app_task"
+                            },
+                            "failure_child_reference": {
+                                "name": "a80b604f_FAILURE_META",
+                                "uuid": "",
+                                "kind": "app_task"
+                            }
+                        },
+                        "child_tasks_local_reference_list": [],
+                        "variable_list": [],
+                        "timeout_secs": "0",
+                        "retries": "0",
+                        "inherit_target": false,
+                        "status_map_list": []
+                    },
+                    {
+                        "type": "META",
+                        "name": "38a7504d_SUCCESS_META",
+                        "uuid": "",
+                        "description": "",
+                        "state": "ACTIVE",
+                        "message_list": [],
+                        "attrs": {
+                            "type": ""
+                        },
+                        "child_tasks_local_reference_list": [
+                            {
+                                "name": "Task 3_2",
+                                "uuid": "",
+                                "kind": "app_task"
+                            }
+                        ],
+                        "variable_list": [],
+                        "timeout_secs": "0",
+                        "retries": "0",
+                        "inherit_target": false,
+                        "status_map_list": []
+                    },
+                    {
+                        "type": "EXEC",
+                        "name": "Task 3_2",
+                        "uuid": "",
+                        "description": "",
+                        "state": "ACTIVE",
+                        "message_list": [],
+                        "attrs": {
+                            "type": "",
+                            "script": "print('Hello world')",
+                            "script_type": "static_py3",
+                            "command_line_args": "",
+                            "exit_status": [],
+                            "tunnel_reference": {
+                                "name": "Tunnel_1",
+                                "uuid": "",
+                                "kind": "tunnel"
+                            }
+                        },
+                        "child_tasks_local_reference_list": [],
+                        "variable_list": [],
+                        "timeout_secs": "0",
+                        "retries": "0",
+                        "inherit_target": false,
+                        "status_map_list": []
+                    },
+                    {
+                        "type": "META",
+                        "name": "a80b604f_FAILURE_META",
+                        "uuid": "",
+                        "description": "",
+                        "state": "ACTIVE",
+                        "message_list": [],
+                        "attrs": {
+                            "type": ""
+                        },
+                        "child_tasks_local_reference_list": [
+                            {
+                                "name": "Task 3_1",
+                                "uuid": "",
+                                "kind": "app_task"
+                            }
+                        ],
+                        "variable_list": [],
+                        "timeout_secs": "0",
+                        "retries": "0",
+                        "inherit_target": false,
+                        "status_map_list": []
+                    },
+                    {
+                        "type": "EXEC",
+                        "name": "Task 3_1",
+                        "uuid": "",
+                        "description": "",
+                        "state": "ACTIVE",
+                        "message_list": [],
+                        "attrs": {
+                            "type": "",
+                            "script": "print('Hello world')",
+                            "script_type": "static_py3",
+                            "command_line_args": "",
+                            "exit_status": [],
+                            "tunnel_reference": {
+                                "name": "Tunnel_1",
+                                "uuid": "",
+                                "kind": "tunnel"
+                            }
+                        },
+                        "child_tasks_local_reference_list": [],
+                        "variable_list": [],
+                        "timeout_secs": "0",
+                        "retries": "0",
+                        "inherit_target": false,
+                        "status_map_list": []
+                    }
+                ],
+                "main_task_local_reference": {
+                    "name": "e31416c3_dag",
+                    "uuid": "",
+                    "kind": "app_task"
+                },
+                "variable_list": [
+                    {
+                        "type": "HTTP_LOCAL",
+                        "name": "HttpDeleteVariable",
+                        "uuid": "",
+                        "description": "",
+                        "regex": {},
+                        "options": {
+                            "type": "HTTP",
+                            "attrs": {
+                                "type": "HTTP",
+                                "method": "DELETE",
+                                "connection_timeout": 120,
+                                "headers": [],
+                                "url": "https://10.44.76.72:9440/api/nutanix/v3/clusters/list",
+                                "request_body": "{}",
+                                "content_type": "application/json",
+                                "expected_response_params": [
+                                    {
+                                        "type": "",
+                                        "status": "SUCCESS",
+                                        "code_range_list": [
+                                            {
+                                                "start_code": 200,
+                                                "end_code": 200
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "authentication": {
+                                    "type": "none"
+                                },
+                                "response_paths": {
+                                    "HttpDeleteVariable": "$.api_version"
+                                },
+                                "tls_verify": false,
+                                "proxy_type": "",
+                                "retry_count": 1,
+                                "retry_interval": 1,
+                                "internal_service": "",
+                                "internal_service_method": "",
+                                "tunnel_reference": {
+                                    "name": "Tunnel_1",
+                                    "uuid": "",
+                                    "kind": "tunnel"
+                                }
+                            }
+                        },
+                        "is_hidden": false,
+                        "is_mandatory": false,
+                        "data_type": "BASE",
+                        "val_type": "STRING",
+                        "label": "",
+                        "attrs": {
+                            "type": ""
+                        },
+                        "state": "ACTIVE",
+                        "message_list": [],
+                        "editables": {
+                            "value": true
+                        },
+                        "value": ""
+                    },
+                    {
+                        "type": "HTTP_LOCAL",
+                        "name": "HttpPutVariable",
+                        "uuid": "",
+                        "description": "",
+                        "regex": {},
+                        "options": {
+                            "type": "HTTP",
+                            "attrs": {
+                                "type": "HTTP",
+                                "method": "PUT",
+                                "connection_timeout": 120,
+                                "headers": [],
+                                "url": "https://10.44.76.72:9440/api/nutanix/v3/clusters/list",
+                                "request_body": "{}",
+                                "content_type": "application/json",
+                                "expected_response_params": [
+                                    {
+                                        "type": "",
+                                        "status": "SUCCESS",
+                                        "code_range_list": [
+                                            {
+                                                "start_code": 200,
+                                                "end_code": 200
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "authentication": {
+                                    "type": "none"
+                                },
+                                "response_paths": {
+                                    "HttpPutVariable": "$.api_version"
+                                },
+                                "tls_verify": false,
+                                "proxy_type": "",
+                                "retry_count": 1,
+                                "retry_interval": 1,
+                                "internal_service": "",
+                                "internal_service_method": "",
+                                "tunnel_reference": {
+                                    "name": "Tunnel_1",
+                                    "uuid": "",
+                                    "kind": "tunnel"
+                                }
+                            }
+                        },
+                        "is_hidden": false,
+                        "is_mandatory": false,
+                        "data_type": "BASE",
+                        "val_type": "STRING",
+                        "label": "",
+                        "attrs": {
+                            "type": ""
+                        },
+                        "state": "ACTIVE",
+                        "message_list": [],
+                        "editables": {
+                            "value": true
+                        },
+                        "value": ""
+                    },
+                    {
+                        "type": "HTTP_LOCAL",
+                        "name": "HttpPostVariable",
+                        "uuid": "",
+                        "description": "",
+                        "regex": {},
+                        "options": {
+                            "type": "HTTP",
+                            "attrs": {
+                                "type": "HTTP",
+                                "method": "POST",
+                                "connection_timeout": 120,
+                                "headers": [],
+                                "url": "https://10.44.76.72:9440/api/nutanix/v3/clusters/list",
+                                "request_body": "{}",
+                                "content_type": "application/json",
+                                "expected_response_params": [
+                                    {
+                                        "type": "",
+                                        "status": "SUCCESS",
+                                        "code_range_list": [
+                                            {
+                                                "start_code": 200,
+                                                "end_code": 200
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "authentication": {
+                                    "type": "none"
+                                },
+                                "response_paths": {
+                                    "HttpPostVariable": "$.api_version"
+                                },
+                                "tls_verify": false,
+                                "proxy_type": "",
+                                "retry_count": 1,
+                                "retry_interval": 1,
+                                "internal_service": "",
+                                "internal_service_method": "",
+                                "tunnel_reference": {
+                                    "name": "Tunnel_1",
+                                    "uuid": "",
+                                    "kind": "tunnel"
+                                }
+                            }
+                        },
+                        "is_hidden": false,
+                        "is_mandatory": false,
+                        "data_type": "BASE",
+                        "val_type": "STRING",
+                        "label": "",
+                        "attrs": {
+                            "type": ""
+                        },
+                        "state": "ACTIVE",
+                        "message_list": [],
+                        "editables": {
+                            "value": true
+                        },
+                        "value": ""
+                    },
+                    {
+                        "type": "HTTP_LOCAL",
+                        "name": "HttpGetVariable",
+                        "uuid": "",
+                        "description": "",
+                        "regex": {},
+                        "options": {
+                            "type": "HTTP",
+                            "attrs": {
+                                "type": "HTTP",
+                                "method": "GET",
+                                "connection_timeout": 120,
+                                "headers": [],
+                                "url": "https://10.44.76.72:9440/api/nutanix/v3/clusters/list",
+                                "request_body": "",
+                                "content_type": "application/json",
+                                "expected_response_params": [
+                                    {
+                                        "type": "",
+                                        "status": "SUCCESS",
+                                        "code_range_list": [
+                                            {
+                                                "start_code": 200,
+                                                "end_code": 200
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "authentication": {
+                                    "type": "none"
+                                },
+                                "response_paths": {
+                                    "HttpGetVariable": "$.api_version"
+                                },
+                                "tls_verify": false,
+                                "proxy_type": "",
+                                "retry_count": 1,
+                                "retry_interval": 1,
+                                "internal_service": "",
+                                "internal_service_method": "",
+                                "tunnel_reference": {
+                                    "name": "Tunnel_1",
+                                    "uuid": "",
+                                    "kind": "tunnel"
+                                }
+                            }
+                        },
+                        "is_hidden": false,
+                        "is_mandatory": false,
+                        "data_type": "BASE",
+                        "val_type": "STRING",
+                        "label": "",
+                        "attrs": {
+                            "type": ""
+                        },
+                        "state": "ACTIVE",
+                        "message_list": [],
+                        "editables": {
+                            "value": true
+                        },
+                        "value": ""
+                    },
+                    {
+                        "type": "EXEC_LOCAL",
+                        "name": "EscriptVariable",
+                        "uuid": "",
+                        "description": "",
+                        "regex": {},
+                        "options": {
+                            "type": "EXEC",
+                            "attrs": {
+                                "type": "EXEC",
+                                "script": "print('Hello world')",
+                                "script_type": "static_py3",
+                                "command_line_args": "",
+                                "exit_status": [],
+                                "tunnel_reference": {
+                                    "name": "Tunnel_1",
+                                    "uuid": "",
+                                    "kind": "tunnel"
+                                }
+                            }
+                        },
+                        "is_hidden": false,
+                        "is_mandatory": false,
+                        "data_type": "BASE",
+                        "val_type": "STRING",
+                        "label": "",
+                        "attrs": {
+                            "type": ""
+                        },
+                        "state": "ACTIVE",
+                        "message_list": [],
+                        "editables": {
+                            "value": true
+                        },
+                        "value": ""
+                    }
+                ],
+                "state": "ACTIVE",
+                "message_list": []
+            },
+            "endpoint_definition_list": [],
+            "credential_definition_list": [],
+            "endpoints_information": [],
+            "global_variable_list": [],
+            "type": "workflow"
+        }
+    },
+    "spec": {
+        "resources": {
+            "credential_definition_list": [],
+            "runbook": {
+                "task_definition_list": [
+                    {
+                        "uuid": "",
+                        "child_tasks_local_reference_list": [
+                            {
+                                "kind": "app_task",
+                                "uuid": ""
+                            },
+                            {
+                                "kind": "app_task",
+                                "uuid": ""
+                            },
+                            {
+                                "kind": "app_task",
+                                "uuid": ""
+                            }
+                        ],
+                        "attrs": {
+                            "edges": [
+                                {
+                                    "from_task_reference": {
+                                        "kind": "app_task",
+                                        "uuid": ""
+                                    },
+                                    "to_task_reference": {
+                                        "kind": "app_task",
+                                        "uuid": ""
+                                    },
+                                    "uuid": ""
+                                },
+                                {
+                                    "from_task_reference": {
+                                        "kind": "app_task",
+                                        "uuid": ""
+                                    },
+                                    "to_task_reference": {
+                                        "kind": "app_task",
+                                        "uuid": ""
+                                    },
+                                    "uuid": ""
+                                }
+                            ]
+                        },
+                        "type": "DAG",
+                        "name": "e31416c3_dag"
+                    },
+                    {
+                        "uuid": "",
+                        "child_tasks_local_reference_list": [],
+                        "status_map_list": [],
+                        "attrs": {
+                            "tunnel_reference": {
+                                "kind": "tunnel",
+                                "uuid": ""
+                            },
+                            "script": "print('Hello world')",
+                            "script_type": "static_py3"
+                        },
+                        "type": "EXEC",
+                        "variable_list": [],
+                        "name": "Execute Escript"
+                    },
+                    {
+                        "uuid": "",
+                        "child_tasks_local_reference_list": [],
+                        "status_map_list": [],
+                        "attrs": {
+                            "script_type": "static_py3",
+                            "eval_variables": [
+                                "var1"
+                            ],
+                            "script": "print('Hello world')",
+                            "tunnel_reference": {
+                                "kind": "tunnel",
+                                "uuid": ""
+                            }
+                        },
+                        "type": "SET_VARIABLE",
+                        "variable_list": [],
+                        "name": "Set_Variable Escript"
+                    },
+                    {
+                        "uuid": "",
+                        "child_tasks_local_reference_list": [],
+                        "status_map_list": [],
+                        "attrs": {
+                            "tunnel_reference": {
+                                "kind": "tunnel",
+                                "uuid": ""
+                            },
+                            "success_child_reference": {
+                                "kind": "app_task",
+                                "uuid": ""
+                            },
+                            "script_type": "static_py3",
+                            "script": "print('Hello world')",
+                            "failure_child_reference": {
+                                "kind": "app_task",
+                                "uuid": ""
+                            }
+                        },
+                        "type": "DECISION",
+                        "variable_list": [],
+                        "name": "Decision Escript"
+                    },
+                    {
+                        "target_any_local_reference": {},
+                        "uuid": "",
+                        "child_tasks_local_reference_list": [
+                            {
+                                "kind": "app_task",
+                                "uuid": ""
+                            }
+                        ],
+                        "attrs": {},
+                        "type": "META",
+                        "variable_list": [],
+                        "name": "a80b604f_FAILURE_META"
+                    },
+                    {
+                        "target_any_local_reference": {},
+                        "uuid": "",
+                        "child_tasks_local_reference_list": [
+                            {
+                                "kind": "app_task",
+                                "uuid": ""
+                            }
+                        ],
+                        "attrs": {},
+                        "type": "META",
+                        "variable_list": [],
+                        "name": "38a7504d_SUCCESS_META"
+                    },
+                    {
+                        "uuid": "",
+                        "child_tasks_local_reference_list": [],
+                        "status_map_list": [],
+                        "attrs": {
+                            "script_type": "static_py3",
+                            "script": "print('Hello world')"
+                        },
+                        "type": "EXEC",
+                        "variable_list": [],
+                        "name": "Task 3_1"
+                    },
+                    {
+                        "uuid": "",
+                        "child_tasks_local_reference_list": [],
+                        "status_map_list": [],
+                        "attrs": {
+                            "script_type": "static_py3",
+                            "script": "print('Hello world')"
+                        },
+                        "type": "EXEC",
+                        "variable_list": [],
+                        "name": "Task 3_2"
+                    }
+                ],
+                "uuid": "",
+                "output_variable_list": [],
+                "variable_list": [
+                    {
+                        "val_type": "STRING",
+                        "description": "",
+                        "data_type": "BASE",
+                        "uuid": "",
+                        "label": "",
+                        "attrs": {},
+                        "editables": {
+                            "value": true
+                        },
+                        "is_hidden": false,
+                        "type": "HTTP_LOCAL",
+                        "options": {
+                            "type": "HTTP",
+                            "attrs": {
+                                "tunnel_reference": {
+                                    "kind": "tunnel",
+                                    "uuid": ""
+                                },
+                                "url": "https://10.44.76.72:9440/api/nutanix/v3/clusters/list",
+                                "response_paths": {
+                                    "HttpDeleteVariable": "$.api_version"
+                                },
+                                "request_body": "{}",
+                                "connection_timeout": 120,
+                                "retry_interval": 1,
+                                "content_type": "application/json",
+                                "method": "DELETE",
+                                "expected_response_params": [
+                                    {
+                                        "code_range_list": [
+                                            {
+                                                "start_code": 200,
+                                                "end_code": 200
+                                            }
+                                        ],
+                                        "status": "SUCCESS"
+                                    }
+                                ],
+                                "authentication": {
+                                    "type": "none"
+                                },
+                                "retry_count": 1,
+                                "headers": [],
+                                "type": "HTTP"
+                            }
+                        },
+                        "name": "HttpDeleteVariable"
+                    },
+                    {
+                        "val_type": "STRING",
+                        "description": "",
+                        "data_type": "BASE",
+                        "uuid": "",
+                        "label": "",
+                        "attrs": {},
+                        "editables": {
+                            "value": true
+                        },
+                        "is_hidden": false,
+                        "type": "HTTP_LOCAL",
+                        "options": {
+                            "type": "HTTP",
+                            "attrs": {
+                                "tunnel_reference": {
+                                    "kind": "tunnel",
+                                    "uuid": ""
+                                },
+                                "url": "https://10.44.76.72:9440/api/nutanix/v3/clusters/list",
+                                "response_paths": {
+                                    "HttpPutVariable": "$.api_version"
+                                },
+                                "request_body": "{}",
+                                "connection_timeout": 120,
+                                "retry_interval": 1,
+                                "content_type": "application/json",
+                                "method": "PUT",
+                                "expected_response_params": [
+                                    {
+                                        "code_range_list": [
+                                            {
+                                                "start_code": 200,
+                                                "end_code": 200
+                                            }
+                                        ],
+                                        "status": "SUCCESS"
+                                    }
+                                ],
+                                "authentication": {
+                                    "type": "none"
+                                },
+                                "retry_count": 1,
+                                "headers": [],
+                                "type": "HTTP"
+                            }
+                        },
+                        "name": "HttpPutVariable"
+                    },
+                    {
+                        "val_type": "STRING",
+                        "description": "",
+                        "data_type": "BASE",
+                        "uuid": "",
+                        "label": "",
+                        "attrs": {},
+                        "editables": {
+                            "value": true
+                        },
+                        "is_hidden": false,
+                        "type": "HTTP_LOCAL",
+                        "options": {
+                            "type": "HTTP",
+                            "attrs": {
+                                "tunnel_reference": {
+                                    "kind": "tunnel",
+                                    "uuid": ""
+                                },
+                                "url": "https://10.44.76.72:9440/api/nutanix/v3/clusters/list",
+                                "response_paths": {
+                                    "HttpPostVariable": "$.api_version"
+                                },
+                                "request_body": "{}",
+                                "connection_timeout": 120,
+                                "retry_interval": 1,
+                                "content_type": "application/json",
+                                "method": "POST",
+                                "expected_response_params": [
+                                    {
+                                        "code_range_list": [
+                                            {
+                                                "start_code": 200,
+                                                "end_code": 200
+                                            }
+                                        ],
+                                        "status": "SUCCESS"
+                                    }
+                                ],
+                                "authentication": {
+                                    "type": "none"
+                                },
+                                "retry_count": 1,
+                                "headers": [],
+                                "type": "HTTP"
+                            }
+                        },
+                        "name": "HttpPostVariable"
+                    },
+                    {
+                        "val_type": "STRING",
+                        "description": "",
+                        "data_type": "BASE",
+                        "uuid": "",
+                        "label": "",
+                        "attrs": {},
+                        "editables": {
+                            "value": true
+                        },
+                        "is_hidden": false,
+                        "type": "HTTP_LOCAL",
+                        "options": {
+                            "type": "HTTP",
+                            "attrs": {
+                                "tunnel_reference": {
+                                    "kind": "tunnel",
+                                    "uuid": ""
+                                },
+                                "url": "https://10.44.76.72:9440/api/nutanix/v3/clusters/list",
+                                "response_paths": {
+                                    "HttpGetVariable": "$.api_version"
+                                },
+                                "connection_timeout": 120,
+                                "retry_interval": 1,
+                                "content_type": "application/json",
+                                "method": "GET",
+                                "expected_response_params": [
+                                    {
+                                        "code_range_list": [
+                                            {
+                                                "start_code": 200,
+                                                "end_code": 200
+                                            }
+                                        ],
+                                        "status": "SUCCESS"
+                                    }
+                                ],
+                                "authentication": {
+                                    "type": "none"
+                                },
+                                "retry_count": 1,
+                                "headers": [],
+                                "type": "HTTP"
+                            }
+                        },
+                        "name": "HttpGetVariable"
+                    },
+                    {
+                        "val_type": "STRING",
+                        "description": "",
+                        "data_type": "BASE",
+                        "uuid": "",
+                        "label": "",
+                        "attrs": {},
+                        "editables": {
+                            "value": true
+                        },
+                        "is_hidden": false,
+                        "type": "EXEC_LOCAL",
+                        "options": {
+                            "type": "EXEC",
+                            "attrs": {
+                                "script_type": "static_py3",
+                                "script": "print('Hello world')",
+                                "tunnel_reference": {
+                                    "kind": "tunnel",
+                                    "uuid": ""
+                                },
+                                "type": "EXEC"
+                            }
+                        },
+                        "name": "EscriptVariable"
+                    }
+                ],
+                "main_task_local_reference": {
+                    "kind": "app_task",
+                    "uuid": ""
+                },
+                "name": "fef6be92_runbook"
+            },
+            "endpoint_definition_list": []
+        },
+        "name": "TestRunbook"
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "last_update_time": "1751027201200590",
+        "uuid": "",
+        "creation_time": "1750667319678043",
+        "spec_version": 1,
+        "name": "TestRunbook",
+        "kind": "runbook",
+        "project_reference": {
+            "kind": "project",
+            "name": "default",
+            "uuid": ""
+        },
+        "owner_reference": {
+            "kind": "user",
+            "uuid": "",
+            "name": "admin"
+        }
+    }
+}

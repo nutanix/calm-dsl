@@ -1,0 +1,86 @@
+{
+    "spec": {
+        "name": "RunbookWithGlobalVariable",
+        "description": "",
+        "resources": {
+            "endpoint_definition_list": [],
+            "credential_definition_list": [],
+            "client_attrs": {},
+            "runbook": {
+                "name": "RunbookWithGlobalVariable_runbook",
+                "description": "",
+                "main_task_local_reference": {
+                    "kind": "app_task",
+                    "name": "RunbookWithGlobalVariable_dag"
+                },
+                "task_definition_list": [
+                    {
+                        "name": "RunbookWithGlobalVariable_dag",
+                        "description": "",
+                        "type": "DAG",
+                        "attrs": {
+                            "edges": []
+                        },
+                        "status_map_list": [],
+                        "child_tasks_local_reference_list": [
+                            {
+                                "kind": "app_task",
+                                "name": "Task 1"
+                            }
+                        ],
+                        "variable_list": [],
+                        "retries": "",
+                        "timeout_secs": ""
+                    },
+                    {
+                        "name": "Task 1",
+                        "description": "",
+                        "type": "EXEC",
+                        "attrs": {
+                            "script_type": "static_py3",
+                            "script": "print(\"@@{rb_var}@@\")\nprint(\"@@{global.gv_var}@@\")"
+                        },
+                        "status_map_list": [],
+                        "child_tasks_local_reference_list": [],
+                        "variable_list": [],
+                        "retries": "",
+                        "timeout_secs": ""
+                    }
+                ],
+                "variable_list": [
+                    {
+                        "name": "rb_var",
+                        "description": "",
+                        "type": "LOCAL",
+                        "label": "",
+                        "attrs": {},
+                        "val_type": "STRING",
+                        "value": "123",
+                        "data_type": "BASE",
+                        "is_hidden": false,
+                        "is_mandatory": false
+                    }
+                ],
+                "output_variable_list": []
+            },
+            "global_variable_reference_list": [
+                {
+                    "kind": "global_variable",
+                    "name": "gv_var",
+                    "uuid": "2e7244f2-1e8e-3899-d2b4-f3a23c79c25f"
+                }
+            ]
+        }
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "spec_version": 1,
+        "kind": "runbook",
+        "name": "RunbookWithGlobalVariable",
+        "project_reference": {
+            "name": "default",
+            "kind": "project",
+            "uuid": "e75bd16c-c40f-42f9-9f2c-7f55935d3efd"
+        }
+    }
+}

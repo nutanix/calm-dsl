@@ -1,6 +1,7 @@
 import sys
 import uuid
 from copy import deepcopy
+from distutils.version import LooseVersion as LV
 
 from calm.dsl.builtins import (
     ahv_account,
@@ -17,8 +18,9 @@ from calm.dsl.builtins import (
     Ref,
 )
 
-from calm.dsl.constants import CACHE, VARIABLE
+from calm.dsl.constants import CACHE, VARIABLE, ACCOUNT
 from calm.dsl.store import Cache
+from calm.dsl.store.version import Version
 from calm.dsl.builtins.models.helper.common import is_not_right_ref
 from .utils import is_compile_secrets
 
@@ -29,10 +31,32 @@ LOG = get_logging_handle(__name__)
 
 class AccountResources:
     class Ntnx:
-        def __new__(cls, username, password, server, port):
-            return ahv_account(
-                username=username, password=password, server=server, port=str(port)
-            )
+        def __new__(
+            cls,
+            username=None,
+            password=None,
+            server=None,
+            port=None,
+            service_account_api_key=None,
+        ):
+
+            kwargs = {}
+
+            if server is not None:
+                kwargs["server"] = server
+            if port is not None:
+                kwargs["port"] = str(port)
+            if username is not None:
+                kwargs["username"] = username
+            if password is not None:
+                kwargs["password"] = password
+
+            # Only pass service_account if the version of Calm >= 4.3.0
+            calm_version = Version.get_version("Calm")
+            if LV(calm_version) >= LV(ACCOUNT.SERVICE_ACCOUNT.FEATURE_MIN_VERSION):
+                if service_account_api_key is not None:
+                    kwargs["service_account"] = service_account_api_key
+            return ahv_account(**kwargs)
 
     class Aws:
         def __new__(cls, access_key_id, secret_access_key, regions=[]):

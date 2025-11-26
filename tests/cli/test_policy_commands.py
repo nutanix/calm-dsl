@@ -644,7 +644,7 @@ class TestPolicyCommands:
                 "runbook",
                 self.created_dsl_runbook_name,
             ],
-            input="\n",
+            input="\n\n",
         )
         self.approval_request_name = "Execute Runbook " + self.created_dsl_runbook_name
 

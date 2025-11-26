@@ -13,9 +13,11 @@ from calm.dsl.decompile.file_handler import (
     init_runbook_dir,
     init_environment_dir,
     init_project_dir,
+    init_global_variable_dir,
 )
 from calm.dsl.decompile.environments import render_environment_template
 from calm.dsl.decompile.projects import render_project_template
+from calm.dsl.decompile.global_variable import render_global_variable_template
 
 LOG = get_logging_handle(__name__)
 
@@ -55,6 +57,13 @@ def create_environment_file(dir_name, environment_data):
         fd.write(environment_data)
 
 
+def create_global_variable_file(dir_name, global_variable_data):
+
+    gv_path = os.path.join(dir_name, "global_variable.py")
+    with open(gv_path, "w") as fd:
+        fd.write(global_variable_data)
+
+
 def create_bp_dir(
     bp_cls=None,
     bp_dir=None,
@@ -62,6 +71,7 @@ def create_bp_dir(
     metadata_obj=None,
     contains_encrypted_secrets=False,
     no_format=False,
+    global_variable_list=None,
 ):
 
     if not bp_dir:
@@ -75,6 +85,7 @@ def create_bp_dir(
         with_secrets=with_secrets,
         metadata_obj=metadata_obj,
         contains_encrypted_secrets=contains_encrypted_secrets,
+        global_variable_list=global_variable_list,
     )
 
     if not no_format:
@@ -119,6 +130,8 @@ def create_runbook_dir(
     metadata_obj=None,
     credentials=None,
     default_endpoint=None,
+    global_variable_list=None,
+    execution_name=None,
     no_format=False,
 ):
     if not runbook_dir:
@@ -132,6 +145,8 @@ def create_runbook_dir(
         credentials=credentials,
         metadata_obj=metadata_obj,
         default_endpoint=default_endpoint,
+        global_variable_list=global_variable_list,
+        execution_name=execution_name,
     )
 
     if not no_format:
@@ -189,3 +204,28 @@ def create_environment_dir(
 
     LOG.info("Creating environment file")
     create_environment_file(environment_dir, environment_data)
+
+
+def create_global_variable_dir(
+    global_variable_cls=None,
+    global_variable_dir=None,
+    metadata_obj=None,
+    no_format=False,
+):
+
+    if not global_variable_dir:
+        global_variable_dir = os.path.join(os.getcwd(), global_variable_cls.__name__)
+
+    LOG.info("Creating global variable directory")
+    _, _, _ = init_global_variable_dir(global_variable_dir)
+    LOG.info("Rendering global variable file template")
+    global_variable_data = render_global_variable_template(
+        global_variable_cls=global_variable_cls, metadata_obj=metadata_obj
+    )
+
+    if not no_format:
+        LOG.info("Formatting global variable file using black")
+        global_variable_data = format_str(global_variable_data, mode=FileMode())
+
+    LOG.info("Creating global variable file")
+    create_global_variable_file(global_variable_dir, global_variable_data)

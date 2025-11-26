@@ -31,6 +31,10 @@ def render_substrate_template(
     user_attrs["name"] = cls.__name__
     user_attrs["description"] = cls.__doc__ or ""
 
+    if user_attrs.get("tunnel", None):
+        user_attrs["tunnel_reference"] = user_attrs["tunnel"].get_dict()
+        user_attrs.pop("tunnel", None)
+
     # Update substrate name map and gui name
     gui_display_name = getattr(cls, "name", "") or cls.__name__
     if gui_display_name != cls.__name__:

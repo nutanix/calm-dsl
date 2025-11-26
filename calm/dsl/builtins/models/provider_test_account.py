@@ -9,6 +9,9 @@ class ProviderTestAccountType(EntityType):
     def compile(cls):
         cdict = super().compile()
         cdict["data"] = {"variable_list": cdict.pop("variable_list", [])}
+        if not cdict.get("tunnel_reference", None):
+            cdict.pop("tunnel_reference", None)
+
         return cdict
 
     @classmethod

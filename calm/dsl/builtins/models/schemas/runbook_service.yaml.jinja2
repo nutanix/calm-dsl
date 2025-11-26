@@ -25,6 +25,26 @@ properties:
     type: object
     x-calm-dsl-type: app_ref
     x-calm-dsl-display-name: default_target
+  global_variable_reference_list:
+    type: array
+    x-calm-dsl-display-name: global_variables
+    x-calm-dsl-min-version: 4.3.0
+    items:
+      type: object
+      x-calm-dsl-type: object
+      properties:
+        kind:
+          type: string
+        name:
+          type: string
+        uuid:
+          type: string
+  execution_name:
+    type: string
+    x-calm-dsl-display-name: execution_name
+    x-calm-dsl-min-version: 4.3.0
+    description: Name of the runbook execution.
+    default: ''
 {%- endmacro %}
 
 

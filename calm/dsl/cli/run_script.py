@@ -11,6 +11,8 @@ from calm.dsl.builtins.models.helper import common as common_helper
 from calm.dsl.cli.constants import TEST_SCRIPTS
 from calm.dsl.log import get_logging_handle
 from calm.dsl.cli.endpoints import compile_endpoint
+from calm.dsl.cli.tunnels import get_tunnel
+from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
 
@@ -231,14 +233,26 @@ def _test_script(script_type, script_file, endpoint_file, project_name):
     _display_script_run_status(state, response)
 
 
-def test_escript(script_file, project_name):
+def test_escript(script_file, project_name, tunnel_name=""):
     """Tests the execution of escript file
     Args:
         -> script_file (str): path to escript file
         -> project_name (optional) (str): name of the reference project
+        -> tunnel_name (optional) (str): name of the tunnel to use for script execution
     """
     with open(os.path.abspath(script_file), "r") as scriptf:
         script_data = scriptf.read()
+
+    # Retrieving tunnel information if a tunnel is specified.
+    tunnel_ref = None
+    if tunnel_name:
+        client = get_api_client()
+        tunnel = get_tunnel(client, tunnel_name)
+        kind = tunnel.get("metadata", {}).get("kind", None)
+        if kind == CACHE.ENTITY.TUNNEL:
+            tunnel_ref = Ref.Tunnel.Account(name=tunnel_name)
+        else:
+            tunnel_ref = Ref.Tunnel.VPC(name=tunnel_name)
 
     # attach project from current context if no project is supplied
     if not project_name:
@@ -262,6 +276,8 @@ def test_escript(script_file, project_name):
             },
         },
     }
+    if tunnel_ref:
+        payload["spec"]["targetDetails"]["tunnel_reference"] = tunnel_ref.get_dict()
 
     state, response = _run_script(bp_uuid, payload)
     _display_script_run_status(state, response)

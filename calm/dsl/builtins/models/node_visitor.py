@@ -6,6 +6,7 @@ from .entity import EntityType
 from .task import CalmTask, RunbookTask, TaskType
 from .variable import CalmVariable, RunbookVariable, VariableType
 from calm.dsl.log import get_logging_handle
+from calm.dsl.builtins import Ref
 
 LOG = get_logging_handle(__name__)
 
@@ -20,7 +21,7 @@ def handle_meta_create(node, func_globals, prefix=None):
         node_visitor.visit(node)
     except Exception as ex:
         raise ex
-    tasks, variables, task_list, _ = node_visitor.get_objects()
+    tasks, variables, task_list, _, _ = node_visitor.get_objects()
 
     child_tasks = []
     for child_task in task_list:
@@ -53,6 +54,7 @@ class GetCallNodes(ast.NodeVisitor):
         self.outputs = []
         self.target = target or None
         self._globals = func_globals or {}.copy()
+        self.global_variables = []
 
         self.is_branch_present = is_branch_present
 
@@ -64,7 +66,13 @@ class GetCallNodes(ast.NodeVisitor):
         self.is_metatask = is_metatask_context
 
     def get_objects(self):
-        return self.all_tasks, self.variables, self.task_list, self.outputs
+        return (
+            self.all_tasks,
+            self.variables,
+            self.task_list,
+            self.outputs,
+            self.global_variables,
+        )
 
     def visit_Call(self, node, return_task=False):
         sub_node = node.func
@@ -113,6 +121,25 @@ class GetCallNodes(ast.NodeVisitor):
                             )
                         if isinstance(variable, VariableType):
                             self.outputs.append(variable)
+            elif lhs == "global_variables":
+                # Parse, validate and fetch global variables
+                # Ex - global_variables = [Ref.GlobalVariable("GV1")], after evaluation below variable will be
+                # {"kind": "global_variable", "name": "GV1", "uuid": '123'}
+                self.global_variables = []
+                for element in node.value.elts:
+                    sub_node = element.func
+                    variable = eval(
+                        compile(ast.Expression(element), "", "eval"), self._globals
+                    )
+                    if (
+                        isinstance(variable, dict)
+                        and variable.get("kind", "") == "global_variable"
+                    ):
+                        self.global_variables.append(variable)
+                    else:
+                        raise ValueError(
+                            "Global variables referenced should be of type Ref.GlobalVariable"
+                        )
 
         if not isinstance(node.value, ast.Call):
             return self.generic_visit(node)
@@ -241,7 +268,13 @@ class GetCallNodes(ast.NodeVisitor):
                         _node_visitor.visit(statementBody)
                     except Exception as ex:
                         raise ex
-                    tasks, variables, task_list, outputs = _node_visitor.get_objects()
+                    (
+                        tasks,
+                        variables,
+                        task_list,
+                        outputs,
+                        _,
+                    ) = _node_visitor.get_objects()
                     if len(task_list) == 0:
                         raise ValueError(
                             "Atleast one task is required under parallel branch"

@@ -1,0 +1,111 @@
+{
+    "status": {
+        "name": "SimpleGlobalVar1",
+        "description": "",
+        "resources": {
+            "type": "HTTP_LOCAL",
+            "label": "",
+            "data_type": "BASE",
+            "val_type": "STRING",
+            "value": "",
+            "regex": {},
+            "options": {
+                "type": "HTTP",
+                "attrs": {
+                    "type": "HTTP",
+                    "method": "GET",
+                    "connection_timeout": 120,
+                    "headers": [],
+                    "url": "https://jsonplaceholder.typicode.com/todos/1",
+                    "request_body": "",
+                    "content_type": "application/json",
+                    "expected_response_params": [
+                        {
+                            "type": "",
+                            "status": "SUCCESS",
+                            "code_range_list": [
+                                {
+                                    "start_code": 200,
+                                    "end_code": 200
+                                }
+                            ]
+                        }
+                    ],
+                    "authentication": {
+                        "type": "none"
+                    },
+                    "response_paths": {
+                        "SimpleGlobalVar1": "$.title"
+                    },
+                    "tls_verify": false,
+                    "proxy_type": "",
+                    "retry_count": 1,
+                    "retry_interval": 1,
+                    "internal_service": "",
+                    "internal_service_method": ""
+                }
+            },
+            "attrs": {
+                "type": ""
+            },
+            "project_reference_list": [],
+            "created_by": "admin"
+        },
+        "state": "ACTIVE",
+        "message_list": []
+    },
+    "spec": {
+        "description": "",
+        "resources": {
+            "val_type": "STRING",
+            "data_type": "BASE",
+            "label": "",
+            "options": {
+                "type": "HTTP",
+                "attrs": {
+                    "content_type": "application/json",
+                    "authentication": {
+                        "type": "none"
+                    },
+                    "retry_count": 1,
+                    "response_paths": {
+                        "SimpleGlobalVar1": "$.title"
+                    },
+                    "method": "GET",
+                    "retry_interval": 1,
+                    "expected_response_params": [
+                        {
+                            "code_range_list": [
+                                {
+                                    "start_code": 200,
+                                    "end_code": 200
+                                }
+                            ],
+                            "status": "SUCCESS"
+                        }
+                    ],
+                    "connection_timeout": 120,
+                    "type": "HTTP",
+                    "url": "https://jsonplaceholder.typicode.com/todos/1",
+                    "request_body": "",
+                    "tls_verify": false
+                }
+            },
+            "type": "HTTP_LOCAL",
+            "project_reference_list": [],
+            "attrs": {}
+        },
+        "name": "SimpleGlobalVar1"
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "spec_version": 0,
+        "name": "SimpleGlobalVar1",
+        "kind": "global_variable",
+        "owner_reference": {
+            "kind": "user",
+            "uuid": "00000000-0000-0000-0000-000000000000",
+            "name": "admin"
+        }
+    }
+}

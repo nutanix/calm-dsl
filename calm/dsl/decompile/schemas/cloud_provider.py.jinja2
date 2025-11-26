@@ -1,3 +1,5 @@
+{% import "tunnel_ref_handle.py.jinja2" as tunnel_ref_handle %}
+
 {% macro cloud_provider(obj) %}
 class {{obj.name}}(CloudProvider):
     {% if obj.description -%}"""{{obj.description}}"""{% endif %}
@@ -40,6 +42,9 @@ class {{obj.name}}(CloudProvider):
                 {{variable}},
             {%- endfor %}
         ]
+        {%- if obj.test_account.tunnel %} 
+        , tunnel={{ tunnel_ref_handle.tunnel_reference(obj.test_account.tunnel) }} 
+        {%- endif %}
     )
     {% endif %}
 

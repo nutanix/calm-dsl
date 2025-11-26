@@ -4,7 +4,6 @@ import time
 import sys
 import uuid
 import pathlib
-
 from distutils.version import LooseVersion as LV
 from ruamel import yaml
 import arrow
@@ -31,6 +30,7 @@ from calm.dsl.constants import CACHE, DSL_CONFIG
 from calm.dsl.store import Cache
 from calm.dsl.store.version import Version
 from calm.dsl.tools import get_module_from_file
+from calm.dsl.constants import GLOBAL_VARIABLE
 from .utils import (
     Display,
     get_name_query,
@@ -42,6 +42,7 @@ from .utils import (
 from .constants import RUNBOOK, RUNLOG
 from .runlog import get_completion_func, get_runlog_status
 from .endpoints import get_endpoint
+from .global_variable import fetch_dynamic_global_variable_values
 
 from anytree import NodeMixin, RenderTree
 
@@ -152,7 +153,6 @@ def compile_runbook(runbook_file):
     # Note: Metadata should be constructed before loading runbook module. As metadata
     # will be used while verifying vm reference in endpoint used withing runbook.
     metadata_payload = get_metadata_payload(runbook_file)
-
     user_runbook_module = get_runbook_module_from_file(runbook_file)
     UserRunbook = get_runbook_class_from_module(user_runbook_module)
     if UserRunbook is None:
@@ -263,6 +263,10 @@ def _decompile_runbook(runbook_payload, runbook_dir, prefix, no_format=False):
     default_endpoint = runbook_payload["status"]["resources"].get(
         "default_target_reference", None
     )
+    global_variable_list = runbook_payload["status"]["resources"].get(
+        "global_variable_list", []
+    )
+    execution_name = runbook_payload["status"]["resources"].get("execution_name", "")
     runbook_name = runbook_payload["status"].get("name", "DslRunbook")
     runbook_description = runbook_payload["status"].get("description", "")
 
@@ -287,6 +291,8 @@ def _decompile_runbook(runbook_payload, runbook_dir, prefix, no_format=False):
         metadata_obj=metadata_obj,
         credentials=credentials,
         default_endpoint=default_endpoint,
+        global_variable_list=global_variable_list,
+        execution_name=execution_name,
         no_format=no_format,
     )
     click.echo(
@@ -689,7 +695,21 @@ def patch_runbook_runtime_editables(client, runbook):
                     }
                 )
 
+    rb_uuid = runbook["metadata"]["uuid"]
+    gv_names = [
+        var["name"]
+        for var in runbook["spec"]["resources"].get(
+            "global_variable_reference_list", []
+        )
+    ]
+
     payload = {"spec": {"args": args}}
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV(GLOBAL_VARIABLE.MIN_SUPPORTED_VERSION):
+        global_args = fetch_dynamic_global_variable_values("runbook", rb_uuid, gv_names)
+        payload["spec"]["global_args"] = global_args
+
     default_target = (
         runbook["spec"]["resources"]
         .get("default_target_reference", {})
@@ -711,8 +731,56 @@ def patch_runbook_runtime_editables(client, runbook):
     return payload
 
 
+def patch_execution_name(payload, runbook, execution_name, ignore_runtime_variables):
+    if "spec" not in payload:
+        payload["spec"] = {}
+    if execution_name:
+        LOG.info(
+            "Execution name (Optional) set for the Runbook Run: {}".format(
+                execution_name
+            )
+        )
+        payload["spec"]["execution_name"] = execution_name
+    else:
+        default_execution_name = runbook["spec"]["resources"].get("execution_name", "")
+        patch_runbook_execution_editables(
+            payload, default_execution_name, ignore_runtime_variables
+        )
+
+
+def patch_runbook_execution_editables(
+    payload, default_execution_name, ignore_runtime_variables
+):
+
+    if ignore_runtime_variables:
+        payload["spec"]["execution_name"] = default_execution_name
+        return payload
+
+    execution_name = input(
+        "Execution name (Optional) for the Runbook Run (default name={}) : ".format(
+            default_execution_name
+        )
+    )
+
+    if execution_name:
+        payload["spec"]["execution_name"] = execution_name
+    else:
+        if not default_execution_name:
+            LOG.info(
+                "Execution name (Optional) is not set for the Runbook Run (default name=runbookname-createdtime) will be shown in UI ."
+            )
+        payload["spec"]["execution_name"] = default_execution_name
+
+    return payload
+
+
 def run_runbook_command(
-    runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None
+    runbook_name,
+    watch,
+    ignore_runtime_variables,
+    runbook_file=None,
+    input_file=None,
+    execution_name="",
 ):
 
     if runbook_file is None and runbook_name is None:
@@ -723,7 +791,6 @@ def run_runbook_command(
 
     client = get_api_client()
     runbook = None
-
     if runbook_file:
         LOG.info("Uploading runbook: {}".format(runbook_file))
         name = "runbook" + "_" + str(uuid.uuid4())[:8]
@@ -749,12 +816,15 @@ def run_runbook_command(
             LOG.error(err["error"])
             return
         runbook = res.json()
-
     payload = {}
     if input_file is None and not ignore_runtime_variables:
         payload = patch_runbook_runtime_editables(client, runbook)
     if input_file:
         payload = parse_input_file(client, runbook, input_file)
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV("4.3.0"):
+        patch_execution_name(payload, runbook, execution_name, ignore_runtime_variables)
 
     def render_runbook(screen):
         screen.clear()
@@ -904,7 +974,6 @@ def describe_runbook(runbook_name, out):
         runbook.pop("status", None)
         click.echo(json.dumps(runbook, indent=4, separators=(",", ": ")))
         return
-
     click.echo("\n----Runbook Summary----\n")
     click.echo(
         "Name: "
@@ -972,6 +1041,20 @@ def describe_runbook(runbook_name, out):
         "name", "-"
     )
     click.echo("Default Endpoint Target: {}\n".format(highlight_text(default_target)))
+
+    global_variable_types = [
+        var["label"] if var.get("label", "") else var.get("name")
+        for var in runbook_resources.get("global_variable_list", [])
+    ]
+    click.echo(
+        "Global Variables [{}]:".format(highlight_text(len(global_variable_types)))
+    )
+    click.echo("\t{}\n".format(highlight_text(", ".join(global_variable_types))))
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV("4.3.0"):
+        execution_name = runbook["spec"]["resources"].get("execution_name", "")
+        click.echo("Execution Name (Optional) : " + highlight_text(execution_name))
 
 
 def format_runbook_command(runbook_file):
@@ -1108,11 +1191,12 @@ def poll_action(poll_func, completion_func, poll_interval=10, **kwargs):
 
 
 class TaskNode(NodeMixin):
-    def __init__(self, name, task_type=None, target=None, parent=None):
+    def __init__(self, name, task_type=None, target=None, parent=None, tunnel=None):
         self.name = name
         self.type = task_type
         self.target = target
         self.parent = parent
+        self.tunnel = tunnel
 
 
 def addTaskNodes(task_uuid, task_map, parent=None):
@@ -1120,12 +1204,17 @@ def addTaskNodes(task_uuid, task_map, parent=None):
     task_name = task.get("name", "")
     task_target = task.get("target_any_local_reference", {}).get("name", "")
     task_type = task.get("type", "")
+    task_tunnel = task.get("attrs", {}).get("tunnel_reference", {}).get("name", "")
 
     if task_type == "DAG":
         node = TaskNode("ROOT")
     elif task_type != "META":
         node = TaskNode(
-            task_name, task_type=task_type, target=task_target, parent=parent
+            task_name,
+            task_type=task_type,
+            target=task_target,
+            parent=parent,
+            tunnel=task_tunnel,
         )
     else:
         node = parent
@@ -1152,23 +1241,15 @@ def addTaskNodes(task_uuid, task_map, parent=None):
 
 
 def displayTaskNode(node, pre):
-    if node.type and node.target:
-        click.echo(
-            "\t{}{} (Type: {}, Target: {})".format(
-                pre,
-                highlight_text(node.name),
-                highlight_text(node.type),
-                highlight_text(node.target),
-            )
-        )
-    elif node.type:
-        click.echo(
-            "\t{}{} (Type: {})".format(
-                pre, highlight_text(node.name), highlight_text(node.type)
-            )
-        )
-    else:
-        click.echo("\t{}{}".format(pre, highlight_text(node.name)))
+    task_str = "\t{}{} (".format(pre, highlight_text(node.name))
+    if node.type:
+        task_str += "Type: {},".format(highlight_text(node.type))
+    if node.target:
+        task_str += " Target: {},".format(highlight_text(node.target))
+    if node.tunnel:
+        task_str += " Tunnel: {},".format(highlight_text(node.tunnel))
+    task_str = task_str.rstrip(",") + ")"
+    click.echo(task_str)
 
 
 def clone_runbook(original_runbook_name, cloned_runbook_name):

@@ -375,10 +375,14 @@ class BlueprintAPI(ResourceAPI):
             self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.GET
         )
 
-    def variable_values(self, uuid, var_uuid):
+    def variable_values(self, uuid, var_uuid, payload={}):
         url = self.VARIABLE_VALUES.format(uuid, var_uuid)
         return self.connection._call(
-            url, verify=False, method=REQUEST.METHOD.GET, ignore_error=True
+            url,
+            verify=False,
+            method=REQUEST.METHOD.POST,
+            request_json=payload,
+            ignore_error=True,
         )
 
     def variable_values_from_trlid(self, uuid, var_uuid, req_id, trl_id):

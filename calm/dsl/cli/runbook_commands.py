@@ -36,6 +36,8 @@ from .runbooks import (
     clone_runbook,
 )
 
+from .runbook_utils import validate_execution_name
+
 LOG = get_logging_handle(__name__)
 
 
@@ -257,8 +259,22 @@ def _decompile_runbook_command(name, runbook_file, prefix, runbook_dir, no_forma
     help="Path to python file for runtime editables",
 )
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
+@click.option(
+    "--execution-name",
+    "-en",
+    "execution_name",
+    default="",
+    callback=lambda ctx, param, value: validate_execution_name(value),
+    required=False,
+    help="This will be used as the execution name during the runbook execution (Optional)",
+)
 def _run_runbook_command(
-    runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None
+    runbook_name,
+    watch,
+    ignore_runtime_variables,
+    runbook_file=None,
+    input_file=None,
+    execution_name="",
 ):
     """Execute the runbook given by name or runbook file. All runtime variables and default target will be prompted by default. When passing the 'ignore_runtime_variables' flag, no variables will be prompted and all default values will be used. The runbook  default values can be  overridden by passing a Python file via 'input_file'. When passing a Python file, no variables will be prompted.
 
@@ -278,6 +294,7 @@ def _run_runbook_command(
         ignore_runtime_variables,
         runbook_file=runbook_file,
         input_file=input_file,
+        execution_name=execution_name,
     )
 
 

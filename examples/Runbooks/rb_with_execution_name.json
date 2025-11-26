@@ -1,0 +1,71 @@
+{
+    "spec": {
+        "name": "runbook_with_execution_name",
+        "description": "",
+        "resources": {
+            "endpoint_definition_list": [],
+            "credential_definition_list": [],
+            "client_attrs": {},
+            "runbook": {
+                "name": "runbook_with_execution_name_runbook",
+                "description": "",
+                "main_task_local_reference": {
+                    "kind": "app_task",
+                    "name": "runbook_with_execution_name_dag"
+                },
+                "task_definition_list": [
+                    {
+                        "name": "runbook_with_execution_name_dag",
+                        "description": "",
+                        "type": "DAG",
+                        "attrs": {
+                            "edges": []
+                        },
+                        "status_map_list": [],
+                        "child_tasks_local_reference_list": [
+                            {
+                                "kind": "app_task",
+                                "name": "Task 1"
+                            }
+                        ],
+                        "variable_list": [],
+                        "retries": "",
+                        "timeout_secs": ""
+                    },
+                    {
+                        "name": "Task 1",
+                        "description": "",
+                        "type": "EXEC",
+                        "target_any_local_reference": {
+                            "kind": "app_endpoint",
+                            "name": "exec_name"
+                        },
+                        "attrs": {
+                            "script_type": "static_py3",
+                            "script": "print(\"Testing calm-dsl runbook execution with execution name\")"
+                        },
+                        "status_map_list": [],
+                        "child_tasks_local_reference_list": [],
+                        "variable_list": [],
+                        "retries": "",
+                        "timeout_secs": ""
+                    }
+                ],
+                "variable_list": [],
+                "output_variable_list": []
+            },
+            "execution_name": "@@{calm_runbook_name}@@_@@{calm_hour}@@_v@@{calm_random}@@"
+        }
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "spec_version": 1,
+        "kind": "runbook",
+        "name": "runbook_with_execution_name",
+        "project_reference": {
+            "name": "exec_name",
+            "kind": "project",
+            "uuid": "716493ef-68a9-47a1-b264-5348d48c54b9"
+        }
+    }
+}

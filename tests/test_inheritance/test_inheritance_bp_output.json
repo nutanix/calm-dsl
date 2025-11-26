@@ -2547,5 +2547,6 @@
     "default_credential_local_reference": {
         "kind": "app_credential",
         "name": "Centos"
-    }
+    },
+    "global_variable_reference_list": []
 }

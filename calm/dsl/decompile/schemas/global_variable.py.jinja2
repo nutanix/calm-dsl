@@ -1,0 +1,33 @@
+{%- macro global_variable(obj) -%}
+import os
+from calm.dsl.builtins import *
+from calm.dsl.builtins import (
+    GlobalVariable, CalmVariable, Ref, ref, Metadata,
+    CalmTask as CalmVarTask {%- if obj.endpoints %}, CalmEndpoint as Endpoint {% endif %}
+)
+from calm.dsl.runbooks import RunbookTask as CalmTask 
+
+{%- if obj.endpoints %}
+# Endpoints
+{%- for endpoint in obj.endpoints %}
+{{endpoint}}
+{%- endfor %}
+{% endif %}
+
+{% if obj.secret_files %}
+# Secret Variables
+{%- endif %}
+{%- for var_file in obj.secret_files %}
+{{var_file}} = read_local_file('{{var_file}}')
+{%- endfor %}
+
+{{obj.name}} = GlobalVariable({{obj.variable | indent( width=4, first=True) }}, projects={{obj.projects}})
+
+{% if obj.project_name %}
+class GlobalVariableMetadata(Metadata):
+    project = Ref.Project('{{obj.project_name}}')
+{%- endif %}
+
+{%- endmacro %}
+
+{{global_variable(obj)}}

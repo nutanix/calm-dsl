@@ -30,14 +30,25 @@ from calm.dsl.builtins import CalmTask as CalmVarTask{% if obj.project_name %}, 
 
 # Runbook
 @runbook
-def {{obj.name}}({% if obj.credentials_list %}credentials={{obj.credentials_list | replace("'","")}}{% endif %}{% if obj.default_endpoint_name %}{% if obj.credentials_list %},{% endif %}default=ref({{obj.default_endpoint_name | replace("'","")}}){% endif %}):
+def {{obj.name}}(
+    {% if obj.credentials_list %}credentials={{obj.credentials_list | replace("'","")}}{% endif %}
+    {% if obj.default_endpoint_name %}{% if obj.credentials_list %},{% endif %}default=ref({{obj.default_endpoint_name | replace("'","")}}){% endif %}
+    {% if obj.execution_name %}{% if obj.credentials_list or obj.default_endpoint_name %},{% endif %}execution_name="{{ obj.execution_name | replace('"', '\\"') }}"{% endif %}
+):
 {% if obj.description %}
     """{{obj.description}}"""
 {% endif %}
-{%- if obj.variables or obj.outputs or obj.tasks %}
+{%- if obj.variables or obj.outputs or obj.tasks or obj.global_variables %}
 {%- for variable in obj.variables %}
 {{variable | indent( width=4, first=True)}} #noqa
 {%- endfor %}
+{%- if obj.global_variables %}
+    global_variables = [
+        {%- for var in obj.global_variables %}
+            Ref.GlobalVariable("{{ var }}"){{ ", " if not loop.last else "" }}
+        {%- endfor %}
+    ]
+{% endif %}
 {% if obj.outputs %}
     outputs=[
         {%- for output in obj.outputs %}

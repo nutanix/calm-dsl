@@ -291,5 +291,8 @@ def insert_uuid(action, name_uuid_map, action_list_with_uuid, entity_key=""):
                         name_uuid_map[value][entity_type] = str(uuid.uuid4())
                 # inserting the uuid using name_uuid_map
                 action_list_with_uuid["uuid"] = name_uuid_map[value][entity_type]
+            if key == "tunnel_reference":
+                # Should not assign uuid to tunnel_reference
+                continue
             elif isinstance(value, (dict, list)):
                 insert_uuid(value, name_uuid_map, action_list_with_uuid[key], key)

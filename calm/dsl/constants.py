@@ -28,6 +28,8 @@ class CACHE:
         POLICY_ACTION_TYPE = "policy_action_type"
         POLICY_ATTRIBUTES = "policy_attributes"
         PROTECTION_POLICY = "app_protection_policy"
+        TUNNEL = "tunnel"
+        GLOBAL_VARIABLE = "global_variable"
 
     API_ENTITY_KIND_MAP = {
         "cluster": ENTITY.AHV_CLUSTER,
@@ -124,6 +126,10 @@ class CLOUD_PROVIDERS:
     MIN_SUPPORTED_VERSION = "4.0.0"
 
 
+class GLOBAL_VARIABLE:
+    MIN_SUPPORTED_VERSION = "4.3.0"
+
+
 class NETWORK_GROUP_TUNNEL_TASK:
     class STATUS:
         SUCCESS = "Succeeded"
@@ -164,6 +170,13 @@ class ACCOUNT:
         CREDENTIAL_PROVIDER = "credential_provider"
         NDB = "NDB"
         CUSTOM_PROVIDER = "custom_provider"
+
+    class CRED_TYPE:
+        BASIC_AUTH = "basic_auth"
+        SERVICE_ACCOUNT = "service_account"
+
+    class SERVICE_ACCOUNT:
+        FEATURE_MIN_VERSION = "4.3.0"
 
     STANDARD_TYPES = [
         TYPE.AHV,
@@ -352,6 +365,7 @@ class VARIABLE:
         class TYPE:
             EXEC = "EXEC"
             HTTP = "HTTP"
+            PREDEFINED = "PREDEFINED"
 
     SECRET_TYPES = [
         TYPE.SECRET,
@@ -360,6 +374,13 @@ class VARIABLE:
         TYPE.SYS_SECRET,
         TYPE.SYS_EXEC_SECRET,
         TYPE.SYS_HTTP_SECRET,
+    ]
+
+    DYNAMIC_TYPES = [
+        TYPE.EXEC_LOCAL,
+        TYPE.EXEC_SECRET,
+        TYPE.HTTP_LOCAL,
+        TYPE.HTTP_SECRET,
     ]
 
     SECRET_ATTRS_TYPE = "SECRET"
@@ -477,6 +498,7 @@ class RESOURCE:
         "platform_dependent_fields",
         "blueprints/brownfield_import/vms",
         "calm_marketplace_items",
+        "global_variables",
         # AhvNew class resources
         "nutanix/v1/subnets",
         "nutanix/v1/images",
@@ -603,3 +625,35 @@ class MULTIGROUP:
 
 class FLAGS:
     POLICY_ON_SMSP = False
+
+
+class TUNNEL:
+    API_VERSION = "3.0"
+    FEATURE_MIN_VERSION = "4.3.0"
+
+    class KIND:
+        ACCOUNT = "tunnel"
+        NETWORK_GROUP = "network_group"
+
+    class STATES:
+        ACTIVE = "ACTIVE"
+        HEALTHY = "HEALTHY"
+        UNHEALTHY = "UNHEALTHY"
+        DELETED = "DELETED"
+
+    class UI_STATES:
+        VALIDATING = "VALIDATING"
+        ACTIVE = "ACTIVE"
+        ERROR = "ERROR"
+        DELETED = "DELETED"
+
+    # Mapping UI states to backend states
+    UI_TO_BACKEND_STATE_MAPPING = {
+        UI_STATES.VALIDATING: STATES.ACTIVE,
+        UI_STATES.ACTIVE: STATES.HEALTHY,
+        UI_STATES.ERROR: STATES.UNHEALTHY,
+        UI_STATES.DELETED: STATES.DELETED,
+    }
+
+    # Mapping backend states to UI states
+    BACKEND_TO_UI_STATE_MAPPING = {v: k for k, v in UI_TO_BACKEND_STATE_MAPPING.items()}

@@ -46,9 +46,9 @@ class PROVIDER:
 
     class AZURE:
         PUBLIC_IMAGE_PUBLISHER = "Canonical"
-        PUBLIC_IMAGE_OFFER = "UbuntuServer"
-        PUBLIC_IMAGE_SKU = "18.04-LTS"
-        PUBLIC_IMAGE_VERSION = "18.04.202401161"
+        PUBLIC_IMAGE_OFFER = "0001-com-ubuntu-server-jammy"
+        PUBLIC_IMAGE_SKU = "22_04-lts-gen2"
+        PUBLIC_IMAGE_VERSION = "22.04.202506200"
         IMAGE_MARKETPLACE = "Marketplace"
         SECURITY_GROUP = "calm-nsg1"
         VIRTUAL_NETWORK = "calm-virtual-network-eastus2"

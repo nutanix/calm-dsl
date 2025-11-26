@@ -764,5 +764,6 @@
     "default_credential_local_reference": {
       "kind": "app_credential",
       "name": "default cred"
-    }
+    },
+    "global_variable_reference_list": []
 }

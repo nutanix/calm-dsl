@@ -46,6 +46,7 @@ from .provider import ProviderAPI
 from .quotas import QuotasAPI
 from .groups_api import MultiGroupsAPI
 from .util import get_auth_info
+from .global_variable import GlobalVariableApi
 
 
 class ClientHandle:
@@ -90,6 +91,7 @@ class ClientHandle:
         self.provider = ProviderAPI(self.connection)
         self.quotas = QuotasAPI(self.connection)
         self.groups = MultiGroupsAPI(self.connection)
+        self.global_variable = GlobalVariableApi(self.connection)
 
 
 def get_client_handle_obj(

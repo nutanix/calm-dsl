@@ -2,7 +2,7 @@ resources:
   account_uuid: a52ba5f0-e5c3-42ed-a8fc-db077b1c586f
   hw_profile:
     max_data_disk_count: 4
-    vm_size: Standard_D1_v2
+    vm_size: Standard_DS1_v2
   location: eastus2
   nw_profile:
     nic_list:
