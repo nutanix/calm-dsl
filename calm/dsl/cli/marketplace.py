@@ -831,6 +831,15 @@ def convert_mpi_into_blueprint(
         LOG.error("Blueprint went to {} state".format(bp_status))
         sys.exit(-1)
 
+    message_list = bp_res["status"].get("message_list", [])
+    if message_list:
+        for message_item in message_list:
+            if (
+                message_item["details"]
+                and "variable_uuids" in message_item["details"][0]
+            ):
+                LOG.error(message_item["message"])
+                sys.exit(-1)
     return bp_res
 
 
