@@ -13,7 +13,7 @@ from calm.dsl.api import (
 )
 from calm.dsl.providers.base import get_provider
 from calm.dsl.config import get_context
-from calm.dsl.constants import STRATOS
+from calm.dsl.constants import STRATOS, PROJECT
 from calm.dsl.log import get_logging_handle
 from calm.dsl.tools.utils import make_file_dir
 from calm.dsl.builtins.models.helper.common import get_project
@@ -265,7 +265,7 @@ def add_directory_service_user_groups(config):
 
 
 def add_project_details(
-    config, config_header="PROJECTS", default_project_name="default"
+    config, config_header="PROJECTS", default_project_name=PROJECT.AUTO_NCM_DEFAULT
 ):
 
     client = get_api_client()
@@ -409,7 +409,7 @@ def add_tunnel_details(config):
     config["VPC_TUNNELS"] = config_tunnels_dict
 
 
-def check_project_exists(project_name="default"):
+def check_project_exists(project_name=PROJECT.AUTO_NCM_DEFAULT):
     client = get_api_client()
 
     payload = {
@@ -602,7 +602,7 @@ def add_http_endpoint(config):
         f.write(dsl_http_endpoint)
 
     ContextObj = get_context()
-    ContextObj.update_project_context("default")
+    ContextObj.update_project_context(PROJECT.AUTO_NCM_DEFAULT)
 
     runner = CliRunner()
     result = runner.invoke(

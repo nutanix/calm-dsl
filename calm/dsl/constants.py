@@ -484,6 +484,7 @@ class CONFIG_TYPE:
 
 class PROJECT:
     INTERNAL = "_internal"
+    AUTO_NCM_DEFAULT = "auto_ncm_default"
 
 
 # storing it as set because it optimizes the lookup to constant time.
