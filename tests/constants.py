@@ -3,7 +3,7 @@
 #
 # pylint: disable=missing-docstring, invalid-name, line-too-long
 class BP_SPEC:
-    PROJECT_NAME_DEFAULT = "default"
+    PROJECT_NAME_DEFAULT = "auto_ncm_default"
 
 
 class PROVIDER:

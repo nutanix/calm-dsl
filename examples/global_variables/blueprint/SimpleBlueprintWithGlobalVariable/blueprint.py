@@ -10,6 +10,7 @@ import os  # no_qa
 from calm.dsl.builtins import CalmTask as CalmVarTask
 from calm.dsl.builtins import *  # no_qa
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
+from calm.dsl.constants import PROJECT
 
 # Secret Variables
 
@@ -127,4 +128,4 @@ class SimpleBlueprintWithGlobalVariable(Blueprint):
 class BpMetadata(Metadata):
 
     categories = {"TemplateType": "Vm"}
-    project = Ref.Project("default")
+    project = Ref.Project(PROJECT.AUTO_NCM_DEFAULT)

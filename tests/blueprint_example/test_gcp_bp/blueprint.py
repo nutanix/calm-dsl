@@ -10,6 +10,7 @@ import os  # no_qa
 from calm.dsl.builtins import CalmTask as CalmVarTask
 from calm.dsl.builtins import *  # no_qa
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
+from calm.dsl.constants import PROJECT as PROJECT_CONSTANTS
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 GCP_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["GCP"][1]
@@ -88,4 +89,4 @@ class gcp_bp_mvm(Blueprint):
 
 class BpMetadata(Metadata):
 
-    project = Ref.Project("default")
+    project = Ref.Project(PROJECT_CONSTANTS.AUTO_NCM_DEFAULT)

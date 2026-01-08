@@ -8,6 +8,7 @@ from calm.dsl.runbooks import (
     read_local_file
 )
 from calm.dsl.builtins import CalmTask as CalmVarTask, Metadata
+from calm.dsl.constants import PROJECT
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 TUNNEL_1 = DSL_CONFIG["TUNNELS"]["TUNNEL_1"]["NAME"]
@@ -153,4 +154,4 @@ def TestRunbook():
 
 
 class RunbookMetadata(Metadata):
-    project = Ref.Project("default")
+    project = Ref.Project(PROJECT.AUTO_NCM_DEFAULT)

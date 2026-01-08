@@ -1,7 +1,7 @@
 class AWS:
     """AWS Constants for cli provider_plugins tests"""
 
-    PROJECTS = ["default"]
+    PROJECTS = ["auto_ncm_default"]
     REGIONS = ["us-east-1"]
     AVAILABILITY_ZONES = ["us-east-1a"]
     MACHINE_IMAGES = ["DND_CENTOS_QA"]
@@ -17,7 +17,7 @@ class AWS:
 class AZURE:
     """Azure Constants for cli provider_plugin tests"""
 
-    PROJECTS = ["default"]
+    PROJECTS = ["auto_ncm_default"]
     RESOURCE_GROUPS = ["calmrg"]
     LOCATIONS = ["East US 2"]
     HW_PROFILES = ["Standard_DS1_v2", "Standard_D2_v2"]

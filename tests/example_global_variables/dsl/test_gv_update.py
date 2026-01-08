@@ -9,6 +9,7 @@ from calm.dsl.builtins import (
     CalmTask as CalmVarTask,
 )
 from calm.dsl.runbooks import RunbookTask as CalmTask
+from calm.dsl.constants import PROJECT as PROJECT_CONSTANTS
 
 
 HttpGlobalVar1 = GlobalVariable(
@@ -36,4 +37,4 @@ HttpGlobalVar1 = GlobalVariable(
 
 
 class GlobalVariableMetadata(Metadata):
-    project = Ref.Project("default")
+    project = Ref.Project(PROJECT_CONSTANTS.AUTO_NCM_DEFAULT)

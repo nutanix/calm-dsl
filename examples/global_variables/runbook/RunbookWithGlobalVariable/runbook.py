@@ -9,6 +9,7 @@ from calm.dsl.runbooks import (
     RunbookVariable as CalmVariable,
 )
 from calm.dsl.builtins import CalmTask as CalmVarTask, Metadata
+from calm.dsl.constants import PROJECT
 
 
 # Runbook
@@ -34,4 +35,4 @@ def RunbookWithGlobalVariable():
 
 
 class RunbookMetadata(Metadata):
-    project = Ref.Project("default")
+    project = Ref.Project(PROJECT.AUTO_NCM_DEFAULT)

@@ -15,6 +15,7 @@ from calm.dsl.cli.main import get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.config.constants import CONFIG
 from calm.dsl.api.util import replace_host_port_in_url
+from tests.constants import BP_SPEC
 
 VPC_TUNNEL_NAME = "vpc_name_1"
 LOG = get_logging_handle(__name__)
@@ -321,7 +322,7 @@ class ReportPortal(object):
 
 
 def get_vpc_project(config):
-    project_name = "default"
+    project_name = BP_SPEC.PROJECT_NAME_DEFAULT
     vpc_enabled = config.get("IS_VPC_ENABLED", False)
     if not vpc_enabled:
         return {"name": project_name, "uuid": ""}
