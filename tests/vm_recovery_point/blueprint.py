@@ -17,7 +17,9 @@ CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
-PROJECT_NAME = DSL_CONFIG["AHV_SNAPSHOT_PROJECTS"]["PROJECT1"]["NAME"]
+PROJECT_NAME = (
+    DSL_CONFIG.get("AHV_SNAPSHOT_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "")
+)
 NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
 
 VM_RECOVERY_POINT_NAME = read_local_file("vm_rp_name")

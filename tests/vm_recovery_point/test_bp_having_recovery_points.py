@@ -21,14 +21,13 @@ VRC_DSL_BP_FILEPATH = "tests/vm_recovery_point/blueprint.py"
 LOCAL_RP_NAME_PATH = "tests/vm_recovery_point/.local/vm_rp_name"
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 
-ENV_NAME = DSL_CONFIG["AHV_SNAPSHOT_PROJECTS"]["PROJECT1"]["ENVIRONMENTS"][0]["NAME"]
-ACC_UUID = DSL_CONFIG["AHV_SNAPSHOT_PROJECTS"]["PROJECT1"]["ACCOUNTS"]["NUTANIX_PC"][0][
-    "UUID"
-]
+AHV_SNAPSHOT_PROJECTS = DSL_CONFIG.get("AHV_SNAPSHOT_PROJECTS", {})
+PROJECT = AHV_SNAPSHOT_PROJECTS.get("PROJECT1") or {}
 
-_SNAPSHOT_POLICY = DSL_CONFIG["AHV_SNAPSHOT_PROJECTS"]["PROJECT1"].get(
-    "SNAPSHOT_POLICY", [{}]
-)[0]
+ENV_NAME = (PROJECT.get("ENVIRONMENTS") or [{}])[0].get("NAME", "")
+ACC_UUID = (PROJECT.get("ACCOUNTS", {}).get("NUTANIX_PC") or [{}])[0].get("UUID", "")
+
+_SNAPSHOT_POLICY = PROJECT.get("SNAPSHOT_POLICY", [{}])[0] if PROJECT else {}
 SNAPSHOT_POLICY_NAME = _SNAPSHOT_POLICY.get("NAME", "")
 LOCAL_RULE_NAME = _SNAPSHOT_POLICY.get("RULE", "")
 # Path where the dynamically generated launch_params file is written
@@ -42,7 +41,7 @@ CALM_VERSION = Version.get_version("Calm")
 
 
 @pytest.mark.skipif(
-    DSL_CONFIG["AHV_SNAPSHOT_PROJECTS"]["PROJECT1"] is None,
+    not PROJECT,
     reason="Snapshot Project is not present on the setup or is not configured correctly",
 )
 @pytest.mark.slow
