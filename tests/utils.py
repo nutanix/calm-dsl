@@ -516,8 +516,12 @@ def replace_host_port_in_tests_url(url):
         ncm_port = "" if ncm_port == "None" else ncm_port
 
         return replace_host_port_in_url(url, ncm_host, ncm_port)
-
-    return url
+    else:
+        LOG.info("NCM is not enabled, replacing host and port in url with PC details")
+        server_config = context.get_server_config()
+        return replace_host_port_in_url(
+            url, server_config.get("pc_ip"), server_config.get("pc_port")
+        )
 
 
 def get_subnet_details_from_config(config, account_name, vlan_name):
