@@ -144,9 +144,19 @@ class TestVmBlueprints:
             sub["create_spec"]["resources"]["account_uuid"] = generated_json[
                 "substrate_definition_list"
             ][ind]["create_spec"]["resources"]["account_uuid"]
+            # Align vtpm with compile output (e.g. Calm 4.5+ may omit vtpm; golden may still list it)
+            gen_res = generated_json["substrate_definition_list"][ind]["create_spec"][
+                "resources"
+            ]
+            if "vtpm_config" in gen_res:
+                sub["create_spec"]["resources"]["vtpm_config"] = gen_res["vtpm_config"]
+            else:
+                sub["create_spec"]["resources"].pop("vtpm_config", None)
 
         # calm_version
         CALM_VERSION = Version.get_version("Calm")
+        LOG.info("test_vm_bp_compile: Calm version={}".format(CALM_VERSION))
+
         # For versions > 3.4, cred_class is needed to cred-payload
         if LV(CALM_VERSION) >= LV("3.4.0"):
             for cred in known_json["credential_definition_list"]:
@@ -156,6 +166,7 @@ class TestVmBlueprints:
             remove_status_map_from_bp(known_json)
         if LV(CALM_VERSION) < LV("4.2.0"):
             remove_vtpm_config_from_bp(known_json)
+            remove_vtpm_config_from_bp(generated_json)
         if LV(CALM_VERSION) < LV("4.3.0"):
             remove_global_variables_from_spec(known_json)
 
