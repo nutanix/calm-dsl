@@ -473,6 +473,12 @@ class CONFIG_TYPE:
         VMWARE = "VMWARE_RESTORE"
         TYPE = [AHV, VMWARE]
 
+        class RESTORE_TYPE(Enum):
+            CLONE = "CLONE"
+            REVERT = "REVERT"
+
+        RESTORE_TYPE_MIN_VERSION = "4.5.0"
+
     CONFIG_TYPE_MAP = {
         "AHV_VM_snapshot": SNAPSHOT.AHV,
         "VMWARE_VM_snapshot": SNAPSHOT.VMWARE,

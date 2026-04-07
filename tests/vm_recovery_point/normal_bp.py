@@ -97,7 +97,14 @@ class AhvVmProfile(Profile):
 
     deployments = [AhvVmDeployment]
 
-    restore_configs = [AppProtection.RestoreConfig("r1", target=ref(AhvVmDeployment))]
+    restore_configs = [
+        AppProtection.RestoreConfig.Ahv(
+            "r1",
+            target=ref(AhvVmDeployment),
+            delete_vm_post_restore=False,
+            restore_type="REVERT",
+        )
+    ]
     snapshot_configs = [
         AppProtection.SnapshotConfig("s1", restore_config=ref(restore_configs[0]))
     ]

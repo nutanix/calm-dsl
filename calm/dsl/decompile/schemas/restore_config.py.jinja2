@@ -1,6 +1,6 @@
 {%- macro restore_config(obj) %}
 {% if obj.provider == "Ahv" %}
-AppProtection.RestoreConfig{% if obj.provider %}.{{obj.provider}}{% endif %}(name='{{obj.name}}', target=ref({{obj.target}}), delete_vm_post_restore={{obj.delete_vm_post_restore}}{% if obj.description %}, description="{{obj.description}}"{% endif %})
+AppProtection.RestoreConfig{% if obj.provider %}.{{obj.provider}}{% endif %}(name='{{obj.name}}', target=ref({{obj.target}}), delete_vm_post_restore={{obj.delete_vm_post_restore}}{% if obj.restore_type %}, restore_type="{{obj.restore_type}}"{% endif %}{% if obj.description %}, description="{{obj.description}}"{% endif %})
 {% else %}
 AppProtection.RestoreConfig{% if obj.provider %}.{{obj.provider}}{% endif %}(name='{{obj.name}}', target=ref({{obj.target}}){% if obj.description %}, description="{{obj.description}}"{% endif %})
 {% endif %}
