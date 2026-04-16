@@ -48,7 +48,7 @@ class TestProjects:
         else:
             assert res.ok is True
             res = res.json()
-            assert project_name == res["metadata"]["name"]
+            assert project_name == res["metadata"]["project_reference"]["name"]
 
             LOG.info("Polling on project creation task")
             task_state = watch_project_task(
@@ -72,7 +72,7 @@ class TestProjects:
         else:
             assert res.ok is True
             res = res.json()
-            assert project_name == res["metadata"]["name"]
+            assert project_name == res["metadata"]["project_reference"]["name"]
             LOG.info("Success")
             LOG.debug("Response: {}".format(res))
 
@@ -92,7 +92,7 @@ class TestProjects:
             assert res.ok is True
             res = res.json()
             calm_version = Version.get_version("Calm")
-            assert project_name == res["metadata"]["name"]
+            assert project_name == res["metadata"]["project_reference"]["name"]
 
             if LV(calm_version) >= LV("3.5.2") and LV(calm_version) < LV("3.6.1"):
                 assert project_upd_des == res["spec"]["project_detail"]["description"]
