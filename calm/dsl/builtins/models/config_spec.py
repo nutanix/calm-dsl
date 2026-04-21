@@ -534,10 +534,25 @@ def snapshot_config_create(
     # therefore not setting snapshot location in config reference for VMWARE
     if config_references:
         if provider == PROVIDER.TYPE.AHV:
+            calm_version = (Version.get_version("Calm") or "").strip()
+            validate_revert = (
+                calm_version
+                and LV(calm_version) >= LV(CONFIG_TYPE.RESTORE.RESTORE_TYPE_MIN_VERSION)
+                and snapshot_location_type == "REMOTE"
+            )
             for config_ref in config_references:
                 config_ref.__self__.attrs_list[0][
                     "snapshot_location_type"
                 ] = snapshot_location_type
+
+                if validate_revert:
+                    restore_type = config_ref.__self__.attrs_list[0].get("restore_type")
+                    if restore_type == CONFIG_TYPE.RESTORE.RESTORE_TYPE.REVERT.value:
+                        sys.exit(
+                            "'restore_type=REVERT' is not supported with snapshot_location_type='REMOTE'. "
+                            "In-place revert requires the snapshot to be on the same cluster as the VM. "
+                            "Please use restore_type='CLONE' for remote snapshots."
+                        )
 
     attrs = {
         "target_any_local_reference": target,
