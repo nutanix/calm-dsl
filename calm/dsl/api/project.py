@@ -28,7 +28,18 @@ class ProjectAPI(ResourceAPI):
             err = {"error": err_msg, "code": -1}
             return None, err
 
-        return super().create(payload)
+        payload = get_projects_internal_payload(payload)
+
+        CALM_PROJECTS_PREFIX = (
+            RESOURCE.API_PREFIX.V3_API_PATH_PREFIX + "/projects_internal"
+        )
+
+        return self.connection._call(
+            CALM_PROJECTS_PREFIX,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
 
     def usage(self, uuid, payload):
 

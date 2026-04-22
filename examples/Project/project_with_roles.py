@@ -1,13 +1,9 @@
 import json
 
-from distutils.version import LooseVersion as LV
-
 from calm.dsl.builtins import Project
 from calm.dsl.builtins import Provider, Ref, read_local_file
-from calm.dsl.store import Version
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
-CALM_VERSION = Version.get_version("Calm")
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
 
 NTNX_ACCOUNT = ACCOUNTS["NUTANIX_PC"][0]
@@ -33,6 +29,12 @@ K8S_ACCOUNT_NAME = K8S_ACCOUNT["NAME"]
 USER = DSL_CONFIG["USERS"][0]
 USER_NAME = USER["NAME"]
 
+USER2 = DSL_CONFIG["USERS"][1]
+USER_NAME2 = USER2["NAME"]
+
+USER_GROUP = DSL_CONFIG["USER_GROUPS"][0]
+USER_GROUP_NAME = USER_GROUP["NAME"]
+
 
 class TestDslProject(Project):
     """Sample DSL Project"""
@@ -49,11 +51,13 @@ class TestDslProject(Project):
         Provider.K8s(account=Ref.Account(K8S_ACCOUNT_NAME)),
     ]
 
-    users = [Ref.User(name=USER_NAME)]
+    users = [Ref.User(name=USER_NAME), Ref.User(name=USER_NAME2)]
 
-    if LV(CALM_VERSION) >= LV("4.4.0"):
-        roles = {
-            "Project Admin": [Ref.User(name=USER_NAME)],
-        }
+    groups = [Ref.Group(name=USER_GROUP_NAME)]
+
+    roles = {
+        "Developer": [users[0], groups[0]],
+        "Operator": [users[1]],
+    }
 
     quotas = {"vcpus": 1, "storage": 2, "memory": 1}

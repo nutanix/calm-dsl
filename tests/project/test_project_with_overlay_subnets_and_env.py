@@ -4,11 +4,14 @@
 import uuid
 import json
 
+from distutils.version import LooseVersion as LV
+
 from calm.dsl.builtins import Project, read_local_file, readiness_probe
 from calm.dsl.builtins import Provider, Ref
 from calm.dsl.builtins import Substrate, Environment
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
 from calm.dsl.builtins import basic_cred, AhvVmResources, AhvVm
+from calm.dsl.store import Version
 from tests.utils import get_local_az_overlay_details_from_dsl_config
 
 
@@ -18,6 +21,7 @@ CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+CALM_VERSION = Version.get_version("Calm")
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
 
 NTNX_ACCOUNT_NAME = "NTNX_LOCAL_AZ"
@@ -159,6 +163,11 @@ class TestDslProjectOverlayWithEnv5(Project):
     ]
 
     users = [Ref.User(name=USER_NAME)]
+
+    if LV(CALM_VERSION) >= LV("4.4.0"):
+        roles = {
+            "Developer": [Ref.User(name=USER_NAME)],
+        }
 
     envs = [ProjEnvironment]
 

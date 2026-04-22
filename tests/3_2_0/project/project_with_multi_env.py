@@ -3,14 +3,18 @@
 
 import json
 
+from distutils.version import LooseVersion as LV
+
 from calm.dsl.builtins import Project, read_local_file, readiness_probe
 from calm.dsl.builtins import Provider, Ref, ref
 from calm.dsl.builtins import Substrate, Environment
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
 from calm.dsl.builtins import basic_cred, AhvVmResources, AhvVm
+from calm.dsl.store import Version
 
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+CALM_VERSION = Version.get_version("Calm")
 CENTOS_CI = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
 SQL_SERVER_IMAGE = DSL_CONFIG["AHV"]["IMAGES"]["CD_ROM"]["SQL_SERVER_2014_x64"]
 
@@ -178,6 +182,11 @@ class SampleDslProject(Project):
     ]
 
     users = [Ref.User(USER_NAME)]
+
+    if LV(CALM_VERSION) >= LV("4.4.0"):
+        roles = {
+            "Developer": [Ref.User(USER_NAME)],
+        }
 
     envs = [ProjEnvironment1, ProjEnvironment2]
     default_environment = ref(ProjEnvironment1)

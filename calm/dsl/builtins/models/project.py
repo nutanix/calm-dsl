@@ -1,21 +1,16 @@
+import sys
+
 from distutils.version import LooseVersion as LV
 
-from calm.dsl.providers.base import get_provider
-
 from .entity import EntityType
-
+from calm.dsl.providers.base import get_provider
 from calm.dsl.api import get_api_client
-
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Version, Cache
-
 from calm.dsl.builtins.models.providers import Provider
 from calm.dsl.builtins.models.calm_ref import Ref
-
 from calm.dsl.constants import CACHE, ACCOUNT
-
 from calm.dsl.providers import get_provider
-
 from calm.dsl.builtins.models.helper.quotas import _get_quota
 
 LOG = get_logging_handle(__name__)
@@ -172,6 +167,8 @@ class ProjectType(EntityType):
 
             cdict["resource_domain"] = {"resources": project_resources}
 
+        validate_project_payload(cls, cdict)
+
         # pop out unnecessary attibutes
         cdict.pop("environment_definition_list", None)
         # empty dict is not accepted for default_environment_reference
@@ -291,6 +288,121 @@ class ProjectType(EntityType):
             cdict["quotas"] = _quotas
 
         return cdict
+
+
+def validate_project_payload(cls, cdict):
+    """
+    For Calm >= 4.4.0:
+
+    Performs directory whitelisting for registered users, strips the
+    `roles` attribute (which is not part of the projects payload) and
+    enforces user/group-to-role assignment invariants. The extracted
+    `roles` mapping is stashed on the class for use by callers outside
+    the project class scope.
+    """
+
+    calm_version = Version.get_version("Calm")
+
+    if LV(calm_version) < LV("4.4.0"):
+        return
+
+    # Whitelist directory references for users registered in projet
+    for user in cdict.get("user_reference_list", []):
+        uuid = user["uuid"]
+        user_data = Cache.get_entity_data_using_uuid(CACHE.ENTITY.USER, uuid)
+        if not user_data:
+            LOG.error(
+                "User {} not found. Please run: calm update cache".format(
+                    user.get("name", "")
+                )
+            )
+            sys.exit(
+                "User {} not found. Please run: calm update cache".format(
+                    user.get("name", "")
+                )
+            )
+
+        directory = Cache.get_entity_data(
+            CACHE.ENTITY.DIRECTORY_SERVICE, user_data.get("directory", "")
+        )
+        directory = Ref.DirectoryService(directory.get("name", ""))
+        directory.pop("name", None)
+
+        cdict["directory_reference_list"].append(directory)
+
+    # removing 'roles' from cdict as it is invalid in projects payload
+    roles = cdict.pop("roles", None)
+
+    # There can't be any user/user-group without role assignment
+    has_users = bool(cdict.get("user_reference_list"))
+    has_groups = bool(cdict.get("external_user_group_reference_list"))
+    if (has_users or has_groups) and not roles:
+        LOG.error(
+            "Users/groups are defined but 'roles' attribute is missing. "
+            "All users and groups must be assigned a role."
+        )
+        sys.exit("'roles' attribute is required when users or groups are defined")
+
+    # validate that each user/group is assigned to only one role
+    if roles:
+        entity_to_role = {}
+        for role_name, role_members in roles.items():
+            if not role_members:
+                LOG.error(
+                    "Role '{}' has no users or groups assigned. "
+                    "Each role must have at least one user or group.".format(role_name)
+                )
+                sys.exit(
+                    "Role '{}' must be assigned to at least one user or group".format(
+                        role_name
+                    )
+                )
+            for member_ref in role_members:
+                member_name = member_ref.get("name", "")
+                member_kind = member_ref.get("kind", "user")
+                key = (member_kind, member_name)
+                if key in entity_to_role:
+                    label = "User" if member_kind == "user" else "Group"
+                    LOG.error(
+                        "{} '{}' is assigned to multiple roles: '{}' and '{}'. "
+                        "Each user/group can only be assigned to one role.".format(
+                            label, member_name, entity_to_role[key], role_name
+                        )
+                    )
+                    sys.exit(
+                        "Multiple roles assignment not allowed for {} '{}'".format(
+                            label.lower(), member_name
+                        )
+                    )
+                entity_to_role[key] = role_name
+
+        # Validate all project users have a role assigned
+        for user in cdict.get("user_reference_list", []):
+            if ("user", user.get("name", "")) not in entity_to_role:
+                LOG.error(
+                    "User '{}' is not assigned to any role. "
+                    "All users must have a role when roles are defined.".format(
+                        user.get("name", "")
+                    )
+                )
+                sys.exit("User '{}' has no role assigned".format(user.get("name", "")))
+
+        # Validate all project groups have a role assigned
+        for group in cdict.get("external_user_group_reference_list", []):
+            if ("user_group", group.get("name", "")) not in entity_to_role:
+                LOG.error(
+                    "Group '{}' is not assigned to any role. "
+                    "All groups must have a role when roles are defined.".format(
+                        group.get("name", "")
+                    )
+                )
+                sys.exit(
+                    "Group '{}' has no role assigned".format(group.get("name", ""))
+                )
+
+    # assigning at class level to be used by function outside the project class scope
+    # we can't keep in cdict as it is invalid in projects payload
+    cls.__roles__ = roles
 
 
 def project(**kwargs):

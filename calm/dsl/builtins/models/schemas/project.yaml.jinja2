@@ -36,6 +36,17 @@ properties:
     type: array
     items:
       {{ calm_ref.CalmRef() | indent(6) }}
+  directory_reference_list:
+    x-calm-dsl-min-version: 4.4.0
+    type: array
+    items:
+      type: object
+      x-calm-dsl-type: object
+      properties:
+        kind:
+          type: string
+        uuid:
+          type: string
 
   default_environment_reference:
     x-calm-dsl-display-name: default_environment
@@ -73,6 +84,22 @@ properties:
       MEMORY:
         x-calm-dsl-display-name: memory
         type: integer
+  roles:
+    x-calm-dsl-type: dict
+    x-calm-dsl-min-version: 4.4.0
+    type: object
+    additionalProperties:
+      type: array
+      items:
+        type: object
+        x-calm-dsl-type: object
+        properties:
+          kind:
+            type: string
+          name:
+            type: string
+          uuid:
+            type: string
 
 {%- endmacro %}
 
