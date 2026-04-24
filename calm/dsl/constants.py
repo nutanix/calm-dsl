@@ -669,7 +669,7 @@ class MARKETPLACE:
     class APP_NAME:
         INFRASTRUCTURE = "Infrastructure"
         NCM = "Nutanix Cloud Manager"
-        NCM_CENTRAL_PROJECT = "Manage Nutanix Central Projects"
+        NCM_CENTRAL_PROJECT = "Cloud Manager Projects"
         NC = "Nutanix Central"
 
     FETCH_APP_DETAILS_PAYLOAD = {
