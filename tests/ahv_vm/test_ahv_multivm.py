@@ -43,7 +43,7 @@ Virtio_CdRom = vm_disk_package(
     config={
         "image": {
             "type": "ISO_IMAGE",
-            "source": "http://10.40.64.33/GoldImages/NuCalm/ISO/Nutanix-VirtIO-1.1.4.iso",
+            "source": "http://endor.dyn.nutanix.com/GoldImages/NuCalm/ISO/Nutanix-VirtIO-1.1.4.iso",
         }
     },
 )
