@@ -1,4 +1,5 @@
 import uuid
+from distutils.version import LooseVersion as LV
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.metadata import render_metadata_template
 from calm.dsl.decompile.task_tree import render_task_tree_template
@@ -20,7 +21,9 @@ from calm.dsl.decompile.decompile_helpers import (
 )
 from calm.dsl.builtins import CalmEndpoint as Endpoint
 from calm.dsl.builtins.models.runbook import RunbookType, runbook
+from calm.dsl.constants import RUNBOOK_JSON_SUPPORT_MIN_VERSION
 from calm.dsl.log import get_logging_handle
+from calm.dsl.store.version import Version
 
 LOG = get_logging_handle(__name__)
 RUNBOOK_ACTION_MAP = {}
@@ -95,6 +98,19 @@ def render_runbook_template(
     )
     variables = []
     for variable in runbook_cls.variables:
+        if getattr(variable, "val_type", "") == "DICT":
+            CALM_VERSION = Version.get_version("Calm")
+            if LV(CALM_VERSION) < LV(RUNBOOK_JSON_SUPPORT_MIN_VERSION):
+                LOG.warning(
+                    f"Skipping DICT variable "
+                    f"'{getattr(variable, 'name', '<unknown>')}' "
+                    f"in runbook '{runbook_cls.__name__}': "
+                    f"JSON / DICT variables are not supported for Runbooks "
+                    f"until Calm {RUNBOOK_JSON_SUPPORT_MIN_VERSION} "
+                    f"(current version: {CALM_VERSION}). "
+                    f"Variable will be omitted from decompiled DSL."
+                )
+                continue
         variables.append(
             render_variable_template(
                 variable,

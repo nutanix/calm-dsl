@@ -3,6 +3,7 @@ import sys
 from .ahv_vm_vpc import AhvVpc
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
+from .macro_helper import validate_ahv_macro_fields
 from calm.dsl.store import Cache
 from .helper import common as common_helper
 from calm.dsl.constants import CACHE
@@ -20,6 +21,8 @@ class AhvNicType(EntityType):
     def compile(cls):
 
         cdict = super().compile()
+
+        validate_ahv_macro_fields(cdict, "AhvNic")
 
         cls_substrate = common_helper._walk_to_parent_with_given_type(
             cls, "SubstrateType"

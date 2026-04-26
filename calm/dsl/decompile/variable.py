@@ -1,3 +1,4 @@
+import json
 import os
 
 from calm.dsl.decompile.render import render_template
@@ -135,6 +136,18 @@ def render_variable_template(
             elif var_val_type == "MULTILINE_STRING":
                 user_attrs["value"] = repr(user_attrs["value"])
                 schema_file = "var_simple_multiline.py.jinja2"
+            elif var_val_type == "DICT":
+                # Server stores the DICT variable value as a JSON-encoded string.
+                # json.loads it back to a Python dict so the rendered DSL uses a
+                # real dict literal (e.g. {"kind": "image", ...}) rather than an
+                # opaque JSON string.  Fall back to the raw string if parsing fails.
+                raw_val = user_attrs.get("value", "")
+                if isinstance(raw_val, str) and raw_val:
+                    try:
+                        user_attrs["value"] = json.loads(raw_val)
+                    except (json.JSONDecodeError, ValueError):
+                        pass  # keep raw string; compile will still json.dumps it
+                schema_file = "var_simple_dict.py.jinja2"
 
     else:
         data_type = cls.data_type

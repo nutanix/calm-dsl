@@ -1,4 +1,12 @@
+"""AHV VM decompile renderer.
+
+A ``cluster`` field set to a whole-reference macro (e.g. ``"@@{cluster}@@"``)
+is a plain string, not an ``AhvCluster`` entity, so it is emitted as
+``cluster_macro`` for the template instead of accessing ``.name`` on a string.
+"""
+
 from calm.dsl.builtins import AhvVmType
+from calm.dsl.builtins.models.macro_helper import has_macro
 
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.ahv_vm_resources import render_ahv_vm_resources
@@ -17,8 +25,15 @@ def render_ahv_vm(cls, boot_config):
 
     vm_name = cls.__name__
     user_attrs["name"] = vm_name
+
+    # FIX: cluster can be a whole-reference JSON variable macro (e.g. "@@{cluster}@@").
+    # A macro string has no .name attribute; emit it bare and let the template
+    # quote it.  Non-macro clusters are AhvCluster entity objects with a .name.
     if cls.cluster:
-        user_attrs["cluster_name"] = cls.cluster.name
+        if has_macro(cls.cluster):
+            user_attrs["cluster_macro"] = cls.cluster
+        else:
+            user_attrs["cluster_name"] = cls.cluster.name
 
     # Update service name map and gui name
     gui_display_name = getattr(cls, "name", "") or vm_name

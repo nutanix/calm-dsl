@@ -1,10 +1,15 @@
+import json
 import re
+import sys
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .task_input import _task_input
 from .helper import common as common_helper
 from .utils import is_compile_secrets
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 # Variable
 
@@ -49,6 +54,22 @@ class VariableType(EntityType):
                 del options["attrs"]
             else:
                 del options["choices"]  # Choices are only for PREDEFINED Type
+
+        # DICT variables: the server expects the value as a JSON-encoded string.
+        # When the user passes a Python dict (e.g. CalmVariable.Simple.dictionary({})),
+        # json.dumps it here so the compiled output is correct.
+        if cdict.get("val_type") == "DICT":
+            val = cdict.get("value", "")
+            if not isinstance(val, str):
+                try:
+                    cdict["value"] = json.dumps(val)
+                except (TypeError, ValueError) as exc:
+                    err_msg = (
+                        f"DICT variable '{cdict.get('name', '')}' value is "
+                        f"not JSON-serialisable: {exc}"
+                    )
+                    LOG.error(err_msg)
+                    sys.exit(err_msg)
 
         return cdict
 
@@ -533,6 +554,21 @@ def simple_variable_dict(
     description="",
     attrs=None,
 ):
+    # The entity framework's 'value' field is typed as string, so a Python dict
+    # must be JSON-encoded here — before it ever reaches EntityDict.__setitem__
+    # which runs PropertyValidator and would raise "dict is not of type str".
+    # This is the canonical entry point for DICT variables and the right place
+    # to normalise the user-supplied value.
+    if not isinstance(value, str):
+        try:
+            value = json.dumps(value)
+        except (TypeError, ValueError) as exc:
+            err_msg = (
+                f"CalmVariable.Simple.dictionary value for "
+                f"'{name or '<unnamed>'}' is not JSON-serialisable: {exc}"
+            )
+            LOG.error(err_msg)
+            sys.exit(err_msg)
     return _advanced_variable(
         type_ or "LOCAL",
         name=name,
@@ -1626,3 +1662,14 @@ class RunbookVariable(CalmVariable):
     class TaskInput:
         def __new__(cls, *args, **kwargs):
             return _task_input(*args, **kwargs)
+
+    class Simple(CalmVariable.Simple):
+        @staticmethod
+        def dictionary(*args, **kwargs):
+            from calm.dsl.constants import RUNBOOK_JSON_SUPPORT_MIN_VERSION
+
+            raise NotImplementedError(
+                f"JSON / DICT variables are not supported for Runbooks until "
+                f"Calm {RUNBOOK_JSON_SUPPORT_MIN_VERSION}. "
+                f"Use CalmVariable.Simple.string or CalmVariable.Simple.int instead."
+            )

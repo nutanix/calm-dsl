@@ -6,6 +6,9 @@ from .calm_ref import Ref
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .provider_spec import ProviderSpecType
+from .helper import common as common_helper
+from .macro_helper import has_macro, validate_ahv_macro_fields
+from calm.dsl.constants import MACRO_SUPPORT_AHV_SPEC_MIN_VERSION
 from calm.dsl.store.version import Version
 from calm.dsl.log import get_logging_handle
 
@@ -21,6 +24,8 @@ class AhvVmResourcesType(EntityType):
     def compile(cls):
         cdict = super().compile()
 
+        validate_ahv_macro_fields(cdict, "AhvVmResources")
+
         ADAPTER_INDEX_MAP = {"SCSI": 0, "PCI": 0, "IDE": 0, "SATA": 0}
 
         # Traverse over disks and modify the adapter index in disk address
@@ -28,6 +33,12 @@ class AhvVmResourcesType(EntityType):
         boot_config = {}
         disk_list = cdict.get("disk_list", [])
         for disk in disk_list:
+            # A whole-disk JSON variable macro (e.g. "@@{disk}@@") is a plain string.
+            # It has no .device_properties or .bootable attributes; skip adapter-index
+            # assignment and boot-config detection — the server resolves it at runtime.
+            if has_macro(disk):
+                continue
+
             device_prop = disk.device_properties.get_dict()
             adapter_type = device_prop["disk_address"]["adapter_type"]
 
@@ -45,8 +56,23 @@ class AhvVmResourcesType(EntityType):
             elif disk.bootable and boot_config:
                 raise ValueError("More than one bootable disks found")
 
-        # Converting memory from GiB to mib
-        cdict["memory_size_mib"] *= 1024
+        # Converting memory from GiB to MiB.
+        # When memory is a macro string the server resolves it at runtime; skip arithmetic.
+        memory = cdict.get("memory_size_mib")
+        if has_macro(memory):
+            calm_version = Version.get_version("Calm")
+            if calm_version and LV(calm_version) < LV(
+                MACRO_SUPPORT_AHV_SPEC_MIN_VERSION
+            ):
+                err_msg = (
+                    f"Macro expressions in memory_size_mib require Calm >= "
+                    f"{MACRO_SUPPORT_AHV_SPEC_MIN_VERSION} "
+                    f"(current: {calm_version})"
+                )
+                LOG.error(err_msg)
+                sys.exit(err_msg)
+        else:
+            cdict["memory_size_mib"] = memory * 1024
 
         # Merging boot_type to boot_config
         cdict["boot_config"] = boot_config
@@ -99,6 +125,8 @@ class AhvVmResourcesType(EntityType):
 
     @classmethod
     def decompile(mcls, cdict, context=[], prefix=""):
+        validate_ahv_macro_fields(cdict, "AhvVmResources", flow="decompile")
+
         # Check for serial ports
         serial_port_list = cdict.pop("serial_port_list", [])
         serial_port_dict = {}
@@ -145,9 +173,18 @@ class AhvVmType(ProviderSpecType):
 
     def compile(cls):
         cdict = super().compile()
+
+        validate_ahv_macro_fields(cdict, "AhvVm")
+
         vpc_name, network_type = None, None
 
         for nic in cdict["resources"].nics:
+            # A whole-NIC JSON variable macro (e.g. "@@{nic}@@") is a plain string.
+            # It has no .vpc_reference or .subnet_reference attributes; the server
+            # resolves the full NIC object at runtime, so skip network-type validation.
+            if has_macro(nic):
+                continue
+
             if nic.vpc_reference:
                 if not network_type:
                     network_type = "OVERLAY"

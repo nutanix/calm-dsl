@@ -1,9 +1,10 @@
+{% macro dsl_val(v) %}{% if v is string and "@@{" in v %}"{{v}}"{% else %}{{v}}{% endif %}{% endmacro %}
 {% macro ahv_vm_resources(obj) %}
 class {{obj.name}}(AhvVmResources):
 
-    memory = {{obj.memory}}
-    vCPUs = {{obj.vCPUs}}
-    cores_per_vCPU = {{obj.cores_per_vCPU}}
+    memory = {{dsl_val(obj.memory)|trim}}
+    vCPUs = {{dsl_val(obj.vCPUs)|trim}}
+    cores_per_vCPU = {{dsl_val(obj.cores_per_vCPU)|trim}}
     {% if obj.disks %}disks = [{{obj.disks}}]{% endif %}
     {% if obj.nics %}nics = [{{obj.nics}}]{% endif %}
     {% if obj.gpus %}gpus = [{{obj.gpus}}]{% endif %}

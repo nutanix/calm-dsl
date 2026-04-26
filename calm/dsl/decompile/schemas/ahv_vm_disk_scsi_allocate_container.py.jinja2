@@ -1,5 +1,6 @@
+{%- macro dsl_val(v) -%}{% if v is string and "@@{" in v %}"{{v}}"{% else %}{{v}}{% endif %}{%- endmacro -%}
 {%- macro ahv_vm_disk_scsi_allocate_storage(obj) -%}
-AhvVmDisk.Disk.Scsi.allocateOnStorageContainer({{obj.size}})
+AhvVmDisk.Disk.Scsi.allocateOnStorageContainer({{ dsl_val(obj.size) }})
 {% endmacro %}
 
 {{ ahv_vm_disk_scsi_allocate_storage(obj) }}

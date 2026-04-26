@@ -157,7 +157,7 @@ def get_vmware_account_from_datacenter(datacenter="Strong-DC"):
 
 
 def is_macro(var):
-    """returns true if given var is macro"""
+    """returns true if given var is macro (legacy shim — use macro_helper.is_macro)"""
     if "@@{" in var:
         return True
     return False

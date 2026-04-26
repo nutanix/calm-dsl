@@ -116,7 +116,7 @@ title: AHV Disk
 type: object
 properties:
   data_source_reference:
-    type: [object, "null"]
+    type: [object, "null", string]
     properties:
       name:
         type: string
@@ -146,7 +146,7 @@ properties:
           type:
             type: string
   disk_size_mib:
-    type: integer
+    type: [integer, string]
     default: 0
   volume_group_reference:
     type: [object, "null"]
@@ -411,18 +411,19 @@ properties:
   nic_list:
     type: array
     items:
-      {{ ahvNIC() | indent(6) }}
+      anyOf:
+        - {{ ahvNIC() | indent(10) }}
+        - type: string
   num_vcpus_per_socket:
-    type: integer
+    type: [integer, string]
   num_sockets:
-    type: integer
+    type: [integer, string]
   memory_size_mib:
-    type: integer
+    type: [integer, string]
   cluster_uuid:
     type: string
   power_state:
     type: string
-    enum: [ON, OFF]
     default: ON
   gpu_list:
     type: array
@@ -480,7 +481,7 @@ properties:
   type:
     type: string
   cluster_reference:
-    type: [object, "null"]
+    type: [object, "null", string]
     properties:
       uuid:
         type: string

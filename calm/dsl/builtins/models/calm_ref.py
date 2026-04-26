@@ -62,6 +62,22 @@ class CalmRefType(EntityType):
     def decompile(mcls, cdict, context=[], prefix=""):
         """return the decompiled class"""
 
+        # Non-dict values (macro strings like @@{x}@@ or bare UUID strings that
+        # the server sometimes returns for reference lists) cannot be structurally
+        # decompiled.  Return them as-is; pre_decompile() calls cdict.get() which
+        # would raise AttributeError on any string input.
+        if not isinstance(cdict, dict):
+            from .macro_helper import is_macro
+
+            if is_macro(cdict):
+                LOG.debug(f"[CalmRef.decompile] Macro reference {cdict!r} kept as-is")
+            else:
+                LOG.debug(
+                    f"[CalmRef.decompile] Non-dict value {cdict!r} "
+                    f"(type={type(cdict).__name__}) kept as-is"
+                )
+            return cdict
+
         cdict = mcls.pre_decompile(cdict, context=context, prefix=prefix)
         cls_mapping = Ref.get_cls_kind_mapping()
         ref_cls_kind = CACHE.API_ENTITY_KIND_MAP.get(cdict["kind"], cdict["kind"])

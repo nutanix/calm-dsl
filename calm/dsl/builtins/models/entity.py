@@ -13,6 +13,7 @@ from calm.dsl.tools import StrictDraft7Validator
 from calm.dsl.log import get_logging_handle
 from .schema import get_schema_details
 from .utils import get_valid_identifier
+from .macro_helper import has_macro as _has_macro, is_macro as _is_macro
 from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
 
 LOG = get_logging_handle(__name__)
@@ -539,20 +540,98 @@ class EntityType(EntityTypeBase):
                 if is_array:
                     new_value = []
                     for val in v:
-                        new_value.append(
-                            entity_type.decompile(
-                                val, context=cur_context, prefix=prefix
+                        if _is_macro(val):
+                            # Whole macro string (@@{...}@@) — opaque at DSL level;
+                            # server resolves it at runtime.
+                            LOG.info(
+                                "[decompile] Field '{}' : keeping macro item as-is: {!r}".format(
+                                    k, val
+                                )
+                            )
+                            new_value.append(val)
+                        elif isinstance(val, str):
+                            # Non-macro string (e.g. bare UUID returned by the server for
+                            # reference lists).  pre_decompile() calls .get() which would
+                            # crash on a string — keep the raw value instead.
+                            LOG.info(
+                                "[decompile] Field '{}' : non-macro string item {!r} - "
+                                "skipping structural decompile, keeping raw value".format(
+                                    k, val
+                                )
+                            )
+                            try:
+                                new_value.append(
+                                    entity_type.decompile(
+                                        val, context=cur_context, prefix=prefix
+                                    )
+                                )
+                            except Exception as exc:
+                                LOG.info(
+                                    "[decompile] Field '{}' : decompile failed for "
+                                    "string item {!r} ({}) - kept raw".format(
+                                        k, val, exc
+                                    )
+                                )
+                                new_value.append(val)
+                        else:
+                            # Normal dict / object — let exceptions propagate so
+                            # legitimate decompile failures are not silently swallowed.
+                            LOG.info(
+                                "[decompile] Field '{}' : decompiling entity item "
+                                "(type={})".format(k, type(val).__name__)
+                            )
+                            new_value.append(
+                                entity_type.decompile(
+                                    val, context=cur_context, prefix=prefix
+                                )
+                            )
+                else:
+                    if _is_macro(v):
+                        LOG.info(
+                            "[decompile] Field '{}' : keeping macro value as-is: {!r}".format(
+                                k, v
                             )
                         )
-                else:
-                    new_value = entity_type.decompile(
-                        v, context=cur_context, prefix=prefix
-                    )
+                        new_value = v
+                    elif isinstance(v, str):
+                        # Non-macro string scalar — same guard as the array case.
+                        LOG.info(
+                            "[decompile] Field '{}' : non-macro string {!r} - "
+                            "skipping structural decompile".format(k, v)
+                        )
+                        try:
+                            new_value = entity_type.decompile(
+                                v, context=cur_context, prefix=prefix
+                            )
+                        except Exception as exc:
+                            LOG.info(
+                                "[decompile] Field '{}' : decompile failed for "
+                                "string {!r} ({}) - kept raw".format(k, v, exc)
+                            )
+                            new_value = v
+                    else:
+                        # Normal dict / object — propagate exceptions.
+                        new_value = entity_type.decompile(
+                            v, context=cur_context, prefix=prefix
+                        )
 
                 user_attrs[k] = new_value
 
-            # validate the new data
-            validator.validate(user_attrs[k], is_array)
+            # Macro strings — skip type validation; server resolves at runtime.
+            # Non-macro type mismatches (e.g. UUID string in a CalmRef field)
+            # are logged and the field is dropped from attrs so class construction
+            # does not re-trigger the same validation failure.
+            if not _has_macro(user_attrs[k]):
+                try:
+                    validator.validate(user_attrs[k], is_array)
+                except Exception as exc:
+                    LOG.info(
+                        "[decompile] Field '{}' : type validation mismatch "
+                        "(value={!r}, error={}) - field excluded from decompiled class".format(
+                            k, user_attrs[k], exc
+                        )
+                    )
+                    del user_attrs[k]
 
         # Merging dsl_attrs("__name__", "__doc__" etc.) and user_attrs
         attrs.update(user_attrs)
