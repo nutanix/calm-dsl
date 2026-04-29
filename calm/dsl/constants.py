@@ -512,7 +512,7 @@ class CONFIG_TYPE:
             CLONE = "CLONE"
             REVERT = "REVERT"
 
-        RESTORE_TYPE_MIN_VERSION = "4.5.0"
+        RESTORE_TYPE_MIN_VERSION = "4.4.0"
 
     CONFIG_TYPE_MAP = {
         "AHV_VM_snapshot": SNAPSHOT.AHV,
