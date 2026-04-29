@@ -10,7 +10,7 @@ resources:
       device_name: "/dev/sda1"
       size_gb: 10
       volume_type: GP2
-  image_id: ami-0ccec2041ac92b449
+  image_id: ami-07856cbc1157212ec
   instance_type: m3.medium
   key_name: calm-blueprints
   region: us-east-1

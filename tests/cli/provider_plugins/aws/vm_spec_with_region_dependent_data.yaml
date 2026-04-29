@@ -46,7 +46,7 @@ cli_assertions:
 spec_assertions:
 - "us-east-1"  # Check for region name
 - "us-east-1a"  # Check for Availability Zone
-- "ami-0ccec2041ac92b449" # Check for Machine Image ID
+- "ami-07856cbc1157212ec" # Check for Machine Image ID
 - "aws-elasticbeanstalk-ec2-role"  # Check for AM Role
 - "sg-184ead62"  # Check for Security Group
 - "subnet-c599a5ef"  # Check for Subnet

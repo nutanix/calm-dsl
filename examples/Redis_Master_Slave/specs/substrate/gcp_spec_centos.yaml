@@ -12,7 +12,7 @@ resources:
     initializeParams:
       diskSizeGb: 10
       diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-east1-b/diskTypes/pd-standard
-      sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7
+      sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/dnd-rocky89-devops
   guestCustomization: {}
   labels: []
   machineType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-east1-b/machineTypes/n1-highcpu-16

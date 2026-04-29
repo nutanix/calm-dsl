@@ -17,7 +17,7 @@ resources:
       type: ''
       volume_type: GP2
     type: ''
-  image_id: ami-0ccec2041ac92b449
+  image_id: ami-07856cbc1157212ec
   instance_initiated_shutdown_behavior: TERMINATE
   instance_profile_name: aws-elasticbeanstalk-ec2-role
   instance_type: t2.small

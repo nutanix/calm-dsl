@@ -28,7 +28,7 @@ class PROVIDER:
 
     class AWS:
         SECGROUPID = "sg-184ead62"
-        AMIID = "ami-0ccec2041ac92b449"
+        AMIID = "ami-07856cbc1157212ec"
         DEFAULT_KEYNAME = "calm-blueprints"
         DEFAULT_REGION = "us-east-1"
         DEFAULT_PROFILE = "aws-elasticbeanstalk-ec2-role"
@@ -36,7 +36,7 @@ class PROVIDER:
         DEFAULT_VPC = "vpc-ffd54d98"
 
     class GCP:
-        SOURCE_IMAGE = "https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7"
+        SOURCE_IMAGE = "https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/dnd-rocky89-devops"
         NETWORK_NAME = "https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/networks/default"
         SUBNETWORK_NAME = "https://www.googleapis.com/compute/v1/projects/nucalm-devopos/regions/us-central1/subnetworks/default"
         CLIENT_EMAIL = "108048128720-compute@developer.gserviceaccount.com"
