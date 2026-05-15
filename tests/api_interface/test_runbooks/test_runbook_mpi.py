@@ -314,6 +314,9 @@ class TestMarketplaceRunbook:
     @pytest.mark.runbook
     @pytest.mark.mpi
     @pytest.mark.regression
+    @pytest.mark.skip(
+        reason="ENG-853330 - To investigate Duplicate endpoint name failure on Master"
+    )
     def test_publish_unshare_unpublish_runbook_store(self):
         """
         test_marketplace_runbook_publish_market_manager
