@@ -19,6 +19,7 @@ All tests mock Version.get_version() to return "4.4.0" so the version
 guards inside AhvVmResourcesType.compile() do not abort.
 """
 
+import contextlib
 import json
 import pytest
 from unittest.mock import patch
@@ -34,9 +35,13 @@ from calm.dsl.constants import AHV_MACRO_FIELDS, MACRO_SUPPORT_AHV_SPEC_MIN_VERS
 
 AhvVmResources = ahv_vm_resources()
 
-# ---------------------------------------------------------------------------
-# Helper: compile a Resources class and return its JSON dict
-# ---------------------------------------------------------------------------
+# Compile-time isolation. Production AhvNic/AhvDisk compile() calls
+# Cache.get_entity_data + get_project_with_pc_account for any literal subnet
+# or image; both miss on a clean dev/CI worker and exit. The helpers below
+# mock those two calls so tests stay self-contained.
+MOCK_PROJECT = {"name": "test-project"}
+MOCK_PROJECT_WHITELIST = {"acct-uuid": {"subnet_uuids": []}}
+
 
 _VERSION_PATCH = patch(
     "calm.dsl.builtins.models.ahv_vm.Version.get_version",
@@ -44,15 +49,57 @@ _VERSION_PATCH = patch(
 )
 
 
+def _mock_cache_entity(entity_type=None, name=None, **_kwargs):
+    """Mock Cache.get_entity_data: return a record whose uuid == requested name."""
+    mock_name = name or "mock-entity"
+    return {
+        "uuid": mock_name,  # tests assert nic["subnet_reference"]["uuid"] == requested name
+        "name": mock_name,
+        "vpc_name": "",
+        "vpc_uuid": "",
+        "cluster_name": "",
+    }
+
+
+def _mock_project_pc_account():
+    """Mock common_helper.get_project_with_pc_account: return stub project + whitelist."""
+    return MOCK_PROJECT, MOCK_PROJECT_WHITELIST
+
+
+@contextlib.contextmanager
+def _dsl_compile_env():
+    """Bundled patches for compiling AHV resources/VMs in unit-test isolation."""
+    with contextlib.ExitStack() as stack:
+        stack.enter_context(_VERSION_PATCH)
+        for module in (
+            "calm.dsl.builtins.models.ahv_vm_nic",
+            "calm.dsl.builtins.models.ahv_vm_disk",
+        ):
+            stack.enter_context(
+                patch(
+                    "{}.Cache.get_entity_data".format(module),
+                    side_effect=_mock_cache_entity,
+                )
+            )
+            stack.enter_context(
+                patch(
+                    "{}.common_helper.get_project_with_pc_account".format(module),
+                    side_effect=_mock_project_pc_account,
+                )
+            )
+        yield
+
+
 def _compile(resources_cls):
     """Return the compiled dict for the given AhvVmResources subclass."""
-    with _VERSION_PATCH:
+    with _dsl_compile_env():
         return json.loads(resources_cls.json_dumps())
 
 
-# ===========================================================================
-# 1. macro_helper — unit tests for is_macro / has_macro
-# ===========================================================================
+def _compile_vm(vm_cls):
+    """Return the compiled dict for the given AhvVm subclass."""
+    with _dsl_compile_env():
+        return json.loads(vm_cls.json_dumps())
 
 
 class TestMacroHelper:
@@ -90,11 +137,6 @@ class TestMacroHelper:
     def test_has_macro_non_string_scalar(self):
         assert has_macro(42) is False
         assert has_macro(None) is False
-
-
-# ===========================================================================
-# 1b. validate_ahv_macro_fields — allowlist enforcement
-# ===========================================================================
 
 
 class TestValidateAhvMacroFieldsAllowlist:
@@ -152,11 +194,6 @@ class TestValidateAhvMacroFieldsAllowlist:
         validate_ahv_macro_fields({"anything": "@@{x}@@"}, "NotAnAhvEntity")
 
 
-# ===========================================================================
-# 2. Normal (literal) profile — sanity baseline
-# ===========================================================================
-
-
 class TestNormalProfileCompile:
     """Baseline: all literal values compile to correct numeric/string output."""
 
@@ -175,11 +212,11 @@ class TestNormalProfileCompile:
 
     def test_vcpus_literal(self):
         cdict = _compile(self._Resources)
-        assert cdict["num_vcpus_per_socket"] == 2
+        assert cdict["num_sockets"] == 2
 
     def test_cores_literal(self):
         cdict = _compile(self._Resources)
-        assert cdict["num_sockets"] == 1
+        assert cdict["num_vcpus_per_socket"] == 1
 
     def test_power_state_literal(self):
         cdict = _compile(self._Resources)
@@ -194,11 +231,6 @@ class TestNormalProfileCompile:
         cdict = _compile(self._Resources)
         nic = cdict["nic_list"][0]
         assert nic["subnet_reference"]["uuid"] == "subnet-uuid-1234"
-
-
-# ===========================================================================
-# 3. Scalar macro fields (INT and string)
-# ===========================================================================
 
 
 class TestScalarMacroFields:
@@ -226,11 +258,11 @@ class TestScalarMacroFields:
 
     def test_vcpus_macro_preserved(self):
         cdict = _compile(self._Resources)
-        assert cdict["num_vcpus_per_socket"] == "@@{vcpus}@@"
+        assert cdict["num_sockets"] == "@@{vcpus}@@"
 
     def test_cores_macro_preserved(self):
         cdict = _compile(self._Resources)
-        assert cdict["num_sockets"] == "@@{cores}@@"
+        assert cdict["num_vcpus_per_socket"] == "@@{cores}@@"
 
     def test_power_state_macro_preserved(self):
         cdict = _compile(self._Resources)
@@ -239,7 +271,7 @@ class TestScalarMacroFields:
     def test_disk_image_name_macro_preserved(self):
         cdict = _compile(self._Resources)
         disk = cdict["disk_list"][0]
-        assert disk["data_source_reference"]["name"] == "@@{img_name}@@"
+        assert disk["data_source_reference"] == "@@{img_name}@@"
 
     def test_disk_size_macro_preserved(self):
         cdict = _compile(self._Resources)
@@ -250,11 +282,6 @@ class TestScalarMacroFields:
         cdict = _compile(self._Resources)
         nic = cdict["nic_list"][0]
         assert nic["subnet_reference"]["uuid"] == "@@{subnet_uuid}@@"
-
-
-# ===========================================================================
-# 4. JSON-object macro fields (whole disk / NIC / cluster as macro string)
-# ===========================================================================
 
 
 class TestJsonObjectMacroFields:
@@ -270,9 +297,7 @@ class TestJsonObjectMacroFields:
         cores_per_vCPU = 1
         power_state = "ON"
         boot_type = "LEGACY"
-        # Whole disk object replaced by macro
         disks = ["@@{disk}@@"]
-        # Whole NIC object replaced by macro
         nics = ["@@{nic}@@"]
 
     def test_disk_macro_string_in_disk_list(self):
@@ -294,55 +319,59 @@ class TestJsonObjectMacroFields:
         assert len(cdict["nic_list"]) == 1
 
 
+# Hoisted to module scope: nested class bodies do NOT see siblings on the
+# enclosing class, so `class _Vm(AhvVm):` below could not resolve a sibling
+# `_VmResources` defined inside TestClusterMacroField. Module globals work.
+class _ClusterMacroVmResources(AhvVmResources):
+    memory = 2
+    vCPUs = 1
+    cores_per_vCPU = 1
+    boot_type = "LEGACY"
+    disks = [AhvVmDisk.Disk.Scsi.cloneFromImageService("centos7")]
+    nics = [AhvVmNic.NormalNic.ingress("subnet-uuid-1234")]
+
+
 class TestClusterMacroField:
     """Cluster reference as a bare macro string on AhvVm."""
 
-    class _VmResources(AhvVmResources):
-        memory = 2
-        vCPUs = 1
-        cores_per_vCPU = 1
-        boot_type = "LEGACY"
-        disks = [AhvVmDisk.Disk.Scsi.cloneFromImageService("centos7")]
-        nics = [AhvVmNic.NormalNic.ingress("subnet-uuid-1234")]
+    _VmResources = _ClusterMacroVmResources  # back-compat alias for self._VmResources
 
     class _Vm(AhvVm):
         name = "vm-test"
-        resources = _VmResources
+        resources = _ClusterMacroVmResources
         cluster = "@@{cluster}@@"
 
     def test_cluster_macro_in_compiled_vm(self):
-        with _VERSION_PATCH:
-            cdict = json.loads(self._Vm.json_dumps())
+        cdict = _compile_vm(self._Vm)
         assert cdict["cluster_reference"] == "@@{cluster}@@"
 
 
-# ===========================================================================
-# 5. AllMacro — every macro-capable field at once
-# ===========================================================================
+# Hoisted to module scope (same class-scope reason as _ClusterMacroVmResources).
+class _AllMacroResources(AhvVmResources):
+    memory = "@@{memory_mib}@@"
+    vCPUs = "@@{vcpus}@@"
+    cores_per_vCPU = "@@{cores}@@"
+    power_state = "@@{power_state}@@"
+    boot_type = "LEGACY"
+    disks = ["@@{disk}@@"]
+    nics = ["@@{nic}@@"]
 
 
 class TestAllMacroFields:
     """All macro-capable fields set simultaneously; each must survive compile."""
 
-    class _Resources(AhvVmResources):
-        memory = "@@{memory_mib}@@"
-        vCPUs = "@@{vcpus}@@"
-        cores_per_vCPU = "@@{cores}@@"
-        power_state = "@@{power_state}@@"
-        boot_type = "LEGACY"
-        disks = ["@@{disk}@@"]
-        nics = ["@@{nic}@@"]
+    _Resources = _AllMacroResources
 
     class _Vm(AhvVm):
         name = "@@{vm_name}@@"
-        resources = _Resources
+        resources = _AllMacroResources
         cluster = "@@{cluster}@@"
 
     def test_all_scalar_macros_preserved(self):
         cdict = _compile(self._Resources)
         assert cdict["memory_size_mib"] == "@@{memory_mib}@@"
-        assert cdict["num_vcpus_per_socket"] == "@@{vcpus}@@"
-        assert cdict["num_sockets"] == "@@{cores}@@"
+        assert cdict["num_sockets"] == "@@{vcpus}@@"
+        assert cdict["num_vcpus_per_socket"] == "@@{cores}@@"
         assert cdict["power_state"] == "@@{power_state}@@"
 
     def test_disk_and_nic_macros_preserved(self):
@@ -351,15 +380,9 @@ class TestAllMacroFields:
         assert cdict["nic_list"][0] == "@@{nic}@@"
 
     def test_vm_name_and_cluster_macros_preserved(self):
-        with _VERSION_PATCH:
-            cdict = json.loads(self._Vm.json_dumps())
+        cdict = _compile_vm(self._Vm)
         assert cdict["name"] == "@@{vm_name}@@"
         assert cdict["cluster_reference"] == "@@{cluster}@@"
-
-
-# ===========================================================================
-# 6. Version guard — macro in memory on Calm < 4.4.0 must exit
-# ===========================================================================
 
 
 class TestVersionGuard:
@@ -380,11 +403,6 @@ class TestVersionGuard:
         ):
             with pytest.raises(SystemExit):
                 self._Resources.json_dumps()
-
-
-# ===========================================================================
-# 7. RunbookVariable — DICT guard
-# ===========================================================================
 
 
 class TestRunbookVariableDictGuard:
