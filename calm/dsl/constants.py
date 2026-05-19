@@ -590,6 +590,7 @@ class RESOURCE:
         "nutanix/v1/clusters",
         "nutanix/v1/vpcs",
         "nutanix/v1/groups",
+        "nutanix/v1/categories",
         # AWS api's
         "aws/machine_types",
         "aws/volume_types",

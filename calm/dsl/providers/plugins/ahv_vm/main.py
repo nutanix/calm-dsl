@@ -19,6 +19,7 @@ from .constants import AHV as AhvConstants
 from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
 
+
 LOG = get_logging_handle(__name__)
 Provider = get_provider_interface()
 
@@ -280,7 +281,9 @@ class AhvVmProvider(Provider):
                 )
                 if choice == "y":
                     categories = Obj.categories(
-                        host_pc=is_host_pc, account_uuid=account_uuid
+                        host_pc=is_host_pc,
+                        account_uuid=account_uuid,
+                        project_uuid=project_id,
                     )
                     click.echo("Choose from given categories:")
                     for ind, group in enumerate(categories):
@@ -990,6 +993,8 @@ class AhvNew(AhvBase):
     CLUSTERS = "nutanix/v1/clusters"
     VPCS = "nutanix/v1/vpcs"
     GROUPS = "nutanix/v1/groups"
+    CATEGORIES = "nutanix/v1/categories"
+    FILTER_EXCLUSIONS = "key!=CalmApplication;key!=CalmDeployment;key!=CalmService;key!=CalmPackage;key!=CalmProject;key!=CalmUser;key!=CalmVmUniqueIdentifier;key!=CalmClusterUuid"
     CATEGORIES_PAYLOAD = {
         "entity_type": "category",
         "filter_criteria": "name!=CalmApplication;name!=CalmDeployment;name!=CalmService;name!=CalmPackage;name!=CalmProject;name!=CalmUser;name!=CalmVmUniqueIdentifier;name!=CalmClusterUuid",
@@ -1050,7 +1055,50 @@ class AhvNew(AhvBase):
 
         return {"entities": res}
 
+    def fetch_categories_from_meta_api(self, *args, **kwargs):
+        project_uuid = kwargs.get("project_uuid", None)
+
+        Obj = get_resource_api(self.CATEGORIES, self.connection)
+        account_uuid = kwargs.get("account_uuid", None)
+        filter_query = ""
+
+        if account_uuid:
+            filter_query = filter_query + ";account_uuid=={}".format(account_uuid)
+
+        if project_uuid:
+            filter_query = filter_query + ";project_uuid=={}".format(project_uuid)
+
+        filter_query = filter_query + ";{}".format(self.FILTER_EXCLUSIONS)
+
+        if filter_query.startswith(";"):
+            filter_query = filter_query[1:]
+
+        params = {"filter": filter_query}
+        res, err = Obj.list(params)
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        categories = []
+
+        for entity in res.get("entities", []):
+            key = entity.get("name", "")
+            value = entity.get("value", "")
+            if not key or not value:
+                continue
+            categories.append({"key": key, "value": value})
+
+        return categories
+
     def categories(self, *args, **kwargs):
+
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+
+        if LV(calm_version) >= LV("4.4.0"):
+            return self.fetch_categories_from_meta_api(*args, **kwargs)
 
         client = get_api_client()
         payload = copy.deepcopy(self.CATEGORIES_PAYLOAD)
@@ -1326,7 +1374,9 @@ def create_spec(client):
     )
     if choice[0] == "y":
         # TODO Remove dependecy for host_pc after bug CALM-17213 is resolved
-        categories = AhvObj.categories(host_pc=is_host_pc, account_uuid=account_uuid)
+        categories = AhvObj.categories(
+            host_pc=is_host_pc, account_uuid=account_uuid, project_uuid=project_id
+        )
         if not categories:
             click.echo("\n{}\n".format(highlight_text("No Category present")))
 
