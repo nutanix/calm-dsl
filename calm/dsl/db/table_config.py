@@ -325,7 +325,7 @@ class AccountCache(CacheTableBase):
         if stratos_config.get("stratos_status", False):
             payload["filter"] += ";child_account==true"
 
-        res, err = client.account.list(payload)
+        res, err = client.account.list_all(base_params=payload, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -611,7 +611,7 @@ class ProviderCache(CacheTableBase):
         elif stratos_status:
             payload["filter"] = "type==SYS_CUSTOM|CUSTOM|CREDENTIAL|SYS_CREDENTIAL"
 
-        res, err = client.provider.list(payload)
+        res, err = client.provider.list_all(base_params=payload, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -798,7 +798,9 @@ class ResourceTypeCache(CacheTableBase):
                 "filter"
             ] = "provider_type==SYS_CUSTOM|CUSTOM|CREDENTIAL|SYS_CREDENTIAL"
 
-        res, err = client.resource_types.list(payload)
+        res, err = client.resource_types.list_all(
+            base_params=payload, ignore_error=True
+        )
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -1106,7 +1108,12 @@ class AhvVpcsCache(CacheTableBase):
         AhvObj = AhvVmProvider.get_api_obj()
 
         # Get all Calm vpcs and Tunnels
-        calm_vpc_entities = client.network_group.list_all()
+        res, err = client.network_group.list_all()
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        calm_vpc_entities = res.get("entities", [])
         for pc_acc_name, pc_acc_uuid in account_name_uuid_map.items():
             try:
                 res = AhvObj.vpcs(account_uuid=pc_acc_uuid)
@@ -1700,11 +1707,12 @@ class ProjectCache(CacheTableBase):
                 ntnx_pc_account_vpc_map[acct_uuid].append(row["metadata"]["uuid"])
 
         # Getting projects data
-        res_entities, err = client.project.list_all(ignore_error=True)
+        res, err = client.project.list_all(ignore_error=True)
         if err:
             LOG.exception(err)
 
-        for entity in res_entities:
+        res = res.json()
+        for entity in res.get("entities", []):
             # populating a map to lookup the account to which a subnet belongs
             whitelisted_subnets = dict()
             whitelisted_clusters = dict()
@@ -2076,8 +2084,12 @@ class EnvironmentCache(CacheTableBase):
         # update by latest data
         client = get_api_client()
 
-        env_list = client.environment.list_all()
-        for entity in env_list:
+        res, err = client.environment.list_all()
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res.get("entities", []):
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
             project_uuid = (
@@ -3092,9 +3104,12 @@ class AppProtectionPolicyCache(CacheTableBase):
         Obj = get_resource_api(
             "app_protection_policies", client.connection, calm_api=True
         )
-        entities = Obj.list_all()
+        res, err = Obj.list_all()
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        for entity in entities:
+        res = res.json()
+        for entity in res.get("entities", []):
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
             project_reference = entity["metadata"].get("project_reference", {})
@@ -3593,7 +3608,7 @@ class TunnelCache(CacheTableBase):
                 "filter": "(state!=DELETED);type!=network_group",
             }
 
-            res, err = client.tunnel.list(payload)
+            res, err = client.tunnel.list_all(base_params=payload, ignore_error=True)
             if err:
                 raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -3817,7 +3832,9 @@ class NDB_DatabaseCache(CacheTableBase):
             "filter": "state==VERIFIED;type==NDB;child_account==true",
         }
 
-        res, err = client.account.list(account_payload)
+        res, err = client.account.list_all(
+            base_params=account_payload, ignore_error=True
+        )
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -4002,7 +4019,9 @@ class NDB_ProfileCache(CacheTableBase):
             "filter": "state==VERIFIED;type==NDB;child_account==true",
         }
 
-        res, err = client.account.list(account_payload)
+        res, err = client.account.list_all(
+            base_params=account_payload, ignore_error=True
+        )
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -4216,7 +4235,9 @@ class NDB_SLACache(CacheTableBase):
             "filter": "state==VERIFIED;type==NDB;child_account==true",
         }
 
-        res, err = client.account.list(account_payload)
+        res, err = client.account.list_all(
+            base_params=account_payload, ignore_error=True
+        )
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -4395,7 +4416,9 @@ class NDB_ClusterCache(CacheTableBase):
             "filter": "state==VERIFIED;type==NDB;child_account==true",
         }
 
-        res, err = client.account.list(account_payload)
+        res, err = client.account.list_all(
+            base_params=account_payload, ignore_error=True
+        )
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -4572,7 +4595,9 @@ class NDB_TimeMachineCache(CacheTableBase):
             "filter": "state==VERIFIED;type==NDB;child_account==true",
         }
 
-        res, err = client.account.list(account_payload)
+        res, err = client.account.list_all(
+            base_params=account_payload, ignore_error=True
+        )
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -4762,7 +4787,9 @@ class NDB_SnapshotCache(CacheTableBase):
             "filter": "state==VERIFIED;type==NDB;child_account==true",
         }
 
-        res, err = client.account.list(account_payload)
+        res, err = client.account.list_all(
+            base_params=account_payload, ignore_error=True
+        )
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -4947,7 +4974,9 @@ class NDB_TagCache(CacheTableBase):
             "filter": "state==VERIFIED;type==NDB;child_account==true",
         }
 
-        res, err = client.account.list(account_payload)
+        res, err = client.account.list_all(
+            base_params=account_payload, ignore_error=True
+        )
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -5127,7 +5156,9 @@ class GlobalVariableCache(CacheTableBase):
         client = get_api_client()
         payload = {"length": 250, "filter": ""}
 
-        res, err = client.global_variable.list(payload)
+        res, err = client.global_variable.list_all(
+            base_params=payload, ignore_error=True
+        )
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 

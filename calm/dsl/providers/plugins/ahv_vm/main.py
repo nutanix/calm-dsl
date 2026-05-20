@@ -1028,7 +1028,7 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
-        res, err = Obj.list(params, ignore_error=True)
+        res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -1053,7 +1053,8 @@ class AhvNew(AhvBase):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        return {"entities": res}
+        res = res.json()
+        return res
 
     def fetch_categories_from_meta_api(self, *args, **kwargs):
         project_uuid = kwargs.get("project_uuid", None)
@@ -1146,7 +1147,7 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
-        res, err = Obj.list(params, ignore_error=True)
+        res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -1170,7 +1171,7 @@ class AhvNew(AhvBase):
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
         LOG.debug(params)
-        res, err = Obj.list(params, ignore_error=True)
+        res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
             if ignore_failures:
                 LOG.warning("Failed to query VPCs due to: {}, ignoring".format(err))
@@ -1233,7 +1234,8 @@ class Ahv(AhvBase):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        return {"entities": res}
+        res = res.json()
+        return res
 
     def categories(self, *args, **kwargs):
         Obj = get_resource_api(self.GROUPS, self.connection)
