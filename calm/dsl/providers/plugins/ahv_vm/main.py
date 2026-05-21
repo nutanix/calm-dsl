@@ -1028,6 +1028,9 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
+        # TODO: Remove this when the ENG-915373 is fixed
+        params["sort_attribute"] = ""
+
         res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -1049,6 +1052,10 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
+
+        # TODO: Remove this when the ENG-915373 is fixed
+        params["sort_attribute"] = ""
+
         res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -1147,6 +1154,10 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
+
+        # TODO: Remove this when the ENG-915373 is fixed
+        params["sort_attribute"] = ""
+
         res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -1170,6 +1181,10 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
+
+        # TODO: Remove this when the ENG-915373 is fixed
+        params["sort_attribute"] = ""
+
         LOG.debug(params)
         res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
