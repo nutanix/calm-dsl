@@ -1028,8 +1028,13 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
+
         # TODO: Remove this when the ENG-915373 is fixed
-        params["sort_attribute"] = ""
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+        if LV(calm_version) >= LV("4.4.0"):
+            params["sort_attribute"] = ""
 
         res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
@@ -1054,7 +1059,11 @@ class AhvNew(AhvBase):
         params = {"length": limit, "offset": offset, "filter": filter_query}
 
         # TODO: Remove this when the ENG-915373 is fixed
-        params["sort_attribute"] = ""
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+        if LV(calm_version) >= LV("4.4.0"):
+            params["sort_attribute"] = ""
 
         res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
@@ -1156,7 +1165,11 @@ class AhvNew(AhvBase):
         params = {"length": limit, "offset": offset, "filter": filter_query}
 
         # TODO: Remove this when the ENG-915373 is fixed
-        params["sort_attribute"] = ""
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+        if LV(calm_version) >= LV("4.4.0"):
+            params["sort_attribute"] = ""
 
         res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
@@ -1183,7 +1196,11 @@ class AhvNew(AhvBase):
         params = {"length": limit, "offset": offset, "filter": filter_query}
 
         # TODO: Remove this when the ENG-915373 is fixed
-        params["sort_attribute"] = ""
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+        if LV(calm_version) >= LV("4.4.0"):
+            params["sort_attribute"] = ""
 
         LOG.debug(params)
         res, err = Obj.list_all(base_params=params, ignore_error=True)
