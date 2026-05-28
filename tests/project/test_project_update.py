@@ -51,66 +51,53 @@ class TestProjectUpdate:
         """Method to create a project for testing the update project"""
 
         self.project_name = "test_proj" + str(uuid.uuid4())[-10:]
+
         runner = CliRunner()
-        LOG.info("Compiling Project file at {}".format(CREATE_PROJECT_FILE_LOCATION))
         result = runner.invoke(
             cli,
-            ["compile", "project", "--file={}".format(CREATE_PROJECT_FILE_LOCATION)],
+            [
+                "create",
+                "project",
+                "--file={}".format(CREATE_PROJECT_FILE_LOCATION),
+                "--name={}".format(self.project_name),
+                "--description='Test DSL Project to delete'",
+            ],
         )
-
         if result.exit_code:
-            pytest.fail("[{}] - {}".format(result.output, str(result.exception)))
-
-        self.project_payload = json.loads(result.output)
-        self.project_payload["spec"]["name"] = self.project_name
-        self.project_payload["metadata"]["name"] = self.project_name
-
-        client = get_api_client()
-
-        # Create API
-        LOG.info("Creating project {}".format(self.project_name))
-        res, err = client.project.create(self.project_payload)
-        self.project_uuid = res.json()["metadata"]["uuid"]
-        if err:
-            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
-        else:
-            res = res.json()
-
-            LOG.info("Polling on project creation task")
-            task_state = watch_project_task(
-                res["metadata"]["uuid"],
-                res["status"]["execution_context"]["task_uuid"],
-                poll_interval=4,
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
             )
-            if task_state in PROJECT_TASK.FAILURE_STATES:
-                pytest.fail("Project creation task went to {} state".format(task_state))
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Project creation from python file failed")
 
-            LOG.info("Success")
-            LOG.debug("Response: {}".format(res))
-            LOG.info("PROJECT NAME:{}".format(self.project_name))
+        LOG.info("Success")
+        LOG.info("PROJECT NAME:{}".format(self.project_name))
 
     def teardown_method(self):
         """Method to delete project after testing the update project"""
 
-        client = get_api_client()
-        res, err = client.project.delete(self.project_uuid)
-        if err:
-            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
-
-        else:
-            res = res.json()
-
-            LOG.info("Polling on project deletion task")
-            task_state = watch_project_task(
-                self.project_uuid,
-                res["status"]["execution_context"]["task_uuid"],
-                poll_interval=4,
+        runner = CliRunner()
+        result = runner.invoke(cli, ["delete", "project", self.project_name])
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
             )
-            if task_state in PROJECT_TASK.FAILURE_STATES:
-                pytest.fail("Project deletion task went to {} state".format(task_state))
-
-            LOG.info("Success")
-            LOG.debug("Response: {}".format(res))
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Project delete call failed")
 
     def update_test_data(self):
         """Helper to get updated users and groups"""

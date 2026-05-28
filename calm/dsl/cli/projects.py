@@ -311,17 +311,23 @@ def set_quota_at_project_level(client, quota, project_uuid):
             sys.exit(-1)
 
 
-def _sync_acps_for_roles(roles, project_name, project_uuid):
+def _sync_acps_for_roles(roles, project_name, project_uuid, append_only=False):
     """Syncs ACPs to match the roles defined in the project DSL.
 
     For each role in the DSL, ensures an ACP exists with the correct users/groups.
-    Existing ACPs for the same role are replaced; ACPs for roles not in the DSL
-    are left untouched.
+    By default, existing ACPs for the same role have their members replaced with
+    what the DSL declares. When ``append_only`` is True, DSL members are merged
+    into the existing ACP's user/group lists (deduplicated by uuid) so that
+    previously-assigned users/groups are preserved. ACPs for roles not in the
+    DSL are left untouched.
 
     Args:
         roles (dict): mapping of role_name -> list of user/group references
         project_name (str): name of the project
         project_uuid (str): uuid of the project
+        append_only (bool): if True, merge DSL members into existing ACPs
+            instead of replacing them. New ACPs are still created for roles
+            that have no matching existing ACP.
     """
     from .acps import construct_acp_payload
 
@@ -403,8 +409,35 @@ def _sync_acps_for_roles(roles, project_name, project_uuid):
                     g_uuid = g_uuid[0]
                 group_refs.append({"kind": "user_group", "name": g, "uuid": g_uuid})
 
-            _acp["acp"]["resources"]["user_reference_list"] = user_refs
-            _acp["acp"]["resources"]["user_group_reference_list"] = group_refs
+            if append_only:
+                # Preserve existing ACP members and merge in DSL members
+                # (deduped by uuid) so that previously-assigned users/groups
+                # are not wiped from the ACP.
+                existing_users = _acp["acp"]["resources"].get("user_reference_list", [])
+                existing_groups = _acp["acp"]["resources"].get(
+                    "user_group_reference_list", []
+                )
+                existing_user_uuids = {u["uuid"] for u in existing_users}
+                existing_group_uuids = {g["uuid"] for g in existing_groups}
+
+                merged_users = list(existing_users)
+                for u_ref in user_refs:
+                    if u_ref["uuid"] not in existing_user_uuids:
+                        merged_users.append(u_ref)
+                        existing_user_uuids.add(u_ref["uuid"])
+
+                merged_groups = list(existing_groups)
+                for g_ref in group_refs:
+                    if g_ref["uuid"] not in existing_group_uuids:
+                        merged_groups.append(g_ref)
+                        existing_group_uuids.add(g_ref["uuid"])
+
+                _acp["acp"]["resources"]["user_reference_list"] = merged_users
+                _acp["acp"]["resources"]["user_group_reference_list"] = merged_groups
+            else:
+                _acp["acp"]["resources"]["user_reference_list"] = user_refs
+                _acp["acp"]["resources"]["user_group_reference_list"] = group_refs
+
             _acp["operation"] = "UPDATE"
             handled_role_uuids.add(existing_role_uuid)
         else:
@@ -1120,7 +1153,9 @@ def update_project_from_dsl(
     if task_state not in PROJECT_TASK.FAILURE_STATES:
         roles = getattr(UserProject, "__roles__", None)
         if roles:
-            _sync_acps_for_roles(roles, project_name, project_uuid)
+            _sync_acps_for_roles(
+                roles, project_name, project_uuid, append_only=append_only
+            )
         elif acp_remove_user_list or acp_remove_group_list:
             LOG.info("Updating project acps")
             remove_users_from_project_acps(
