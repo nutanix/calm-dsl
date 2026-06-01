@@ -13,11 +13,14 @@ from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
 from calm.dsl.tools import StrictDraft7Validator
 from calm.dsl.log import get_logging_handle
-
+from calm.dsl.store.version import Version
 from .constants import AHV as AhvConstants
 
 from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
+from calm.dsl.builtins.models.helper.common import (
+    get_pc_account_uuid_using_pe_account_uuid,
+)
 
 
 LOG = get_logging_handle(__name__)
@@ -108,21 +111,28 @@ class AhvVmProvider(Provider):
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
-        for entity in res["entities"]:
-            entity_id = entity["metadata"]["uuid"]
-            if entity_id in reg_accounts:
-                account_uuid = entity_id
-                break
+
+        pe_account_uuid = (
+            substrate_spec.get("create_spec", {})
+            .get("resources", {})
+            .get("account_uuid", "")
+        )
+
+        # Find parent pc account uuid attached to this pe
+        account_uuid = get_pc_account_uuid_using_pe_account_uuid(pe_account_uuid)
+
+        calm_version = Version.get_version("Calm")
 
         # TODO Host PC dependency for categories call due to bug https://jira.nutanix.com/browse/CALM-17213
-        if account_uuid:
-            payload = {"length": 250, "filter": "_entity_id_=={}".format(account_uuid)}
-            res, err = client.account.list(payload)
+        # Host pc dependency is removed in Calm 4.4.0. As categories groups call is deprecated
+        # Keeping this check here for backward compatibility in version lesser than 4.4.0
+        if LV(calm_version) < LV("4.4.0") and account_uuid:
+            res, err = client.account.read(account_uuid)
             if err:
                 raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
             res = res.json()
-            provider_data = res["entities"][0]["status"]["resources"]["data"]
+            provider_data = res["status"]["resources"]["data"]
             is_host_pc = provider_data["host_pc"]
 
         # Getting the readiness probe details

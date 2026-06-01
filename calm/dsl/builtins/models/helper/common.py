@@ -234,6 +234,31 @@ def get_pe_account_using_pc_account_uuid_and_cluster_name(
     return cluster_cache_data.get("pe_account_uuid", "")
 
 
+def get_pc_account_uuid_using_pe_account_uuid(pe_account_uuid):
+    """
+    Returns pc account uuid using pe account uuid.
+    """
+    account_cache_data = Cache.get_entity_data_using_uuid(
+        entity_type=CACHE.ENTITY.ACCOUNT, uuid=pe_account_uuid
+    )
+    if not account_cache_data:
+        LOG.error(
+            "Account (uuid='{}') not found. Please update cache".format(pe_account_uuid)
+        )
+        sys.exit("Account {} not found".format(pe_account_uuid))
+
+    pc_account_uuid = account_cache_data.get("data", {}).get("pc_account_uuid", "")
+
+    if not pc_account_uuid:
+        LOG.error(
+            "PC account uuid not found for PE account (uuid='{}'). "
+            "Account may not be of type 'nutanix'".format(pe_account_uuid)
+        )
+        sys.exit("PC account uuid not found for PE account {}".format(pe_account_uuid))
+
+    return pc_account_uuid
+
+
 def get_network_group(name=None, tunnel_uuid=None):
 
     if not (name):
