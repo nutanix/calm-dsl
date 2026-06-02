@@ -54,10 +54,10 @@ spec_assertions:
 
 dependencies:
   # For changing indexes of resource in input as per the setup
-- [0 , projects/default]
+- [0 , projects/auto_ncm_default]
 - [5, accounts/primary_account/regions/us-east-1/index]
 - [9 , accounts/primary_account/regions/us-east-1/availability_zones/us-east-1a]
-- [11 , accounts/primary_account/regions/us-east-1/machine_images/DND_CENTOS_QA]
+- [11 , accounts/primary_account/regions/us-east-1/machine_images/DND_Rocky89_DevOps]
 - [13 , accounts/primary_account/regions/us-east-1/iam_roles/aws-elasticbeanstalk-ec2-role]
 - [15 , accounts/primary_account/regions/us-east-1/key_pairs/calm-blueprints]
 - [17 , accounts/primary_account/regions/us-east-1/vpcs/vpc-ffd54d98/index]

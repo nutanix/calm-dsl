@@ -20,5 +20,5 @@ spec_assertions:
 
 dependencies:
  # For changing indexes of resource in input as per the setup
-- [0, projects/default]
+- [0, projects/auto_ncm_default]
 - [9, volume_types/Provisioned IOPS SSD]

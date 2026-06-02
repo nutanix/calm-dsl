@@ -4,7 +4,7 @@ class AWS:
     PROJECTS = ["auto_ncm_default"]
     REGIONS = ["us-east-1"]
     AVAILABILITY_ZONES = ["us-east-1a"]
-    MACHINE_IMAGES = ["DND_CENTOS_QA"]
+    MACHINE_IMAGES = ["DND_Rocky89_DevOps"]
     IAM_ROLES = ["aws-elasticbeanstalk-ec2-role"]
     KEY_PAIRS = ["calm-blueprints"]
     VPC_IDS = ["vpc-ffd54d98"]
