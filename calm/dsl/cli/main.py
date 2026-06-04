@@ -92,7 +92,8 @@ def main(ctx, config_file, sync):
             old_host = nc_server_config.get("host", "")
             LOG.debug("Old NC host: {}".format(old_host))
         else:
-            old_host = Version.get_version_data("PC").get("pc_ip", "")
+            server_config = ContextObj.get_server_config()
+            old_host = server_config.get("pc_ip", "")
 
         if config_file:
             if not os.path.exists(config_file):
@@ -396,11 +397,13 @@ def get_server_status():
     LOG.info("Server URL: {}".format(client.connection.base_url))
     LOG.info("Calm Version: {}".format(calm_version))
 
-    res, err = client.version.get_pc_version()
-    if not err:
-        res = res.json()
-        pc_version = res["version"]
-        LOG.info("PC Version: {}".format(pc_version))
+    # Fetch PC version only for onprem setups
+    if not is_nc_enabled_by_config():
+        res, err = client.version.get_pc_version()
+        if not err:
+            res = res.json()
+            pc_version = res["version"]
+            LOG.info("PC Version: {}".format(pc_version))
 
 
 @main.group(cls=FeatureFlagGroup)
