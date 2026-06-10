@@ -12,13 +12,16 @@ from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
 from calm.dsl.log import get_logging_handle
 from calm.dsl.tools import get_module_from_file
-from calm.dsl.builtins import TaskType
+from calm.dsl.builtins import TaskType, Ref
+from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from .utils import (
     get_name_query,
     highlight_text,
     get_states_filter,
 )
 from .constants import TASKS
+from calm.dsl.store.cache import Cache
+from calm.dsl.constants import CACHE, DSL_CONFIG
 
 # from anytree import NodeMixin, RenderTree
 
@@ -243,6 +246,116 @@ def delete_task(task_names):
         LOG.info("Task Library item {} deleted".format(task_name))
 
 
+def share_task(task_name, projects):
+    """Share a Task Library item with one or more projects"""
+
+    client = get_api_client()
+
+    task = get_task(client, task_name)
+    task_uuid = task["metadata"]["uuid"]
+
+    res, err = client.task.read(task_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    task_data = res.json()
+
+    # Validate: owner project cannot be shared
+    owner_project_name = task_data["metadata"].get("project_reference", {}).get("name")
+    if owner_project_name and owner_project_name in projects:
+        LOG.error(
+            "Cannot share library entity with its owner project '{}'".format(
+                owner_project_name
+            )
+        )
+        sys.exit(
+            "Cannot share library entity with its owner project '{}'".format(
+                owner_project_name
+            )
+        )
+
+    # Strip server-managed fields
+    task_data.pop("status", None)
+    task_data["metadata"].pop("uuid", None)
+    task_data["metadata"].pop("last_update_time", None)
+    task_data["metadata"].pop("creation_time", None)
+    task_data["metadata"].pop("owner_reference", None)
+
+    project_reference_list = task["status"]["resources"].get(
+        "project_reference_list", []
+    )
+
+    # Add new projects, skip duplicates
+    existing_names = {p["name"] for p in project_reference_list}
+    for name in projects:
+        if name not in existing_names:
+            try:
+                project_reference_list.append(Ref.Project(name))
+            except Exception:
+                LOG.warning(
+                    "Project '{}' not found in cache. Unable to share task with this project.".format(
+                        name
+                    )
+                )
+                continue
+
+    task_data["spec"]["resources"]["project_reference_list"] = project_reference_list
+
+    res, err = client.task.share(task_uuid, task_data)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    LOG.info("Task '{}' shared with: {}".format(task_name, ", ".join(projects)))
+
+
+def unshare_task(task_name, projects):
+    """Remove a Task Library item's from the given projects"""
+
+    client = get_api_client()
+
+    task = get_task(client, task_name)
+    task_uuid = task["metadata"]["uuid"]
+
+    res, err = client.task.read(task_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    task_data = res.json()
+
+    # Strip server-managed fields
+    task_data.pop("status", None)
+    task_data["metadata"].pop("uuid", None)
+    task_data["metadata"].pop("last_update_time", None)
+    task_data["metadata"].pop("creation_time", None)
+    task_data["metadata"].pop("owner_reference", None)
+
+    project_reference_list = task["status"]["resources"].get(
+        "project_reference_list", []
+    )
+
+    # Keep only projects NOT in the unshare list
+    projects_to_remove = set(projects)
+    updated_list = [
+        p for p in project_reference_list if p["name"] not in projects_to_remove
+    ]
+
+    removed = [
+        name
+        for name in projects
+        if name not in {p["name"] for p in updated_list}
+        and name in {p["name"] for p in project_reference_list}
+    ]
+
+    task_data["spec"]["resources"]["project_reference_list"] = updated_list
+
+    res, err = client.task.share(task_uuid, task_data)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    if removed:
+        LOG.info("Task '{}' unshared from: {}".format(task_name, ", ".join(removed)))
+
+
 def create_update_library_task(client, task_payload, name=None, force_create=None):
     """Create/Update Task library item"""
 
@@ -279,27 +392,18 @@ def create_update_library_task(client, task_payload, name=None, force_create=Non
 
     context = get_context()
     project_config = context.get_project_config()
-    project_name = project_config["name"]
 
-    # Fetch project details
-    params = {"filter": "name=={}".format(project_name)}
-    res, err = client.project.list(params=params)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    # Honor a project reference already present in the payload metadata (e.g.
+    # defined via the Metadata class in the DSL file or supplied in the JSON
+    # payload). Fall back to the project from the current context otherwise.
+    metadata_payload = task_payload.get("metadata", {})
+    if not metadata_payload.get("project_reference"):
+        project_name = project_config["name"]
+        if project_name == DSL_CONFIG.EMPTY_CONFIG_ENTITY_NAME:
+            LOG.error(DSL_CONFIG.EMPTY_PROJECT_MESSAGE)
+            sys.exit("Invalid project configuration")
 
-    response = res.json()
-    entities = response.get("entities", None)
-    if not entities:
-        raise Exception("No project with name {} exists".format(project_name))
-
-    project_id = entities[0]["metadata"]["uuid"]
-
-    # Setting project reference
-    task_payload["metadata"]["project_reference"] = {
-        "kind": "project",
-        "uuid": project_id,
-        "name": project_name,
-    }
+        metadata_payload["project_reference"] = Ref.Project(project_name)
 
     res, err = client.task.create(task_payload)
     if err:
@@ -368,6 +472,8 @@ def create_library_task_payload(name, task_type, attrs, description, out_vars=No
 def compile_library_task(path_to_dsl):
     """Compile Task Library item"""
 
+    metadata_payload = get_metadata_payload(path_to_dsl)
+
     TaskLibraryItem = get_library_task_classes(path_to_dsl)
     task_dict = TaskLibraryItem.get_dict()
 
@@ -380,6 +486,10 @@ def compile_library_task(path_to_dsl):
         name, task_type, attrs, description, out_vars=None
     )
 
+    # Honor the project reference defined via the Metadata class in the DSL file
+    project_reference = metadata_payload.get("project_reference")
+    if project_reference:
+        task_payload["metadata"]["project_reference"] = project_reference
     return task_payload
 
 

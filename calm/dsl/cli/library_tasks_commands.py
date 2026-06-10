@@ -8,6 +8,8 @@ from .main import (
     library_create,
     library_describe,
     library_delete,
+    library_share,
+    library_unshare,
 )
 from .library_tasks import (
     get_tasks_list,
@@ -15,6 +17,8 @@ from .library_tasks import (
     delete_task,
     create_task,
     import_task,
+    share_task,
+    unshare_task,
 )
 
 LOG = get_logging_handle(__name__)
@@ -162,3 +166,43 @@ def _create_task(task_file, name, description, force):
     calm create library task -f HTTPGetVM.json\n"""
 
     create_task(task_file, name, description, force)
+
+
+@library_share.command("task")
+@click.argument("task_name")
+@click.option(
+    "--project",
+    "-p",
+    "projects",
+    multiple=True,
+    required=True,
+    help="Project to share the task with (can be specified multiple times). Owner project cannot be shared.",
+)
+def _share_task(task_name, projects):
+    """Share a task library item with one or more projects.
+
+    Examples:\n
+    calm share library task "Task Name" -p project1\n
+    calm share library task "Task Name" -p project1 -p project2\n"""
+
+    share_task(task_name, list(projects))
+
+
+@library_unshare.command("task")
+@click.argument("task_name")
+@click.option(
+    "--project",
+    "-p",
+    "projects",
+    multiple=True,
+    required=True,
+    help="Project to remove from the task's shared list (can be specified multiple times).",
+)
+def _unshare_task(task_name, projects):
+    """Remove a task library item's access from one or more projects.
+
+    Examples:\n
+    calm unshare library task "Task Name" -p project1\n
+    calm unshare library task "Task Name" -p project1 -p project2\n"""
+
+    unshare_task(task_name, list(projects))

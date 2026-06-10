@@ -526,6 +526,7 @@ class CONFIG_TYPE:
 class PROJECT:
     INTERNAL = "_internal"
     AUTO_NCM_DEFAULT = "auto_ncm_default"
+    INTERNAL_PROJECT_UUID = "00000000-0000-0000-0000-000000000000"
 
 
 # storing it as set because it optimizes the lookup to constant time.

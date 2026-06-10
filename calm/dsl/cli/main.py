@@ -636,6 +636,30 @@ def library_delete():
 
 
 @main.group(cls=FeatureFlagGroup)
+def share():
+    """Share entities with projects"""
+    pass
+
+
+@share.group("library")
+def library_share():
+    """Share Library entities with projects"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def unshare():
+    """Unshare entities from projects"""
+    pass
+
+
+@unshare.group("library")
+def library_unshare():
+    """Unshare Library entities with projects"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
 def sync():
     """Sync platform account"""
     pass

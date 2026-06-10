@@ -22,6 +22,7 @@ from calm.dsl.store import Cache, Version
 from calm.dsl.constants import CACHE, TUNNEL
 from calm.dsl.api.handle import get_api_client
 from calm.dsl.log import get_logging_handle
+from calm.dsl.constants import PROJECT
 
 
 LOG = get_logging_handle(__name__)
@@ -332,6 +333,13 @@ class Ref:
         __ref_kind__ = CACHE.ENTITY.PROJECT
 
         def __new__(cls, name, **kwargs):
+
+            if name == PROJECT.INTERNAL:
+                return {
+                    "kind": "project",
+                    "name": name,
+                    "uuid": PROJECT.INTERNAL_PROJECT_UUID,
+                }
 
             project_cache_data = Cache.get_entity_data(
                 entity_type=CACHE.ENTITY.PROJECT, name=name
