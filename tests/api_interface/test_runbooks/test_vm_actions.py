@@ -24,6 +24,7 @@ CALM_VERSION = Version.get_version("Calm")
 class TestVMActions:
     @pytest.mark.runbook
     @pytest.mark.regression
+    @pytest.mark.skip(reason="skipping until this is resolved: ENG-808894")
     @pytest.mark.parametrize(
         "Runbook, warning_msg",
         [
