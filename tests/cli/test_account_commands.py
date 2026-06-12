@@ -218,6 +218,7 @@ class TestAccountCommands:
                 compiled_payload["spec"]["resources"]["data"]["port"] = str(
                     compiled_payload["spec"]["resources"]["data"]["port"]
                 )
+            compiled_payload["spec"]["resources"]["data"].pop("pc_uuid", None)
 
         assert compiled_payload == known_json
         LOG.info("Success")
@@ -254,6 +255,16 @@ class TestAccountCommands:
         ],
     )
     def test_dsl_account_create(self, account_file_path, update_account_file_path):
+
+        context = get_context()
+        ncm_config = context.get_ncm_server_config()
+        if (
+            ncm_config.get("ncm_enabled", False)
+            and DSL_AHV_ACCOUNT_FILEPATH in account_file_path
+        ):
+            pytest.skip(
+                "AHV account creation is not supported on NCM setups with existing Local/Multipc accounts."
+            )
 
         client = get_api_client()
 
