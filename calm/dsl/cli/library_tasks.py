@@ -229,7 +229,8 @@ def get_task(client, name, all=False):
         LOG.info("{} found ".format(name))
         task = entities[0]
     else:
-        raise Exception("No task found with name {}".format(name))
+        LOG.error("Task '{}' not found".format(name))
+        sys.exit("Task '{}' not found".format(name))
     return task
 
 
@@ -287,10 +288,12 @@ def share_task(task_name, projects):
 
     # Add new projects, skip duplicates
     existing_names = {p["name"] for p in project_reference_list}
+    shared_projects = []
     for name in projects:
         if name not in existing_names:
             try:
                 project_reference_list.append(Ref.Project(name))
+                shared_projects.append(name)
             except Exception:
                 LOG.warning(
                     "Project '{}' not found in cache. Unable to share task with this project.".format(
@@ -305,7 +308,10 @@ def share_task(task_name, projects):
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-    LOG.info("Task '{}' shared with: {}".format(task_name, ", ".join(projects)))
+    if shared_projects:
+        LOG.info(
+            "Task '{}' shared with: {}".format(task_name, ", ".join(shared_projects))
+        )
 
 
 def unshare_task(task_name, projects):
@@ -335,16 +341,21 @@ def unshare_task(task_name, projects):
 
     # Keep only projects NOT in the unshare list
     projects_to_remove = set(projects)
+    shared_project_names = {p["name"] for p in project_reference_list}
     updated_list = [
         p for p in project_reference_list if p["name"] not in projects_to_remove
     ]
 
-    removed = [
-        name
-        for name in projects
-        if name not in {p["name"] for p in updated_list}
-        and name in {p["name"] for p in project_reference_list}
-    ]
+    removed = [name for name in projects if name in shared_project_names]
+
+    not_shared = [name for name in projects if name not in shared_project_names]
+
+    if not_shared:
+        LOG.warning(
+            "Task '{}' is not shared with projects: {}. Skipping unshare for these.".format(
+                task_name, ", ".join(not_shared)
+            )
+        )
 
     task_data["spec"]["resources"]["project_reference_list"] = updated_list
 
