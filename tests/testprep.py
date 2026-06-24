@@ -89,7 +89,7 @@ def add_account_details(config):
                 pass
             else:
                 result = result.json()
-                for entity in result["entities"]:
+                for entity in result.get("entities", []):
                     cluster_ref = entity["status"].get("cluster_reference", {})
                     if not cluster_ref:
                         if entity["status"]["resources"]["subnet_type"] != "OVERLAY":
