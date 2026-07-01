@@ -102,7 +102,4 @@ _init_centos:
 	sudo sed -i 's|mirror.centos.org|vault.centos.org|g' /etc/yum.repos.d/CentOS-*
 	sudo sed -i 's|mirrorlist.centos.org|vault.centos.org|g' /etc/yum.repos.d/CentOS-* || :
 	sudo yum install -y rh-python38 rh-python38-python-devel
-	. /opt/rh/rh-python38/enable
-
-	python3 --version
-	python3 -m pip install --upgrade pip wheel
+	. /opt/rh/rh-python38/enable && python3 --version && python3 -m pip install --upgrade pip wheel
