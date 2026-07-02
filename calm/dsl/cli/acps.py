@@ -337,6 +337,11 @@ def construct_acp_payload(
 
 def create_acp(role, project, acp_users, acp_groups, name):
 
+    if name is not None:
+        LOG.warning(
+            "WARNING: custom acp name is deprecated and will be removed in a future release."
+        )
+
     if not (acp_users or acp_groups):
         LOG.error("Atleast single user/group should be given")
         sys.exit(-1)
@@ -413,7 +418,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
     acp_list.append(acp_payload)
     project_payload["spec"]["access_control_policy_list"] = acp_list
 
-    LOG.info("Creating acp {}".format(acp_name))
+    LOG.info("Creating acp")
     entities, err = ProjectInternalObj.update(project_uuid, project_payload)
     if err:
         LOG.error(err)
@@ -421,7 +426,6 @@ def create_acp(role, project, acp_users, acp_groups, name):
 
     entities = entities.json()
     stdout_dict = {
-        "name": acp_name,
         "execution_context": entities["status"]["execution_context"],
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
