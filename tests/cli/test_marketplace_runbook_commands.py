@@ -36,8 +36,8 @@ APP_SOURCES = [
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 
-PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
-PROJECT_NAME = PROJECT["NAME"]
+CONFIG_PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
+PROJECT_NAME = CONFIG_PROJECT["NAME"]
 
 
 class TestMarketplaceRunbookCommands:
