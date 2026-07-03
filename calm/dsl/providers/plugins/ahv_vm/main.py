@@ -290,26 +290,33 @@ class AhvVmProvider(Provider):
                     show_choices=False,
                 )
                 if choice == "y":
-                    categories = Obj.categories(
+                    categories = fetch_categories_interactively(
+                        Obj,
                         host_pc=is_host_pc,
                         account_uuid=account_uuid,
                         project_uuid=project_id,
                     )
-                    click.echo("Choose from given categories:")
-                    for ind, group in enumerate(categories):
-                        category = "{}:{}".format(group["key"], group["value"])
-                        click.echo(
-                            "\t {}. {} ".format(str(ind + 1), highlight_text(category))
-                        )
 
                 while choice == "y":
                     index = click.prompt(
-                        "Enter the index of category (0 to skip)", default=0
+                        "Enter the index of category (0 to skip, -1 to search again)",
+                        default=0,
                     )
-                    if not index:
+                    if index == 0:
                         break
 
-                    if (index > len(categories)) or (index <= 0):
+                    if index == -1:
+                        new_categories = fetch_categories_interactively(
+                            Obj,
+                            host_pc=is_host_pc,
+                            account_uuid=account_uuid,
+                            project_uuid=project_id,
+                        )
+                        if new_categories:
+                            categories = new_categories
+                        continue
+
+                    if (index > len(categories)) or (index < 0):
                         click.echo("Invalid index !!! ")
                     else:
                         group = categories[index - 1]
@@ -1004,6 +1011,8 @@ class AhvNew(AhvBase):
     VPCS = "nutanix/v1/vpcs"
     GROUPS = "nutanix/v1/groups"
     CATEGORIES = "nutanix/v1/categories"
+    # Max entities the categories meta-api returns per call (no pagination support).
+    CATEGORIES_FETCH_LIMIT = 50
     FILTER_EXCLUSIONS = "key!=CalmApplication;key!=CalmDeployment;key!=CalmService;key!=CalmPackage;key!=CalmProject;key!=CalmUser;key!=CalmVmUniqueIdentifier;key!=CalmClusterUuid"
     CATEGORIES_PAYLOAD = {
         "entity_type": "category",
@@ -1084,6 +1093,7 @@ class AhvNew(AhvBase):
 
     def fetch_categories_from_meta_api(self, *args, **kwargs):
         project_uuid = kwargs.get("project_uuid", None)
+        search = kwargs.get("search", None)
 
         Obj = get_resource_api(self.CATEGORIES, self.connection)
         account_uuid = kwargs.get("account_uuid", None)
@@ -1096,6 +1106,14 @@ class AhvNew(AhvBase):
             filter_query = filter_query + ";project_uuid=={}".format(project_uuid)
 
         filter_query = filter_query + ";{}".format(self.FILTER_EXCLUSIONS)
+
+        # The categories meta-api caps responses at CATEGORIES_FETCH_LIMIT and does
+        # not support pagination. To reach categories beyond that cap we narrow the
+        # result set server-side using the same substring clause the UI sends per
+        # keystroke: match the search text against either key or value.
+        if search:
+            safe = re.escape(search)
+            filter_query = filter_query + ";(key==.*{0}.*,value==.*{0}.*)".format(safe)
 
         if filter_query.startswith(";"):
             filter_query = filter_query[1:]
@@ -1303,6 +1321,71 @@ def highlight_text(text, **kwargs):
     return click.style("{}".format(text), fg="blue", bold=False, **kwargs)
 
 
+def fetch_categories_interactively(
+    ahv_obj, host_pc=False, account_uuid=None, project_uuid=None
+):
+    """Interactively fetch and display selectable categories.
+
+    The categories meta-api (Calm >= 4.4.0) caps responses at ~50 entities and
+    does not support pagination. To let users reach categories beyond that cap,
+    we prompt for a search term and pass it through as a server-side substring
+    filter (the same approach the UI uses for type-to-filter). When a response
+    is truncated at the cap, the user is asked to refine the search. For older
+    Calm versions the search prompt is skipped (that path is not capped at 50).
+
+    Returns the displayed list of category dicts ({"key": ..., "value": ...}).
+    """
+    calm_version = Version.get_version("Calm")
+    search_supported = LV(calm_version) >= LV("4.4.0")
+    fetch_limit = getattr(ahv_obj, "CATEGORIES_FETCH_LIMIT", 50)
+
+    while True:
+        fetch_kwargs = {
+            "host_pc": host_pc,
+            "account_uuid": account_uuid,
+            "project_uuid": project_uuid,
+        }
+
+        search = ""
+        if search_supported:
+            search = click.prompt(
+                "\nEnter search text to filter categories by key/value "
+                "(leave blank for to list all)",
+                default="",
+                show_default=False,
+            )
+            fetch_kwargs["search"] = search or None
+
+        categories = ahv_obj.categories(**fetch_kwargs)
+
+        if not categories:
+            click.echo(
+                highlight_text(
+                    "No categories matched{}.".format(
+                        " '{}'".format(search) if search else ""
+                    )
+                )
+            )
+            if search_supported:
+                continue
+            return categories
+
+        if search_supported and len(categories) >= fetch_limit:
+            click.echo(
+                highlight_text(
+                    "Showing first {} matches only (api limit); refine the search "
+                    "text to narrow down to the category you want.".format(fetch_limit)
+                )
+            )
+
+        click.echo("Choose from given categories:")
+        for ind, group in enumerate(categories):
+            category = "{}:{}".format(group["key"], group["value"])
+            click.echo("\t {}. {} ".format(str(ind + 1), highlight_text(category)))
+
+        return categories
+
+
 def create_spec(client):
 
     spec = {}
@@ -1418,23 +1501,38 @@ def create_spec(client):
     )
     if choice[0] == "y":
         # TODO Remove dependecy for host_pc after bug CALM-17213 is resolved
-        categories = AhvObj.categories(
-            host_pc=is_host_pc, account_uuid=account_uuid, project_uuid=project_id
+        categories = fetch_categories_interactively(
+            AhvObj,
+            host_pc=is_host_pc,
+            account_uuid=account_uuid,
+            project_uuid=project_id,
         )
         if not categories:
             click.echo("\n{}\n".format(highlight_text("No Category present")))
 
         else:
-            click.echo("\n Choose from given categories: \n")
-            for ind, group in enumerate(categories):
-                category = "{}:{}".format(group["key"], group["value"])
-                click.echo("\t {}. {} ".format(str(ind + 1), highlight_text(category)))
-
             result = {}
             while True:
 
                 while True:
-                    index = click.prompt("\nEnter the index of category", default=1)
+                    index = click.prompt(
+                        "\nEnter the index of category (-1 to search again)", default=1
+                    )
+                    if index == -1:
+                        new_categories = fetch_categories_interactively(
+                            AhvObj,
+                            host_pc=is_host_pc,
+                            account_uuid=account_uuid,
+                            project_uuid=project_id,
+                        )
+                        if new_categories:
+                            categories = new_categories
+                        else:
+                            click.echo(
+                                "\n{}\n".format(highlight_text("No Category present"))
+                            )
+                        continue
+
                     if (index > len(categories)) or (index <= 0):
                         click.echo("Invalid index !!! ")
 

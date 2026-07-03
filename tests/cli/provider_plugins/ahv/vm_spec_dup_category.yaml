@@ -1,11 +1,12 @@
 
 input:
-- "1" # Project name = default
+- "10" # Project name = auto_ncm_default (matches configured project)
 - "vm-@@{calm_array_index}@@-@@{calm_time}@@"
 - "y"  # Want Category
-- "1"  # Category: App-Family:Backup
+- ""   # Category search text (blank = list all)
+- "4"  # Category: AppFamily:Backup
 - "y"  # Add more categories
-- "4"  # Category: AppFamily:Databases
+- "8"  # Category: AppFamily:Databases
 - "y"  # Replace old one
 - "n"  # Add more catergories
 - "1"  # no. of VCPU
@@ -31,3 +32,10 @@ spec_assertions:
 
 spec_false_assertions:
 - "Backup"  # Check for old category
+
+dependencies:
+ # Resolve setup-dependent indexes by resource name (see populators.py)
+- [0, "projects/auto_ncm_default"]
+- [4, "categories/AppFamily:Backup"]
+- [6, "categories/AppFamily:Databases"]
+- [14, "cdrom_images/SQLServer2014SP2-FullSlipstream-x64-ENU.iso"]

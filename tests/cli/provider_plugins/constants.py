@@ -1,3 +1,17 @@
+class AHV:
+    """AHV Constants for cli provider_plugins tests.
+
+    Resource names listed here are resolved to their live indexes by the
+    populator so fixtures don't hardcode positions (which shift per setup).
+    """
+
+    PROJECTS = ["auto_ncm_default"]
+    CATEGORIES = ["AppFamily:Backup", "AppFamily:Databases"]
+    CDROM_IMAGES = ["SQLServer2014SP2-FullSlipstream-x64-ENU.iso"]
+    DISK_IMAGES = ["Ubuntu1404"]
+    SUBNETS = ["vlan1211"]
+
+
 class AWS:
     """AWS Constants for cli provider_plugins tests"""
 

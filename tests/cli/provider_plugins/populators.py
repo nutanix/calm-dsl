@@ -2,6 +2,7 @@ from calm.dsl.api.handle import get_api_client
 from calm.dsl.log.logger import get_logging_handle
 from calm.dsl.providers.plugins.aws_vm.constants import AWS as AWS_CONSTANTS
 from calm.dsl.providers.plugins.aws_vm.main import AwsVmProvider
+from calm.dsl.providers.plugins.ahv_vm.main import AhvVmProvider
 from tests.cli.provider_plugins import constants as CONSTANTS
 from calm.dsl.providers.plugins.azure_vm.main import Azure
 
@@ -198,8 +199,126 @@ class ResourcePopulator:
         pass
 
     def __populate_ahv_resources(self):
-        """Get ahv resource info and store them"""
-        pass
+        """Get ahv resource info and store them.
+
+        Resolves live indexes (per setup) for the resources the AHV fixtures
+        reference by name, so the fixtures don't hardcode positions that shift
+        from one environment to another.
+        """
+        LOG.info("Collecting ahv resource info")
+        client = get_api_client()
+        Obj = AhvVmProvider.get_api_obj()
+
+        # get projects -> name:index map
+        projects = client.project.get_name_uuid_map()
+        project_list = list(projects.keys())
+
+        self.ahv_resource_info["projects"] = {}
+        for project in CONSTANTS.AHV.PROJECTS:
+            if project in project_list:
+                self.ahv_resource_info["projects"][project] = project_list.index(
+                    project
+                )
+
+        # Resolve category/image/subnet indexes for the primary test project.
+        target_project = None
+        for project in CONSTANTS.AHV.PROJECTS:
+            if project in projects:
+                target_project = project
+                break
+
+        if not target_project:
+            return
+
+        project_id = projects[target_project]
+        res, err = client.project.read(project_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        project = res.json()
+
+        # subnets registered with the project (same source create_spec uses)
+        subnets_list = []
+        for subnet in project["status"]["resources"]["subnet_reference_list"]:
+            subnets_list.append(subnet["uuid"])
+        for subnet in project["status"]["resources"].get("external_network_list", []):
+            subnets_list.append(subnet["uuid"])
+
+        # accounts registered with the project -> resolve account uuid/index
+        reg_accounts = [
+            account["uuid"]
+            for account in project["status"]["resources"]["account_reference_list"]
+        ]
+
+        accounts = []
+        payload = {"length": 250, "filter": "type==nutanix_pc"}
+        res, err = client.account.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        res = res.json()
+        for entity in res["entities"]:
+            if entity["metadata"]["uuid"] in reg_accounts:
+                accounts.append(
+                    {
+                        "name": entity["metadata"]["name"],
+                        "uuid": entity["metadata"]["uuid"],
+                    }
+                )
+
+        self.ahv_resource_info["accounts"] = {
+            account["name"]: index for index, account in enumerate(accounts)
+        }
+
+        account_uuid = accounts[0]["uuid"] if accounts else ""
+
+        # categories -> "key:value":index (order as shown by create_spec)
+        self.ahv_resource_info["categories"] = {}
+        categories = Obj.categories(account_uuid=account_uuid, project_uuid=project_id)
+        category_names = [
+            "{}:{}".format(group["key"], group["value"]) for group in categories
+        ]
+        for category in CONSTANTS.AHV.CATEGORIES:
+            if category in category_names:
+                self.ahv_resource_info["categories"][category] = category_names.index(
+                    category
+                )
+
+        # images, split by device type (CD_ROM -> ISO_IMAGE, DISK -> DISK_IMAGE)
+        image_res = Obj.images(account_uuid=account_uuid)
+        cdrom_images = []
+        disk_images = []
+        for entity in image_res.get("entities", []):
+            img_type = entity["status"]["resources"].get("image_type", None)
+            if not img_type:
+                continue
+            name = entity["status"]["name"]
+            if img_type == "ISO_IMAGE":
+                cdrom_images.append(name)
+            elif img_type == "DISK_IMAGE":
+                disk_images.append(name)
+
+        self.ahv_resource_info["cdrom_images"] = {}
+        for image in CONSTANTS.AHV.CDROM_IMAGES:
+            if image in cdrom_images:
+                self.ahv_resource_info["cdrom_images"][image] = cdrom_images.index(
+                    image
+                )
+
+        self.ahv_resource_info["disk_images"] = {}
+        for image in CONSTANTS.AHV.DISK_IMAGES:
+            if image in disk_images:
+                self.ahv_resource_info["disk_images"][image] = disk_images.index(image)
+
+        # subnets -> name:index (order as shown by create_spec)
+        self.ahv_resource_info["subnets"] = {}
+        if subnets_list:
+            filter_query = "_entity_id_=in={}".format("|".join(subnets_list))
+            nics = Obj.subnets(account_uuid=account_uuid, filter_query=filter_query)
+            subnet_names = [nic["status"]["name"] for nic in nics.get("entities", [])]
+            for subnet in CONSTANTS.AHV.SUBNETS:
+                if subnet in subnet_names:
+                    self.ahv_resource_info["subnets"][subnet] = subnet_names.index(
+                        subnet
+                    )
 
     def __populate_azure_resources(self):
         client = get_api_client()
