@@ -2606,9 +2606,7 @@ class TestMarketplaceBPCommands:
     def test_project_removal_flag_on_approving_marketplace_bp(self):
         """Tests `--remove-project` flag on approving bp to marketplace manager"""
 
-        project_name = (
-            PROJECT.AUTO_NCM_DEFAULT
-        )  # This project will be removed while approving
+        project_name = PROJECT["NAME"]  # This project will be removed while approving
         self._create_bp()
         self.created_bp_list.append(self.created_dsl_bp_name)
         self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(

@@ -1373,9 +1373,7 @@ class TestMarketplaceRunbookCommands:
     def test_project_removal_flag_on_approving_marketplace_runbook(self):
         """Tests `--remove-project` flag on approving runbook to marketplace manager"""
 
-        project_name = (
-            PROJECT.AUTO_NCM_DEFAULT
-        )  # This project will be removed while approving
+        project_name = PROJECT["NAME"]  # This project will be removed while approving
         self._create_runbook(DSL_RB_FILEPATH)
         self.created_rb_list.append(self.created_dsl_rb_name)
         self.marketplace_rb_name = "Test_Marketplace_Bp_{}".format(
