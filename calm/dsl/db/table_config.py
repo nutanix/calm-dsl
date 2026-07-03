@@ -2853,7 +2853,7 @@ class UserGroupCache(CacheTableBase):
 
         for entity in entities:
             user_group = get_user_group_from_response(client, entity)
-            name = user_group.get("name") or user_group.get("display_name", "")
+            name = user_group.get("display_name", "")
             directory_service_name = user_group.get("directory")
 
             if directory_service_name and name:
