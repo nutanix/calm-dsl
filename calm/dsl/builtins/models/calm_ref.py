@@ -606,26 +606,40 @@ class Ref:
 
             vrs_uuid = kwargs.get("uuid", "")
             payload = {"filter": "account_uuid=={}".format(account_uuid)}
-            if vrs_uuid:
-                payload["filter"] += ";uuid=={}".format(vrs_uuid)
-            else:
-                payload["filter"] += ";name=={}".format(name)
+
+            # TODO: Fix this once backend fixes uuid/name in filter: ENG-950458
+            # if vrs_uuid:
+            #     payload["filter"] += ";uuid=={}".format(vrs_uuid)
+            # else:
+            #     payload["filter"] += ";name=={}".format(name)
 
             client = get_api_client()
             vrc_map = client.vm_recovery_point.get_name_uuid_map(payload)
 
-            if not vrc_map:
-                log_msg = "No recovery point found with " + (
-                    "uuid='{}'".format(vrs_uuid)
-                    if vrs_uuid
-                    else "name='{}'".format(name)
-                )
-                LOG.error(log_msg)
-                sys.exit("No recovery point found")
+            # if not vrc_map:
+            #     log_msg = "No recovery point found with " + (
+            #         "uuid='{}'".format(vrs_uuid)
+            #         if vrs_uuid
+            #         else "name='{}'".format(name)
+            #     )
+            #     LOG.error(log_msg)
+            #     sys.exit("No recovery point found")
 
             # there will be single key
-            vrc_name = list(vrc_map.keys())[0]
-            vrc_uuid = vrc_map[vrc_name]
+            # vrc_name = list(vrc_map.keys())[0]
+            if name:
+                if name not in vrc_map:
+                    LOG.error("No recovery point found with name='{}'".format(name))
+                    sys.exit("No recovery point found")
+                vrc_uuid = vrc_map[name]
+                vrc_name = name
+            else:
+                vrc_uuid_name_map = client.vm_recovery_point.get_uuid_name_map(payload)
+                if vrs_uuid not in vrc_uuid_name_map:
+                    LOG.error("No recovery point found with uuid='{}'".format(vrs_uuid))
+                    sys.exit("No recovery point found")
+                vrc_uuid = vrc_uuid_name_map[vrs_uuid]
+                vrc_name = vrc_uuid_name_map[vrs_uuid]
 
             if isinstance(vrc_uuid, list):
                 LOG.error(
