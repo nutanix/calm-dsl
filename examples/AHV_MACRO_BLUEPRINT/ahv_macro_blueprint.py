@@ -1,43 +1,102 @@
 """
 AHV Blueprint — Macro Support in Substrate Fields
 ==================================================
-Demonstrates all AHV substrate fields that accept Calm macro expressions
-(@@{variable_name}@@) as runtime inputs, as per the DSL-Changes-for-Custom-Forms
-specification (section 3.2).
+A worked, runnable reference for every AHV substrate field that accepts a Calm
+macro expression (``@@{variable_name}@@``) as a runtime input, per the
+DSL-Changes-for-Custom-Forms spec (section 3.2).
 
-Requires: Calm >= 4.4.0
+Requires: Calm >= 4.4.0  (numeric / JSON substrate-field macros are gated on this).
 
-Profiles
---------
+------------------------------------------------------------------------------
+How to run
+------------------------------------------------------------------------------
+1. Put guest-OS creds in ``.local/.tests/`` next to this file::
+
+       echo -n 'root'        > .local/.tests/username
+       echo -n 'nutanix/4u'  > .local/.tests/password
+
+2. Replace every ``<replace-with-...>`` token below with a real value from your
+   setup: image name/uuid, subnet name/uuid, cluster name/uuid. (Look them up with
+   ``calm get images`` / ``calm get subnets``, or your local DSL cache.)
+3. Compile, create, then launch a chosen profile (``-i`` uses the variable
+   defaults; drop it to be prompted)::
+
+       calm compile bp -f ahv_macro_blueprint.py
+       calm create  bp -f ahv_macro_blueprint.py --name ahv_macro_bp
+       calm launch  bp ahv_macro_bp -a my_app -p NormalMacroProfile -i -w
+
+------------------------------------------------------------------------------
+Macro-capable AHV fields
+(single source of truth: ``calm.dsl.constants.AHV_MACRO_FIELDS``)
+------------------------------------------------------------------------------
+  Entity          Field                  Kind           How to macro it
+  --------------  ---------------------  -------------  ------------------------------------------
+  AhvVm           name                   string         name = "@@{vm_name}@@"
+  AhvVm           cluster_reference      json           cluster = "@@{cluster_json}@@"      (dict var)
+  AhvVmResources  num_sockets (vCPUs)    int            vCPUs = "@@{vcpus}@@"
+  AhvVmResources  num_vcpus_per_socket   int            cores_per_vCPU = "@@{cores}@@"
+  AhvVmResources  memory_size_mib        int            memory = "@@{memory_mib}@@"
+  AhvVmResources  power_state            string         power_state = "@@{power_state}@@"
+  AhvVmResources  nic_list               json-per-item  a NIC OBJECT, or a whole-NIC dict-macro entry
+  AhvDisk         data_source_reference  json           cloneFromImageService("@@{disk_image_ref}@@") (dict var)
+  AhvDisk         disk_size_mib          int            disk_size_mib = "@@{disk_size_mib}@@"
+  AhvNic          subnet_reference       json           NormalNic.ingress("@@{subnet_uuid}@@")
+
+------------------------------------------------------------------------------
+Validation rules (spec section 3.2)
+------------------------------------------------------------------------------
+* String field : a bare macro ``@@{...}@@`` or a literal string.
+* INT field    : a bare macro ``@@{...}@@`` or a non-negative integer.
+* JSON field   : a full object dict, OR a bare macro that resolves to one (fed by
+                 a ``CalmVariable.Simple.dictionary`` runtime variable).
+* Arbitrary non-macro strings in a numeric field are rejected by the server.
+
+------------------------------------------------------------------------------
+Example JSON object values (what each dict variable should resolve to)
+Replace the ids/names with your own (``calm get clusters`` / ``images`` / ``subnets``).
+------------------------------------------------------------------------------
+* cluster_reference (AhvVm.cluster):
+    {"kind": "cluster", "name": "auto_cluster_nested_6a479f4192fce9e853a8ab2f",
+     "uuid": "000655c3-f365-f042-7e7b-5254009f04f1"}
+* data_source_reference (disk image):
+    {"kind": "image", "uuid": "e57c4b80-b695-4afe-b45b-08695eb697c2",
+     "name": "Centos7HadoopMaster.qcow2"}
+* nic_list item (whole NIC / subnet_reference):
+    {"subnet_reference": {"type": "", "kind": "subnet", "name": "vlan.0",
+     "uuid": "7b8b48fe-59c4-4e62-8366-a78f25a99a03"}}
+
+------------------------------------------------------------------------------
+Three gotchas that trip people up (and why)
+------------------------------------------------------------------------------
+* INT field + macro  -> the server resolves the value at runtime and SKIPS the
+  GiB->MiB conversion the DSL normally applies. So put the final unit (MiB for
+  memory/disk size) in the variable's default value.
+* DISK image macro   -> macro the disk's ``data_source_reference`` (a dict
+  ``{"kind":"image","uuid":...}``), NOT an image-NAME string. A name string
+  resolves to a bare value the server can't turn into a reference, so the disk is
+  created with no image (no OS).                                    [ENG-949632]
+* WHOLE-disk macro   -> ``disks = ["@@{disk}@@"]`` is NOT supported: the server
+  costs disks per item (it reads ``disk_size_mib`` on each disk), which fails on a
+  bare macro string and returns HTTP 500 at create. Use the per-item
+  ``data_source_reference`` form instead. NICs / cluster ARE fine as whole-object
+  macros — only disks are cost-iterated.                            [ENG-949615]
+
+------------------------------------------------------------------------------
+Profiles in this blueprint
+------------------------------------------------------------------------------
 1. NormalProfile       — all literal values; no macros (baseline).
-2. NormalMacroProfile  — macros in INT / string-typed substrate fields only:
-                          vCPUs, cores_per_vCPU, memory, disk_size_mib,
-                          disk image name (string in image field), subnet uuid,
-                          power_state, VM name.
-3. JsonMacroProfile    — macros that replace entire JSON objects:
-                          disk (whole disk object), NIC (whole NIC object),
-                          cluster (whole cluster reference).
-4. AllMacroProfile     — every macro-capable field at once (union of 2 + 3),
-                          including categories and disk_size_mib.
-
-Macro validation rules (from spec section 3.2)
------------------------------------------------
-* String fields  : value must be a bare macro  @@{...}@@  or a literal string.
-* INT fields     : value must be a bare macro   @@{...}@@  or a non-negative integer.
-* JSON fields    : value is a full object dict  OR a bare macro that resolves to one.
-* Arbitrary non-macro strings for numeric fields are rejected by the server.
+2. NormalMacroProfile  — scalar INT/string macros + the disk image as a dict macro.
+3. JsonMacroProfile    — JSON-object macros: disk image ref, whole NIC, cluster.
+4. AllMacroProfile     — union of 2 + 3: every macro-capable field at once.
 """
 
 import os  # noqa
 
 from calm.dsl.builtins import *  # noqa
 
-# ---------------------------------------------------------------------------
 # Credentials
-# ---------------------------------------------------------------------------
-
-CRED_USERNAME = read_local_file("cred_username")
-CRED_PASSWORD = read_local_file("cred_password")
+CRED_USERNAME = read_local_file(".tests/username")
+CRED_PASSWORD = read_local_file(".tests/password")
 
 DefaultCred = basic_cred(
     CRED_USERNAME,
@@ -47,9 +106,9 @@ DefaultCred = basic_cred(
     default=True,
 )
 
-# ---------------------------------------------------------------------------
-# Shared service / package (reused by all profiles)
-# ---------------------------------------------------------------------------
+# One shared service, but a separate package per profile deployment.
+# A Service can be reused across packages; each deployment must reference its own
+# Package (same pattern as examples/Redis_Master_Slave).
 
 
 class AhvMacroService(Service):
@@ -58,14 +117,23 @@ class AhvMacroService(Service):
     pass
 
 
-class AhvMacroPackage(Package):
+class NormalPackage(Package):
     services = [ref(AhvMacroService)]
 
 
-# ===========================================================================
-# Profile 1 – NormalProfile
-# All fields are literal values.  This is the baseline "no macro" case.
-# ===========================================================================
+class NormalMacroPackage(Package):
+    services = [ref(AhvMacroService)]
+
+
+class JsonMacroPackage(Package):
+    services = [ref(AhvMacroService)]
+
+
+class AllMacroPackage(Package):
+    services = [ref(AhvMacroService)]
+
+
+# Profile 1 – NormalProfile: baseline, all literal values (no macros).
 
 
 class NormalVmResources(AhvVmResources):
@@ -77,11 +145,13 @@ class NormalVmResources(AhvVmResources):
 
     disks = [
         AhvVmDisk.Disk.Scsi.cloneFromImageService(
-            "<replace-with-image-name>",
+            "Centos7HadoopMaster.qcow2",  # literal image by NAME (resolved at compile)
             bootable=True,
         )
     ]
-    nics = [AhvVmNic.NormalNic.ingress("<replace-with-subnet-uuid>")]
+    nics = [
+        AhvVmNic.NormalNic.ingress("vlan.0")
+    ]  # literal NIC: subnet by NAME (resolved at compile)
 
 
 class NormalAhvVm(AhvVm):
@@ -107,7 +177,7 @@ class NormalSubstrate(Substrate):
 
 
 class NormalDeployment(Deployment):
-    packages = [ref(AhvMacroPackage)]
+    packages = [ref(NormalPackage)]
     substrate = ref(NormalSubstrate)
 
 
@@ -120,39 +190,24 @@ class NormalProfile(Profile):
     deployments = [NormalDeployment]
 
 
-# ===========================================================================
-# Profile 2 – NormalMacroProfile
-# INT and string substrate fields are driven by runtime macros.
-# Supported macro-capable scalar fields (spec section 3.2):
-#   vCPUs, cores_per_vCPU, memory (INT)
-#   disk_size_mib (INT)
-#   disk image name / subnet uuid (existing string-accepting fields)
-#   power_state, VM name (string)
-# ===========================================================================
+# Profile 2 – NormalMacroProfile: INT/string macros + disk image as a dict macro.
 
 
 class NormalMacroVmResources(AhvVmResources):
-    # INT fields — accept macro string at runtime (resolved by server)
-    memory = "@@{memory_mib}@@"      # server skips GiB→MiB when value is a macro
+    memory = "@@{memory_mib}@@"
     vCPUs = "@@{vcpus}@@"
     cores_per_vCPU = "@@{cores}@@"
-
-    # String field — ON/OFF/ACPI_SHUTDOWN
     power_state = "@@{power_state}@@"
-
     boot_type = "LEGACY"
 
     disks = [
         AhvVmDisk.Disk.Scsi.cloneFromImageService(
-            # image name field already accepts a macro string
-            "@@{img_name}@@",
-            # disk_size_mib is an INT field — also accepts a macro
+            "@@{disk_image_ref}@@",  # dict var -> data_source_reference (not a name)
             disk_size_mib="@@{disk_size_mib}@@",
             bootable=True,
         )
     ]
 
-    # Subnet UUID inside a NIC is a string field — accepts a macro
     nics = [AhvVmNic.NormalNic.ingress("@@{subnet_uuid}@@")]
 
 
@@ -180,7 +235,7 @@ class NormalMacroSubstrate(Substrate):
 
 
 class NormalMacroDeployment(Deployment):
-    packages = [ref(AhvMacroPackage)]
+    packages = [ref(NormalMacroPackage)]
     substrate = ref(NormalMacroSubstrate)
 
 
@@ -196,7 +251,7 @@ class NormalMacroProfile(Profile):
         cores_per_vCPU   (INT)
         memory           (INT, in MiB)
         disk_size_mib    (INT)
-        disk image name  (string)
+        disk image ref   (JSON dict {kind,uuid} — data_source_reference)
         subnet UUID      (string, inside NIC)
         power_state      (string)
         VM name          (string — always supported)
@@ -246,12 +301,12 @@ class NormalMacroProfile(Profile):
         description="Primary disk size in MiB (e.g. 51200 = 50 GiB).",
     )
 
-    img_name = CalmVariable.Simple(
-        "<replace-with-image-name>",
-        label="Disk Image Name",
+    disk_image_ref = CalmVariable.Simple.dictionary(
+        {"kind": "image", "uuid": "<replace-with-image-uuid>"},
+        label="Disk Image Reference (JSON)",
         is_mandatory=True,
         runtime=True,
-        description="Name of the AHV image to clone for the primary disk.",
+        description="Image data_source_reference {kind, uuid} for the primary disk.",
     )
 
     subnet_uuid = CalmVariable.Simple(
@@ -263,7 +318,7 @@ class NormalMacroProfile(Profile):
     )
 
     power_state = CalmVariable.WithOptions(
-        ["ON", "OFF", "ACPI_SHUTDOWN"],
+        ["ON", "OFF"],
         default="ON",
         label="Power State",
         is_mandatory=False,
@@ -272,39 +327,35 @@ class NormalMacroProfile(Profile):
     )
 
 
-# ===========================================================================
-# Profile 3 – JsonMacroProfile
-# Entire JSON objects are replaced by a single macro string.
-# Supported JSON-typed macro fields (spec section 3.2):
-#   Disk (whole disk object)       → nics list entry is a macro string
-#   NIC  (whole NIC object)        → disk list entry is a macro string
-#   Cluster reference              → cluster field on AhvVm is a macro string
-# ===========================================================================
+# Profile 3 – JsonMacroProfile: JSON-object macros (disk image ref, whole NIC, cluster).
 
 
 class JsonMacroVmResources(AhvVmResources):
-    memory = 4  # literal GiB — only the JSON-object fields are macros here
+    memory = 4
     vCPUs = 2
     cores_per_vCPU = 1
     power_state = "ON"
     boot_type = "LEGACY"
 
-    # Whole disk object replaced by a JSON macro.
-    # The server resolves @@{disk_json}@@ to a full disk spec dict at runtime.
-    disks = ["@@{disk_json}@@"]
+    # Macro the disk image ref (JSON object), not the whole disk. disk_size_mib is
+    # required when the image ref is a macro.
+    disks = [
+        AhvVmDisk.Disk.Scsi.cloneFromImageService(
+            "@@{disk_image_ref}@@",
+            disk_size_mib=51200,
+            bootable=True,
+        )
+    ]
 
-    # Whole NIC object replaced by a JSON macro.
-    # The server resolves @@{nic_json}@@ to a full NIC spec dict at runtime.
-    nics = ["@@{nic_json}@@"]
+    nics = [
+        "@@{nic_json}@@"
+    ]  # whole-NIC macro is supported (NICs aren't cost-iterated)
 
 
 class JsonMacroAhvVm(AhvVm):
     name = "vm-@@{calm_array_index}@@-@@{calm_time}@@"
     resources = JsonMacroVmResources
-
-    # Whole cluster reference replaced by a JSON macro.
-    # The server resolves @@{cluster_json}@@ to {"kind": "cluster", "uuid": "..."} at runtime.
-    cluster = "@@{cluster_json}@@"
+    cluster = "@@{cluster_json}@@"  # whole cluster reference as a JSON macro
 
 
 class JsonMacroSubstrate(Substrate):
@@ -325,39 +376,21 @@ class JsonMacroSubstrate(Substrate):
 
 
 class JsonMacroDeployment(Deployment):
-    packages = [ref(AhvMacroPackage)]
+    packages = [ref(JsonMacroPackage)]
     substrate = ref(JsonMacroSubstrate)
 
 
 class JsonMacroProfile(Profile):
-    """
-    JSON-object substrate fields driven by macros.
-
-    Each variable below holds a full JSON object (dict) as its default value.
-    At launch the operator can supply a different object; the macro reference
-    in the substrate is resolved to the provided dict before provisioning.
-
-    JSON macro-capable fields demonstrated:
-        disk_json    — full AHV disk spec object (replaces a disk list entry)
-        nic_json     — full AHV NIC spec object  (replaces a NIC list entry)
-        cluster_json — full cluster reference     (replaces cluster_reference)
-    """
+    """JSON-object macros: disk image ref, whole NIC, and cluster reference."""
 
     deployments = [JsonMacroDeployment]
 
-    # --- Runtime variables (dict type — JSON objects) ---
-
-    disk_json = CalmVariable.Simple.dictionary(
-        {
-            "type": "",
-            "kind": "image",
-            "name": "<replace-with-image-name>",
-            "uuid": "<replace-with-image-uuid>",
-        },
-        label="Disk (JSON)",
+    disk_image_ref = CalmVariable.Simple.dictionary(
+        {"kind": "image", "uuid": "<replace-with-image-uuid>"},
+        label="Disk Image Reference (JSON)",
         is_mandatory=True,
         runtime=True,
-        description="Full AHV disk spec as a JSON object.",
+        description="Image data_source_reference {kind, uuid} for the disk.",
     )
 
     nic_json = CalmVariable.Simple.dictionary(
@@ -396,28 +429,24 @@ class JsonMacroProfile(Profile):
     )
 
 
-# ===========================================================================
-# Profile 4 – AllMacroProfile
-# Union of NormalMacroProfile + JsonMacroProfile.
-# Every macro-capable AHV substrate field listed in spec section 3.2.
-# ===========================================================================
+# Profile 4 – AllMacroProfile: union of NormalMacroProfile + JsonMacroProfile.
 
 
 class AllMacroVmResources(AhvVmResources):
-    # INT macro fields
     memory = "@@{memory_mib}@@"
     vCPUs = "@@{vcpus}@@"
     cores_per_vCPU = "@@{cores}@@"
-
-    # String macro field
     power_state = "@@{power_state}@@"
-
     boot_type = "LEGACY"
 
-    # Whole disk object as JSON macro
-    disks = ["@@{disk}@@"]
+    disks = [
+        AhvVmDisk.Disk.Scsi.cloneFromImageService(
+            "@@{disk_image_ref}@@",
+            disk_size_mib=51200,
+            bootable=True,
+        )
+    ]
 
-    # Whole NIC object as JSON macro
     nics = ["@@{nic}@@"]
 
 
@@ -425,8 +454,6 @@ class AllMacroAhvVm(AhvVm):
     # VM name macro (always supported)
     name = "@@{vm_name}@@"
     resources = AllMacroVmResources
-
-    # Whole cluster reference as JSON macro
     cluster = "@@{cluster}@@"
 
 
@@ -448,27 +475,12 @@ class AllMacroSubstrate(Substrate):
 
 
 class AllMacroDeployment(Deployment):
-    packages = [ref(AhvMacroPackage)]
+    packages = [ref(AllMacroPackage)]
     substrate = ref(AllMacroSubstrate)
 
 
 class AllMacroProfile(Profile):
-    """
-    All macro-capable AHV substrate fields driven at runtime (spec section 3.2).
-
-    Combines scalar INT/string macros with full JSON-object macros:
-
-    Field              Type    Macro
-    -----------------  ------  ---------------------
-    VM Name            string  @@{vm_name}@@
-    vCPUs              INT     @@{vcpus}@@
-    Cores per vCPU     INT     @@{cores}@@
-    Memory             INT     @@{memory_mib}@@
-    VM Power State     string  @@{power_state}@@
-    Cluster            JSON    @@{cluster}@@
-    Disk (full object) JSON    @@{disk}@@
-    NIC  (full object) JSON    @@{nic}@@
-    """
+    """Every macro-capable substrate field at once (union of profiles 2 + 3)."""
 
     deployments = [AllMacroDeployment]
 
@@ -507,7 +519,7 @@ class AllMacroProfile(Profile):
     )
 
     power_state = CalmVariable.WithOptions(
-        ["ON", "OFF", "ACPI_SHUTDOWN"],
+        ["ON", "OFF"],
         default="ON",
         label="Power State",
         is_mandatory=False,
@@ -533,19 +545,14 @@ class AllMacroProfile(Profile):
         ),
     )
 
-    disk = CalmVariable.Simple.dictionary(
-        {
-            "type": "",
-            "kind": "image",
-            "name": "<replace-with-image-name>",
-            "uuid": "<replace-with-image-uuid>",
-        },
-        label="Disk (JSON)",
+    disk_image_ref = CalmVariable.Simple.dictionary(
+        {"kind": "image", "uuid": "<replace-with-image-uuid>"},
+        label="Disk Image Reference (JSON)",
         is_mandatory=True,
         runtime=True,
         description=(
-            "Full AHV disk spec as a JSON object. "
-            "Replaces the single entry in the disk_list."
+            "Image data_source_reference {kind, uuid} as a JSON object. "
+            "Resolved into the bootable disk data_source_reference at launch."
         ),
     )
 
@@ -595,7 +602,12 @@ class AhvMacroBlueprint(Blueprint):
     """
 
     services = [AhvMacroService]
-    packages = [AhvMacroPackage]
+    packages = [
+        NormalPackage,
+        NormalMacroPackage,
+        JsonMacroPackage,
+        AllMacroPackage,
+    ]
     substrates = [
         NormalSubstrate,
         NormalMacroSubstrate,

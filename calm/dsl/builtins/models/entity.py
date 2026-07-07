@@ -543,7 +543,7 @@ class EntityType(EntityTypeBase):
                         if _is_macro(val):
                             # Whole macro string (@@{...}@@) — opaque at DSL level;
                             # server resolves it at runtime.
-                            LOG.info(
+                            LOG.debug(
                                 "[decompile] Field '{}' : keeping macro item as-is: {!r}".format(
                                     k, val
                                 )
@@ -553,7 +553,7 @@ class EntityType(EntityTypeBase):
                             # Non-macro string (e.g. bare UUID returned by the server for
                             # reference lists).  pre_decompile() calls .get() which would
                             # crash on a string — keep the raw value instead.
-                            LOG.info(
+                            LOG.debug(
                                 "[decompile] Field '{}' : non-macro string item {!r} - "
                                 "skipping structural decompile, keeping raw value".format(
                                     k, val
@@ -566,7 +566,7 @@ class EntityType(EntityTypeBase):
                                     )
                                 )
                             except Exception as exc:
-                                LOG.info(
+                                LOG.debug(
                                     "[decompile] Field '{}' : decompile failed for "
                                     "string item {!r} ({}) - kept raw".format(
                                         k, val, exc
@@ -576,7 +576,7 @@ class EntityType(EntityTypeBase):
                         else:
                             # Normal dict / object — let exceptions propagate so
                             # legitimate decompile failures are not silently swallowed.
-                            LOG.info(
+                            LOG.debug(
                                 "[decompile] Field '{}' : decompiling entity item "
                                 "(type={})".format(k, type(val).__name__)
                             )
@@ -587,7 +587,7 @@ class EntityType(EntityTypeBase):
                             )
                 else:
                     if _is_macro(v):
-                        LOG.info(
+                        LOG.debug(
                             "[decompile] Field '{}' : keeping macro value as-is: {!r}".format(
                                 k, v
                             )
@@ -595,7 +595,7 @@ class EntityType(EntityTypeBase):
                         new_value = v
                     elif isinstance(v, str):
                         # Non-macro string scalar — same guard as the array case.
-                        LOG.info(
+                        LOG.debug(
                             "[decompile] Field '{}' : non-macro string {!r} - "
                             "skipping structural decompile".format(k, v)
                         )
@@ -604,7 +604,7 @@ class EntityType(EntityTypeBase):
                                 v, context=cur_context, prefix=prefix
                             )
                         except Exception as exc:
-                            LOG.info(
+                            LOG.debug(
                                 "[decompile] Field '{}' : decompile failed for "
                                 "string {!r} ({}) - kept raw".format(k, v, exc)
                             )
@@ -625,7 +625,7 @@ class EntityType(EntityTypeBase):
                 try:
                     validator.validate(user_attrs[k], is_array)
                 except Exception as exc:
-                    LOG.info(
+                    LOG.debug(
                         "[decompile] Field '{}' : type validation mismatch "
                         "(value={!r}, error={}) - field excluded from decompiled class".format(
                             k, user_attrs[k], exc

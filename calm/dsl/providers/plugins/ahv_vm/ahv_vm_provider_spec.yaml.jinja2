@@ -449,7 +449,9 @@ properties:
   disk_list:
     type: array
     items:
-      {{ ahvDisk() | indent(6) }}
+      anyOf:
+        - {{ ahvDisk() | indent(10) }}
+        - type: string
   boot_config:
     {{ ahvBootConfig() | indent(4) }}
   guest_customization:

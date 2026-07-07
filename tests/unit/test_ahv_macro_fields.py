@@ -428,3 +428,44 @@ class TestRunbookVariableDictGuard:
 
         var = RunbookVariable.Simple.int("2", name="vcpus", runtime=True)
         assert var is not None
+
+
+class TestDecompileDiskListMacroValidation:
+    """
+    Regression (ENG-949632): the AHV provider spec schema must accept a
+    whole-disk macro string in ``disk_list`` (mirroring ``nic_list``).
+
+    Before the fix, ``disk_list.items`` only allowed an object, so decompiling a
+    blueprint that used ``disks = ["@@{disk_json}@@"]`` crashed with
+    ``'@@{disk_json}@@' is not of type 'object'`` during provider-spec
+    validation.
+    """
+
+    @staticmethod
+    def _validate(spec):
+        from calm.dsl.providers import get_provider
+
+        get_provider("AHV_VM").validate_spec(spec)
+
+    def test_disk_list_macro_string_passes_validation(self):
+        # Must not raise.
+        self._validate({"resources": {"disk_list": ["@@{disk_json}@@"]}})
+
+    def test_nic_list_macro_string_passes_validation(self):
+        # Symmetry guard: NIC macro strings were already allowed.
+        self._validate({"resources": {"nic_list": ["@@{nic_json}@@"]}})
+
+    def test_disk_and_nic_macro_strings_pass_validation(self):
+        self._validate(
+            {
+                "resources": {
+                    "disk_list": ["@@{disk_json}@@"],
+                    "nic_list": ["@@{nic_json}@@"],
+                }
+            }
+        )
+
+    def test_non_macro_string_disk_still_allowed_by_schema(self):
+        # anyOf(object, string) — a bare string is schema-valid; real content
+        # checks happen elsewhere. Guards against over-tightening the schema.
+        self._validate({"resources": {"disk_list": ["@@{disk_json}@@", "@@{d2}@@"]}})
