@@ -322,13 +322,15 @@ def validate_project_payload(cls, cdict):
                 )
             )
 
-        directory = Cache.get_entity_data(
-            CACHE.ENTITY.DIRECTORY_SERVICE, user_data.get("directory", "")
-        )
-        directory = Ref.DirectoryService(directory.get("name", ""))
-        directory.pop("name", None)
+        # whitelist directory references only for users part of active directory
+        if user_data.get("directory") not in ["LOCAL", "SERVICE_ACCOUNT"]:
+            directory = Cache.get_entity_data(
+                CACHE.ENTITY.DIRECTORY_SERVICE, user_data.get("directory", "")
+            )
+            directory = Ref.DirectoryService(directory.get("name", ""))
+            directory.pop("name", None)
 
-        cdict["directory_reference_list"].append(directory)
+            cdict["directory_reference_list"].append(directory)
 
     # removing 'roles' from cdict as it is invalid in projects payload
     roles = cdict.pop("roles", None)
