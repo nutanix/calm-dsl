@@ -60,7 +60,7 @@ SELF_SERVICE_DISABLED = "DISABLED"
     default=False,
     help="Update cache before running command",
 )
-@click.version_option("4.3.1")
+@click.version_option("4.4.0")
 @click.pass_context
 def main(ctx, config_file, sync):
     """Calm CLI
