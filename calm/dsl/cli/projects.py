@@ -318,8 +318,10 @@ def _sync_acps_for_roles(roles, project_name, project_uuid, append_only=False):
     By default, existing ACPs for the same role have their members replaced with
     what the DSL declares. When ``append_only`` is True, DSL members are merged
     into the existing ACP's user/group lists (deduplicated by uuid) so that
-    previously-assigned users/groups are preserved. ACPs for roles not in the
-    DSL are left untouched.
+    previously-assigned users/groups are preserved.
+
+    ACPs for roles that are no longer present in the DSL are deleted during
+    update - removing a role from the DSL.
 
     Args:
         roles (dict): mapping of role_name -> list of user/group references
@@ -440,6 +442,11 @@ def _sync_acps_for_roles(roles, project_name, project_uuid, append_only=False):
 
             _acp["operation"] = "UPDATE"
             handled_role_uuids.add(existing_role_uuid)
+        elif not append_only:
+            # Role has been removed from the DSL: delete its ACP so that the
+            # role (and its user/group assignments) is unassigned from the
+            # project on the server.
+            _acp["operation"] = "DELETE"
         else:
             _acp["operation"] = "UPDATE"
 
