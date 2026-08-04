@@ -41,7 +41,7 @@ resources:
       publisher: Canonical
       sku: 22_04-lts-gen2
       use_custom_image: false
-      version: 22.04.202506200
+      version: 22.04.202606110
     is_managed: true
     os_disk_details:
       caching_type: None

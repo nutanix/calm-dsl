@@ -38,7 +38,7 @@ class AZURE:
     PUBLISHERS = ["Canonical"]
     IMAGE_OFFERS = ["0001-com-ubuntu-server-jammy"]
     IMAGE_SKUS = ["22_04-lts-gen2"]
-    IMAGE_VERSIONS = ["22.04.202506200"]
+    IMAGE_VERSIONS = ["22.04.202606110"]
     SECURITY_GROUPS = ["DND-CENTOS-IMAGE-nsg"]
     VIRTUAL_NETWORKS = ["calm-virtual-network-eastus2"]
     SUBNETS = ["subnet1", "default"]

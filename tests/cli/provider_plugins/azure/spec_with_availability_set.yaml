@@ -16,7 +16,7 @@ input:
 - "137"   # Publisher = Canonical
 - "19"    # Image Offer = 0001-com-ubuntu-server-jammy
 - "18"    # Image Sku = 22_04-lts-gen2
-- "27"    # Image Version = 22.04.202506200
+- "27"    # Image Version = 22.04.202606110
 - "os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk"   # OS Disk Name
 - "n"   # Want to add storage type
 - "1"   # Cache type = None
@@ -36,7 +36,7 @@ spec_assertions:
 - "calmrg"    # Resource group
 - "Canonical"   # Publisher
 - "22_04-lts-gen2"   # Image Sku
-- "22.04.202506200"   # Image Version
+- "22.04.202606110"   # Image Version
 - "Attach"    # Os disk create option
 - "0001-com-ubuntu-server-jammy"  # Image offer
 - "data_disk_list: []"   # Data disks = No
@@ -50,5 +50,5 @@ dependencies:
 - [4, accounts/azure_primary/resource_groups/calmrg/index]
 - [13, accounts/azure_primary/locations/East US 2/publishers/Canonical/index]
 - [15, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/0001-com-ubuntu-server-jammy/image_skus/22_04-lts-gen2/index]
-- [16, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/0001-com-ubuntu-server-jammy/image_skus/22_04-lts-gen2/image_versions/22.04.202506200/index]
+- [16, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/0001-com-ubuntu-server-jammy/image_skus/22_04-lts-gen2/image_versions/22.04.202606110/index]
 - [14, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/0001-com-ubuntu-server-jammy/index]
