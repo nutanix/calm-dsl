@@ -44,7 +44,12 @@ def _get_acps(name, project, filter_by, limit, offset, quiet, out):
 @click.option("--project", "-p", required=True, help="ACP project name")
 @click.option("--user", "-u", "users", multiple=True, default=[])
 @click.option("--group", "-g", "groups", multiple=True, default=[])
-@click.option("--name", "-name", default=None)
+@click.option(
+    "--name",
+    "-name",
+    default=None,
+    help="[Deprecated] This option has no effect and will be removed in a future release.",
+)
 def _create_acp(role, project, users, groups, name):
     """Creates an acp"""
 

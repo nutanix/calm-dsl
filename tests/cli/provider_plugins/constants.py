@@ -1,10 +1,24 @@
+class AHV:
+    """AHV Constants for cli provider_plugins tests.
+
+    Resource names listed here are resolved to their live indexes by the
+    populator so fixtures don't hardcode positions (which shift per setup).
+    """
+
+    PROJECTS = ["auto_ncm_default"]
+    CATEGORIES = ["AppFamily:Backup", "AppFamily:Databases"]
+    CDROM_IMAGES = ["SQLServer2014SP2-FullSlipstream-x64-ENU.iso"]
+    DISK_IMAGES = ["Ubuntu1404"]
+    SUBNETS = ["vlan1211"]
+
+
 class AWS:
     """AWS Constants for cli provider_plugins tests"""
 
-    PROJECTS = ["default"]
+    PROJECTS = ["auto_ncm_default"]
     REGIONS = ["us-east-1"]
     AVAILABILITY_ZONES = ["us-east-1a"]
-    MACHINE_IMAGES = ["DND_CENTOS_QA"]
+    MACHINE_IMAGES = ["DND_Rocky89_DevOps"]
     IAM_ROLES = ["aws-elasticbeanstalk-ec2-role"]
     KEY_PAIRS = ["calm-blueprints"]
     VPC_IDS = ["vpc-ffd54d98"]
@@ -17,7 +31,7 @@ class AWS:
 class AZURE:
     """Azure Constants for cli provider_plugin tests"""
 
-    PROJECTS = ["default"]
+    PROJECTS = ["auto_ncm_default"]
     RESOURCE_GROUPS = ["calmrg"]
     LOCATIONS = ["East US 2"]
     HW_PROFILES = ["Standard_DS1_v2", "Standard_D2_v2"]

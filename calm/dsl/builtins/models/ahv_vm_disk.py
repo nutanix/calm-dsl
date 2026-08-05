@@ -9,6 +9,7 @@ from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
 from .helper import common as common_helper
+from .macro_helper import has_macro, is_macro, validate_ahv_macro_fields
 
 LOG = get_logging_handle(__name__)
 
@@ -24,6 +25,9 @@ class AhvDiskType(EntityType):
 
     def compile(cls):
         cdict = super().compile()
+
+        validate_ahv_macro_fields(cdict, "AhvDisk")
+
         # Pop bootable from cdict
         cdict.pop("bootable", None)
 
@@ -40,11 +44,17 @@ class AhvDiskType(EntityType):
             account_uuid = list(project_whitelist.keys())[0]
 
         image_ref = cdict.get("data_source_reference") or dict()
+
+        # The whole data_source_reference is a macro string (DICT-type variable).
+        # Leave it as-is; the server resolves it to the actual image reference at runtime.
+        if has_macro(image_ref):
+            return cdict
+
         if image_ref and image_ref["kind"] == "image":
             image_name = image_ref.get("name")
             device_type = cdict["device_properties"].get("device_type")
 
-            if image_name.startswith("@@{") and image_name.endswith("}@@"):
+            if has_macro(image_name):
                 cdict["data_source_reference"] = {
                     "kind": "image",
                     "uuid": image_name,
@@ -91,19 +101,30 @@ def ahv_vm_disk(**kwargs):
 
 
 def allocate_on_storage_container(adapter_type="SCSI", size=8):
+    # When size is a macro string the server resolves the value at runtime, so
+    # skip the GiB-to-MiB conversion and pass the macro string directly.
+    if has_macro(size):
+        disk_size_mib = size
+    else:
+        disk_size_mib = size * 1024
+
     kwargs = {
         "device_properties": {
             "device_type": "DISK",
             "disk_address": {"adapter_type": adapter_type, "device_index": -1},
         },
-        "disk_size_mib": size * 1024,
+        "disk_size_mib": disk_size_mib,
     }
 
     return ahv_vm_disk(**kwargs)
 
 
 def update_disk_config(
-    device_type="DISK", adapter_type="SCSI", image_data={}, bootable=False
+    device_type="DISK",
+    adapter_type="SCSI",
+    image_data={},
+    bootable=False,
+    disk_size_mib=0,
 ):
     if not image_data:
         raise ValueError("Image data not found")
@@ -114,7 +135,10 @@ def update_disk_config(
             "device_type": device_type,
             "disk_address": {"adapter_type": adapter_type, "device_index": -1},
         },
-        "disk_size_mib": 0,
+        # disk_size_mib=0 means "use image size" for real image clones; when
+        # data_source_reference is a macro the server cannot infer size at
+        # save time, so callers must pass a concrete int or @@{size}@@.
+        "disk_size_mib": disk_size_mib,
         "bootable": bootable,
     }
 
@@ -122,17 +146,28 @@ def update_disk_config(
 
 
 def clone_from_image_service(
-    device_type="DISK", adapter_type="SCSI", image_name="", bootable=False
+    device_type="DISK",
+    adapter_type="SCSI",
+    image_name="",
+    bootable=False,
+    disk_size_mib=0,
 ):
 
     if not image_name:
         LOG.error("image_name not provided")
         sys.exit(-1)
 
-    # image_uuid will be added at compile time as it requires project context
-    image_data = {"kind": "image", "name": image_name}
+    # When image_name is a DICT-type macro (the whole reference object is a variable),
+    # use it directly as data_source_reference so the server resolves it at runtime.
+    if is_macro(image_name):
+        image_data = image_name
+    else:
+        # image_uuid will be added at compile time as it requires project context
+        image_data = {"kind": "image", "name": image_name}
 
-    return update_disk_config(device_type, adapter_type, image_data, bootable)
+    return update_disk_config(
+        device_type, adapter_type, image_data, bootable, disk_size_mib=disk_size_mib
+    )
 
 
 def clone_from_vm_image_service(
@@ -168,36 +203,43 @@ def empty_cd_rom(adapter_type="IDE"):
     return ahv_vm_disk(**kwargs)
 
 
-def disk_scsi_clone_from_image(image_name=None, bootable=False):
+def disk_scsi_clone_from_image(image_name=None, bootable=False, disk_size_mib=0):
     return clone_from_image_service(
         device_type="DISK",
         adapter_type="SCSI",
         image_name=image_name,
         bootable=bootable,
+        disk_size_mib=disk_size_mib,
     )
 
 
-def disk_pci_clone_from_image(image_name=None, bootable=False):
+def disk_pci_clone_from_image(image_name=None, bootable=False, disk_size_mib=0):
     return clone_from_image_service(
-        device_type="DISK", adapter_type="PCI", image_name=image_name, bootable=bootable
+        device_type="DISK",
+        adapter_type="PCI",
+        image_name=image_name,
+        bootable=bootable,
+        disk_size_mib=disk_size_mib,
     )
 
 
-def cd_rom_ide_clone_from_image(image_name=None, bootable=False):
+def cd_rom_ide_clone_from_image(image_name=None, bootable=False, disk_size_mib=0):
     return clone_from_image_service(
         device_type="CDROM",
         adapter_type="IDE",
         image_name=image_name,
         bootable=bootable,
+        disk_size_mib=disk_size_mib,
     )
 
 
-def cd_rom_sata_clone_from_image(image_name=None, bootable=False):
+def cd_rom_sata_clone_from_image(image_name=None, bootable=False, disk_size_mib=0):
     return clone_from_image_service(
         device_type="CDROM",
         adapter_type="SATA",
         image_name=image_name,
         bootable=bootable,
+        disk_size_mib=disk_size_mib,
     )
 
 

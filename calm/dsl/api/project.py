@@ -1,3 +1,4 @@
+import copy
 from distutils.version import LooseVersion as LV
 
 from .resource import ResourceAPI
@@ -28,7 +29,19 @@ class ProjectAPI(ResourceAPI):
             err = {"error": err_msg, "code": -1}
             return None, err
 
-        return super().create(payload)
+        final_payload = copy.deepcopy(payload)
+        final_payload = get_projects_internal_payload(final_payload)
+
+        CALM_PROJECTS_PREFIX = (
+            RESOURCE.API_PREFIX.V3_API_PATH_PREFIX + "/projects_internal"
+        )
+
+        return self.connection._call(
+            CALM_PROJECTS_PREFIX,
+            verify=False,
+            request_json=final_payload,
+            method=REQUEST.METHOD.POST,
+        )
 
     def usage(self, uuid, payload):
 

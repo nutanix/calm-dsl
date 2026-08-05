@@ -13,11 +13,15 @@ from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
 from calm.dsl.tools import StrictDraft7Validator
 from calm.dsl.log import get_logging_handle
-
+from calm.dsl.store.version import Version
 from .constants import AHV as AhvConstants
 
 from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
+from calm.dsl.builtins.models.helper.common import (
+    get_pc_account_uuid_using_pe_account_uuid,
+)
+
 
 LOG = get_logging_handle(__name__)
 Provider = get_provider_interface()
@@ -107,21 +111,28 @@ class AhvVmProvider(Provider):
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
-        for entity in res["entities"]:
-            entity_id = entity["metadata"]["uuid"]
-            if entity_id in reg_accounts:
-                account_uuid = entity_id
-                break
+
+        pe_account_uuid = (
+            substrate_spec.get("create_spec", {})
+            .get("resources", {})
+            .get("account_uuid", "")
+        )
+
+        # Find parent pc account uuid attached to this pe
+        account_uuid = get_pc_account_uuid_using_pe_account_uuid(pe_account_uuid)
+
+        calm_version = Version.get_version("Calm")
 
         # TODO Host PC dependency for categories call due to bug https://jira.nutanix.com/browse/CALM-17213
-        if account_uuid:
-            payload = {"length": 250, "filter": "_entity_id_=={}".format(account_uuid)}
-            res, err = client.account.list(payload)
+        # Host pc dependency is removed in Calm 4.4.0. As categories groups call is deprecated
+        # Keeping this check here for backward compatibility in version lesser than 4.4.0
+        if LV(calm_version) < LV("4.4.0") and account_uuid:
+            res, err = client.account.read(account_uuid)
             if err:
                 raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
             res = res.json()
-            provider_data = res["entities"][0]["status"]["resources"]["data"]
+            provider_data = res["status"]["resources"]["data"]
             is_host_pc = provider_data["host_pc"]
 
         # Getting the readiness probe details
@@ -279,24 +290,33 @@ class AhvVmProvider(Provider):
                     show_choices=False,
                 )
                 if choice == "y":
-                    categories = Obj.categories(
-                        host_pc=is_host_pc, account_uuid=account_uuid
+                    categories = fetch_categories_interactively(
+                        Obj,
+                        host_pc=is_host_pc,
+                        account_uuid=account_uuid,
+                        project_uuid=project_id,
                     )
-                    click.echo("Choose from given categories:")
-                    for ind, group in enumerate(categories):
-                        category = "{}:{}".format(group["key"], group["value"])
-                        click.echo(
-                            "\t {}. {} ".format(str(ind + 1), highlight_text(category))
-                        )
 
                 while choice == "y":
                     index = click.prompt(
-                        "Enter the index of category (0 to skip)", default=0
+                        "Enter the index of category (0 to skip, -1 to search again)",
+                        default=0,
                     )
-                    if not index:
+                    if index == 0:
                         break
 
-                    if (index > len(categories)) or (index <= 0):
+                    if index == -1:
+                        new_categories = fetch_categories_interactively(
+                            Obj,
+                            host_pc=is_host_pc,
+                            account_uuid=account_uuid,
+                            project_uuid=project_id,
+                        )
+                        if new_categories:
+                            categories = new_categories
+                        continue
+
+                    if (index > len(categories)) or (index < 0):
                         click.echo("Invalid index !!! ")
                     else:
                         group = categories[index - 1]
@@ -990,6 +1010,10 @@ class AhvNew(AhvBase):
     CLUSTERS = "nutanix/v1/clusters"
     VPCS = "nutanix/v1/vpcs"
     GROUPS = "nutanix/v1/groups"
+    CATEGORIES = "nutanix/v1/categories"
+    # Max entities the categories meta-api returns per call (no pagination support).
+    CATEGORIES_FETCH_LIMIT = 50
+    FILTER_EXCLUSIONS = "key!=CalmApplication;key!=CalmDeployment;key!=CalmService;key!=CalmPackage;key!=CalmProject;key!=CalmUser;key!=CalmVmUniqueIdentifier;key!=CalmClusterUuid"
     CATEGORIES_PAYLOAD = {
         "entity_type": "category",
         "filter_criteria": "name!=CalmApplication;name!=CalmDeployment;name!=CalmService;name!=CalmPackage;name!=CalmProject;name!=CalmUser;name!=CalmVmUniqueIdentifier;name!=CalmClusterUuid",
@@ -1023,7 +1047,15 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
-        res, err = Obj.list(params, ignore_error=True)
+
+        # TODO: Remove this when the ENG-915373 is fixed
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+        if LV(calm_version) >= LV("4.4.0"):
+            params["sort_attribute"] = ""
+
+        res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -1044,13 +1076,74 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
+
+        # TODO: Remove this when the ENG-915373 is fixed
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+        if LV(calm_version) >= LV("4.4.0"):
+            params["sort_attribute"] = ""
+
         res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        return {"entities": res}
+        res = res.json()
+        return res
+
+    def fetch_categories_from_meta_api(self, *args, **kwargs):
+        project_uuid = kwargs.get("project_uuid", None)
+        search = kwargs.get("search", None)
+
+        Obj = get_resource_api(self.CATEGORIES, self.connection)
+        account_uuid = kwargs.get("account_uuid", None)
+        filter_query = ""
+
+        if account_uuid:
+            filter_query = filter_query + ";account_uuid=={}".format(account_uuid)
+
+        if project_uuid:
+            filter_query = filter_query + ";project_uuid=={}".format(project_uuid)
+
+        filter_query = filter_query + ";{}".format(self.FILTER_EXCLUSIONS)
+
+        # The categories meta-api caps responses at CATEGORIES_FETCH_LIMIT and does
+        # not support pagination. To reach categories beyond that cap we narrow the
+        # result set server-side using the same substring clause the UI sends per
+        # keystroke: match the search text against either key or value.
+        if search:
+            safe = re.escape(search)
+            filter_query = filter_query + ";(key==.*{0}.*,value==.*{0}.*)".format(safe)
+
+        if filter_query.startswith(";"):
+            filter_query = filter_query[1:]
+
+        params = {"filter": filter_query}
+        res, err = Obj.list(params)
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        categories = []
+
+        for entity in res.get("entities", []):
+            key = entity.get("name", "")
+            value = entity.get("value", "")
+            if not key or not value:
+                continue
+            categories.append({"key": key, "value": value})
+
+        return categories
 
     def categories(self, *args, **kwargs):
+
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+
+        if LV(calm_version) >= LV("4.4.0"):
+            return self.fetch_categories_from_meta_api(*args, **kwargs)
 
         client = get_api_client()
         payload = copy.deepcopy(self.CATEGORIES_PAYLOAD)
@@ -1098,7 +1191,15 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
-        res, err = Obj.list(params, ignore_error=True)
+
+        # TODO: Remove this when the ENG-915373 is fixed
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+        if LV(calm_version) >= LV("4.4.0"):
+            params["sort_attribute"] = ""
+
+        res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -1121,8 +1222,16 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
+
+        # TODO: Remove this when the ENG-915373 is fixed
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+        if LV(calm_version) >= LV("4.4.0"):
+            params["sort_attribute"] = ""
+
         LOG.debug(params)
-        res, err = Obj.list(params, ignore_error=True)
+        res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
             if ignore_failures:
                 LOG.warning("Failed to query VPCs due to: {}, ignoring".format(err))
@@ -1185,7 +1294,8 @@ class Ahv(AhvBase):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        return {"entities": res}
+        res = res.json()
+        return res
 
     def categories(self, *args, **kwargs):
         Obj = get_resource_api(self.GROUPS, self.connection)
@@ -1209,6 +1319,71 @@ class Ahv(AhvBase):
 def highlight_text(text, **kwargs):
     """Highlight text in our standard format"""
     return click.style("{}".format(text), fg="blue", bold=False, **kwargs)
+
+
+def fetch_categories_interactively(
+    ahv_obj, host_pc=False, account_uuid=None, project_uuid=None
+):
+    """Interactively fetch and display selectable categories.
+
+    The categories meta-api (Calm >= 4.4.0) caps responses at ~50 entities and
+    does not support pagination. To let users reach categories beyond that cap,
+    we prompt for a search term and pass it through as a server-side substring
+    filter (the same approach the UI uses for type-to-filter). When a response
+    is truncated at the cap, the user is asked to refine the search. For older
+    Calm versions the search prompt is skipped (that path is not capped at 50).
+
+    Returns the displayed list of category dicts ({"key": ..., "value": ...}).
+    """
+    calm_version = Version.get_version("Calm")
+    search_supported = LV(calm_version) >= LV("4.4.0")
+    fetch_limit = getattr(ahv_obj, "CATEGORIES_FETCH_LIMIT", 50)
+
+    while True:
+        fetch_kwargs = {
+            "host_pc": host_pc,
+            "account_uuid": account_uuid,
+            "project_uuid": project_uuid,
+        }
+
+        search = ""
+        if search_supported:
+            search = click.prompt(
+                "\nEnter search text to filter categories by key/value "
+                "(leave blank for to list all)",
+                default="",
+                show_default=False,
+            )
+            fetch_kwargs["search"] = search or None
+
+        categories = ahv_obj.categories(**fetch_kwargs)
+
+        if not categories:
+            click.echo(
+                highlight_text(
+                    "No categories matched{}.".format(
+                        " '{}'".format(search) if search else ""
+                    )
+                )
+            )
+            if search_supported:
+                continue
+            return categories
+
+        if search_supported and len(categories) >= fetch_limit:
+            click.echo(
+                highlight_text(
+                    "Showing first {} matches only (api limit); refine the search "
+                    "text to narrow down to the category you want.".format(fetch_limit)
+                )
+            )
+
+        click.echo("Choose from given categories:")
+        for ind, group in enumerate(categories):
+            category = "{}:{}".format(group["key"], group["value"])
+            click.echo("\t {}. {} ".format(str(ind + 1), highlight_text(category)))
+
+        return categories
 
 
 def create_spec(client):
@@ -1326,21 +1501,38 @@ def create_spec(client):
     )
     if choice[0] == "y":
         # TODO Remove dependecy for host_pc after bug CALM-17213 is resolved
-        categories = AhvObj.categories(host_pc=is_host_pc, account_uuid=account_uuid)
+        categories = fetch_categories_interactively(
+            AhvObj,
+            host_pc=is_host_pc,
+            account_uuid=account_uuid,
+            project_uuid=project_id,
+        )
         if not categories:
             click.echo("\n{}\n".format(highlight_text("No Category present")))
 
         else:
-            click.echo("\n Choose from given categories: \n")
-            for ind, group in enumerate(categories):
-                category = "{}:{}".format(group["key"], group["value"])
-                click.echo("\t {}. {} ".format(str(ind + 1), highlight_text(category)))
-
             result = {}
             while True:
 
                 while True:
-                    index = click.prompt("\nEnter the index of category", default=1)
+                    index = click.prompt(
+                        "\nEnter the index of category (-1 to search again)", default=1
+                    )
+                    if index == -1:
+                        new_categories = fetch_categories_interactively(
+                            AhvObj,
+                            host_pc=is_host_pc,
+                            account_uuid=account_uuid,
+                            project_uuid=project_id,
+                        )
+                        if new_categories:
+                            categories = new_categories
+                        else:
+                            click.echo(
+                                "\n{}\n".format(highlight_text("No Category present"))
+                            )
+                        continue
+
                     if (index > len(categories)) or (index <= 0):
                         click.echo("Invalid index !!! ")
 

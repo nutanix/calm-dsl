@@ -4,11 +4,17 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
+from calm.dsl.builtins.models.macro_helper import has_macro
 
 LOG = get_logging_handle(__name__)
 
 
 def render_ahv_vm_nic(cls):
+
+    # When the entire NIC entry is a macro string the server resolves it at
+    # runtime.  Render it as AhvVmNic("<macro>") so the decompiled file is valid.
+    if has_macro(cls):
+        return 'AhvVmNic("{}")'.format(cls)
 
     # Note cls.get_dict() may not contain subnet name
     # So it will fail. So use class attributes instead of getting dict object

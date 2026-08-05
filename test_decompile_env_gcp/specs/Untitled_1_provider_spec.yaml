@@ -13,7 +13,7 @@ resources:
       diskName: ''
       diskSizeGb: -1
       diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/diskTypes/hyperdisk-throughput
-      sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7
+      sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/dnd-rocky89-devops
       sourceImageEncryptionKey: {}
       type: ''
     interface: ''

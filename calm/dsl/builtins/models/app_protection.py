@@ -6,7 +6,7 @@ from calm.dsl.store import Cache
 from .config_spec import snapshot_config_create, restore_config_create
 from .helper import common as common_helper
 from .metadata_payload import get_metadata_obj
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import PROVIDER, CONFIG_TYPE
 from calm.dsl.builtins import Ref
 
 LOG = get_logging_handle(__name__)
@@ -111,6 +111,7 @@ class AppProtection:
                 name,
                 target=None,
                 delete_vm_post_restore=False,
+                restore_type=CONFIG_TYPE.RESTORE.RESTORE_TYPE.CLONE.value,
                 description="",
             ):
                 return restore_config_create(
@@ -118,6 +119,7 @@ class AppProtection:
                     provider=PROVIDER.TYPE.AHV,
                     target=target,
                     delete_vm_post_restore=delete_vm_post_restore,
+                    restore_type=restore_type,
                     description=description,
                 )
 
@@ -141,6 +143,7 @@ class AppProtection:
             name,
             target=None,
             delete_vm_post_restore=False,
+            restore_type=CONFIG_TYPE.RESTORE.RESTORE_TYPE.CLONE.value,
             description="",
         ):
             return cls.Ahv.__new__(
@@ -148,5 +151,6 @@ class AppProtection:
                 name=name,
                 target=target,
                 delete_vm_post_restore=delete_vm_post_restore,
+                restore_type=restore_type,
                 description=description,
             )

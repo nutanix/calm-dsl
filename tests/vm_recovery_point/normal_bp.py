@@ -18,7 +18,9 @@ CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 CENTOS_CI = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
 PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
-PROJECT_NAME = DSL_CONFIG["AHV_SNAPSHOT_PROJECTS"]["PROJECT1"]["NAME"]
+PROJECT_NAME = (
+    DSL_CONFIG.get("AHV_SNAPSHOT_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "")
+)
 NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
 
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
@@ -95,7 +97,14 @@ class AhvVmProfile(Profile):
 
     deployments = [AhvVmDeployment]
 
-    restore_configs = [AppProtection.RestoreConfig("r1", target=ref(AhvVmDeployment))]
+    restore_configs = [
+        AppProtection.RestoreConfig.Ahv(
+            "r1",
+            target=ref(AhvVmDeployment),
+            delete_vm_post_restore=False,
+            restore_type="REVERT",
+        )
+    ]
     snapshot_configs = [
         AppProtection.SnapshotConfig("s1", restore_config=ref(restore_configs[0]))
     ]

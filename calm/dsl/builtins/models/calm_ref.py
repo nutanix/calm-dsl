@@ -22,6 +22,7 @@ from calm.dsl.store import Cache, Version
 from calm.dsl.constants import CACHE, TUNNEL
 from calm.dsl.api.handle import get_api_client
 from calm.dsl.log import get_logging_handle
+from calm.dsl.constants import PROJECT
 
 
 LOG = get_logging_handle(__name__)
@@ -61,6 +62,22 @@ class CalmRefType(EntityType):
     @classmethod
     def decompile(mcls, cdict, context=[], prefix=""):
         """return the decompiled class"""
+
+        # Non-dict values (macro strings like @@{x}@@ or bare UUID strings that
+        # the server sometimes returns for reference lists) cannot be structurally
+        # decompiled.  Return them as-is; pre_decompile() calls cdict.get() which
+        # would raise AttributeError on any string input.
+        if not isinstance(cdict, dict):
+            from .macro_helper import is_macro
+
+            if is_macro(cdict):
+                LOG.debug(f"[CalmRef.decompile] Macro reference {cdict!r} kept as-is")
+            else:
+                LOG.debug(
+                    f"[CalmRef.decompile] Non-dict value {cdict!r} "
+                    f"(type={type(cdict).__name__}) kept as-is"
+                )
+            return cdict
 
         cdict = mcls.pre_decompile(cdict, context=context, prefix=prefix)
         cls_mapping = Ref.get_cls_kind_mapping()
@@ -316,6 +333,13 @@ class Ref:
         __ref_kind__ = CACHE.ENTITY.PROJECT
 
         def __new__(cls, name, **kwargs):
+
+            if name == PROJECT.INTERNAL:
+                return {
+                    "kind": "project",
+                    "name": name,
+                    "uuid": PROJECT.INTERNAL_PROJECT_UUID,
+                }
 
             project_cache_data = Cache.get_entity_data(
                 entity_type=CACHE.ENTITY.PROJECT, name=name
@@ -582,26 +606,40 @@ class Ref:
 
             vrs_uuid = kwargs.get("uuid", "")
             payload = {"filter": "account_uuid=={}".format(account_uuid)}
-            if vrs_uuid:
-                payload["filter"] += ";uuid=={}".format(vrs_uuid)
-            else:
-                payload["filter"] += ";name=={}".format(name)
+
+            # TODO: Fix this once backend fixes uuid/name in filter: ENG-950458
+            # if vrs_uuid:
+            #     payload["filter"] += ";uuid=={}".format(vrs_uuid)
+            # else:
+            #     payload["filter"] += ";name=={}".format(name)
 
             client = get_api_client()
             vrc_map = client.vm_recovery_point.get_name_uuid_map(payload)
 
-            if not vrc_map:
-                log_msg = "No recovery point found with " + (
-                    "uuid='{}'".format(vrs_uuid)
-                    if vrs_uuid
-                    else "name='{}'".format(name)
-                )
-                LOG.error(log_msg)
-                sys.exit("No recovery point found")
+            # if not vrc_map:
+            #     log_msg = "No recovery point found with " + (
+            #         "uuid='{}'".format(vrs_uuid)
+            #         if vrs_uuid
+            #         else "name='{}'".format(name)
+            #     )
+            #     LOG.error(log_msg)
+            #     sys.exit("No recovery point found")
 
             # there will be single key
-            vrc_name = list(vrc_map.keys())[0]
-            vrc_uuid = vrc_map[vrc_name]
+            # vrc_name = list(vrc_map.keys())[0]
+            if name:
+                if name not in vrc_map:
+                    LOG.error("No recovery point found with name='{}'".format(name))
+                    sys.exit("No recovery point found")
+                vrc_uuid = vrc_map[name]
+                vrc_name = name
+            else:
+                vrc_uuid_name_map = client.vm_recovery_point.get_uuid_name_map(payload)
+                if vrs_uuid not in vrc_uuid_name_map:
+                    LOG.error("No recovery point found with uuid='{}'".format(vrs_uuid))
+                    sys.exit("No recovery point found")
+                vrc_uuid = vrc_uuid_name_map[vrs_uuid]
+                vrc_name = vrc_uuid_name_map[vrs_uuid]
 
             if isinstance(vrc_uuid, list):
                 LOG.error(

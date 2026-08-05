@@ -140,13 +140,20 @@ class HelloProfile(Profile):
     # Deployments under this profile
     deployments = [HelloDeployment]
 
-    restore_configs = [AppProtection.RestoreConfig("r1", target=ref(HelloDeployment))]
-    snapshot_configs = [AppProtection.SnapshotConfig("s1", policy=AppProtection.ProtectionPolicy("p221", rule_name="rule_0bb6745f8a104e5e3791bbfd7413f5d5"))]
+    restore_configs = [
+        AppProtection.RestoreConfig("r1", target=ref(HelloDeployment)),
+        AppProtection.RestoreConfig("r1_in_place", target=ref(HelloDeployment), restore_type="REVERT"),
+    ]
+    snapshot_configs = [
+        AppProtection.SnapshotConfig("s1", restore_config=ref(restore_configs[0]), policy=AppProtection.ProtectionPolicy("p221", rule_name="rule_0bb6745f8a104e5e3791bbfd7413f5d5")),
+        AppProtection.SnapshotConfig("s1_in_place", restore_config=ref(restore_configs[1]), policy=AppProtection.ProtectionPolicy("p221", rule_name="rule_0bb6745f8a104e5e3791bbfd7413f5d5")),
+    ]
     environments = [Ref.Environment(name="env1")]
 
     @action
     def custom_action():
         Task.ConfigExec(config=ref(HelloProfile.restore_configs[0]), name="Execute restore config task")
+
 
 class DSLSnapshotRestore(Blueprint):
     """ Sample blueprint for Hello app using AHV VM"""

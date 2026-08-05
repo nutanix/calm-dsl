@@ -8,6 +8,7 @@ from click.testing import CliRunner
 from calm.dsl.cli import main as cli
 
 from calm.dsl.cli.constants import APPLICATION, ERGON_TASK, RUNLOG
+from calm.dsl.constants import CONFIG_TYPE
 from calm.dsl.log import get_logging_handle
 from calm.dsl.api import get_client_handle_obj
 from calm.dsl.api.connection import REQUEST
@@ -15,6 +16,7 @@ from calm.dsl.cli.main import get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.config.constants import CONFIG
 from calm.dsl.api.util import replace_host_port_in_url
+from tests.constants import BP_SPEC
 
 VPC_TUNNEL_NAME = "vpc_name_1"
 LOG = get_logging_handle(__name__)
@@ -104,8 +106,114 @@ class Application:
 
         return None
 
-    def execute_actions(self, actions, app):
-        "This routine execute actions"
+    def get_vm_uuid_from_app(self, app_name):
+        """Extract the VM UUID from a running app's substrate platform data.
+
+        Returns the UUID string, or None if no VM UUID is found.
+        Raises RuntimeError if the CLI call itself fails.
+        """
+        runner = CliRunner()
+        result = runner.invoke(cli, ["describe", "app", app_name, "--out=json"])
+        if result.exit_code:
+            raise RuntimeError(
+                "Failed to describe app '{}': {}".format(app_name, result.output)
+            )
+        app = json.loads(result.output)
+
+        deployment_list = app["status"]["resources"].get("deployment_list", [])
+        for deployment in deployment_list:
+            for substrate in deployment.get("substrate_configuration", {}).get(
+                "element_list", []
+            ):
+                platform_data_str = substrate.get("platform_data", "")
+                if not platform_data_str:
+                    continue
+                platform_data = json.loads(platform_data_str)
+                vm_uuid = platform_data.get("metadata", {}).get("uuid")
+                if vm_uuid:
+                    return vm_uuid
+
+        return None
+
+    def _build_restore_action_args(self, app, action_name):
+        """Build the ``recovery_point_group_uuid`` args needed by a restore
+        action.  Picks the most recent recovery group.
+        Returns a list of arg dicts ready for the ``run_action`` API.
+        """
+        client = get_api_client()
+        app_id = app["metadata"]["uuid"]
+        app_spec = app["spec"]
+
+        calm_action_name = "action_" + action_name.lower()
+        action_payload = next(
+            (
+                a
+                for a in app_spec["resources"]["action_list"]
+                if a["name"] == calm_action_name or a["name"] == action_name
+            ),
+            None,
+        )
+        if not action_payload:
+            pytest.fail("Restore action '{}' not found in app".format(action_name))
+
+        res, err = client.application.get_recovery_groups(app_id, "")
+        if err:
+            pytest.fail(
+                "Failed to fetch recovery groups: [{}] - {}".format(
+                    err["code"], err["error"]
+                )
+            )
+        rg_entities = res.json().get("entities", [])
+        if not rg_entities:
+            pytest.fail(
+                "No recovery groups found for app '{}'. "
+                "Take a snapshot before running restore.".format(app_id)
+            )
+
+        rg = rg_entities[0]
+        LOG.info(
+            "Using most recent recovery group '{}' ({})".format(
+                rg["status"]["name"], rg["status"]["uuid"]
+            )
+        )
+
+        action_args = []
+        for task in action_payload["runbook"]["task_definition_list"]:
+            if task["type"] != "CALL_CONFIG":
+                continue
+            action_args.append(
+                {
+                    "name": "recovery_point_group_uuid",
+                    "value": rg["status"]["uuid"],
+                    "task_uuid": task["uuid"],
+                }
+            )
+        return action_args
+
+    def run_restore_action(self, app_name, action_name):
+        """Resolve recovery group args and delegate to ``execute_actions``."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["describe", "app", app_name, "--out=json"])
+        if result.exit_code:
+            pytest.fail(
+                "Failed to describe app '{}': {}".format(app_name, result.output)
+            )
+        app = json.loads(result.output)
+        args = self._build_restore_action_args(app, action_name)
+        self.execute_actions([action_name], app, action_args_map={action_name: args})
+
+    def execute_actions(self, actions, app, action_args_map=None):
+        """Run one or more actions on an application via the API and poll
+        each to completion.
+
+        *action_args_map* is an optional ``{action_name: [arg_dicts]}``
+        mapping.  Each action looks up its own args by name; actions
+        without an entry (or when the map is ``None``) receive an empty
+        arg list, which is the default for simple actions.
+        """
+        if action_args_map is None:
+            action_args_map = {}
+
         client = get_api_client()
         app_uuid = app["metadata"]["uuid"]
         app_spec = app["spec"]
@@ -135,7 +243,7 @@ class Application:
 
             app.pop("status", None)
             app["spec"] = {
-                "args": [],
+                "args": action_args_map.get(action_name, []),
                 "target_kind": "Application",
                 "target_uuid": app_uuid,
             }
@@ -149,7 +257,11 @@ class Application:
 
             response = res.json()
             runlog_uuid = response["status"]["runlog_uuid"]
-            LOG.info(f"Runlog uuid of custom action triggered {runlog_uuid}")
+            LOG.info(
+                "Action Run Stage: action {} triggered, runlog {}".format(
+                    action_name, runlog_uuid
+                )
+            )
 
             url = client.application.item_path.format(app_uuid) + "/app_runlogs/list"
             payload = {"filter": "root_reference=={}".format(runlog_uuid)}
@@ -321,7 +433,7 @@ class ReportPortal(object):
 
 
 def get_vpc_project(config):
-    project_name = "default"
+    project_name = BP_SPEC.PROJECT_NAME_DEFAULT
     vpc_enabled = config.get("IS_VPC_ENABLED", False)
     if not vpc_enabled:
         return {"name": project_name, "uuid": ""}
@@ -515,8 +627,12 @@ def replace_host_port_in_tests_url(url):
         ncm_port = "" if ncm_port == "None" else ncm_port
 
         return replace_host_port_in_url(url, ncm_host, ncm_port)
-
-    return url
+    else:
+        LOG.info("NCM is not enabled, replacing host and port in url with PC details")
+        server_config = context.get_server_config()
+        return replace_host_port_in_url(
+            url, server_config.get("pc_ip"), server_config.get("pc_port")
+        )
 
 
 def get_subnet_details_from_config(config, account_name, vlan_name):

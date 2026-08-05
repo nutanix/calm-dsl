@@ -15,8 +15,14 @@ def get_policy_action_types():
     """function to get list of policy actions supported"""
 
     client = get_api_client()
-    res = client.policy_action_types.list_all()
-    if not res:
+    res, err = client.policy_action_types.list()
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    entities = res.get("entities", [])
+
+    if not entities:
         click.echo(highlight_text("No policy_action_types found !!!\n"))
         return None
     return res

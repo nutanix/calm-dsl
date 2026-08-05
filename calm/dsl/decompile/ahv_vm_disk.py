@@ -5,15 +5,47 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
 from calm.dsl.decompile.ref_dependency import get_package_name
+from calm.dsl.builtins.models.macro_helper import has_macro
 
 LOG = get_logging_handle(__name__)
 
 
 def render_ahv_vm_disk(cls, boot_config):
 
-    data_source_ref = cls.data_source_reference or {}
-    if data_source_ref:
-        data_source_ref = data_source_ref.get_dict()
+    raw_data_source_ref = cls.data_source_reference
+    data_source_ref = {}
+
+    # When data_source_reference is a whole-reference macro string, treat it
+    # as a cloneFromImageService call with the macro as image_name.
+    if has_macro(raw_data_source_ref):
+        device_properties = cls.device_properties.get_dict()
+        adapter_type = device_properties["disk_address"]["adapter_type"]
+        device_type = device_properties["device_type"]
+        schema_map = {
+            ("DISK", "SCSI"): "ahv_vm_disk_scsi_clone_from_image.py.jinja2",
+            ("DISK", "PCI"): "ahv_vm_disk_pci_clone_from_image.py.jinja2",
+            ("CDROM", "SATA"): "ahv_vm_cdrom_sata_clone_from_image.py.jinja2",
+            ("CDROM", "IDE"): "ahv_vm_cdrom_ide_clone_from_image.py.jinja2",
+        }
+        schema_file = schema_map.get(
+            (device_type, adapter_type), "ahv_vm_disk_scsi_clone_from_image.py.jinja2"
+        )
+        user_attrs = {"name": raw_data_source_ref}
+
+        # Preserve disk_size_mib (macro or non-zero int) alongside a macro
+        # data_source_reference: server rejects disk_size_mib=0 at save time
+        # because it cannot infer size for a macro-backed image.
+        disk_size_mib = cls.disk_size_mib
+        if has_macro(disk_size_mib):
+            user_attrs["size"] = '"{}"'.format(disk_size_mib)
+        elif disk_size_mib and disk_size_mib != 0:
+            user_attrs["size"] = disk_size_mib
+
+        text = render_template(schema_file=schema_file, obj=user_attrs)
+        return text.strip()
+
+    if raw_data_source_ref:
+        data_source_ref = raw_data_source_ref.get_dict()
 
     device_properties = cls.device_properties.get_dict()
 
@@ -69,7 +101,10 @@ def render_ahv_vm_disk(cls, boot_config):
 
     else:
         if device_type == "DISK":
-            user_attrs["size"] = disk_size_mib // 1024
+            if has_macro(disk_size_mib):
+                user_attrs["size"] = disk_size_mib  # macro; template will quote it
+            else:
+                user_attrs["size"] = disk_size_mib // 1024
             operation_type = "allocateOnStorageContainer"
 
         elif device_type == "CDROM":

@@ -6,6 +6,7 @@ import arrow
 import json
 import sys
 import copy
+import uuid
 from distutils.version import LooseVersion as LV
 from prettytable import PrettyTable
 from ruamel import yaml
@@ -37,6 +38,7 @@ from calm.dsl.builtins.models.helper.quotas import (
 from calm.dsl.store import Cache, Version
 from calm.dsl.constants import CACHE, PROJECT_TASK, QUOTA
 from calm.dsl.builtins.models.project import ProjectType
+
 
 LOG = get_logging_handle(__name__)
 
@@ -309,6 +311,192 @@ def set_quota_at_project_level(client, quota, project_uuid):
             sys.exit(-1)
 
 
+def _sync_acps_for_roles(roles, project_name, project_uuid, append_only=False):
+    """Syncs ACPs to match the roles defined in the project DSL.
+
+    For each role in the DSL, ensures an ACP exists with the correct users/groups.
+    By default, existing ACPs for the same role have their members replaced with
+    what the DSL declares. When ``append_only`` is True, DSL members are merged
+    into the existing ACP's user/group lists (deduplicated by uuid) so that
+    previously-assigned users/groups are preserved.
+
+    ACPs for roles that are no longer present in the DSL are deleted during
+    update - removing a role from the DSL.
+
+    Args:
+        roles (dict): mapping of role_name -> list of user/group references
+        project_name (str): name of the project
+        project_uuid (str): uuid of the project
+        append_only (bool): if True, merge DSL members into existing ACPs
+            instead of replacing them. New ACPs are still created for roles
+            that have no matching existing ACP.
+    """
+    from .acps import construct_acp_payload
+
+    client = get_api_client()
+    ProjectInternalObj = get_resource_api("projects_internal", client.connection)
+
+    LOG.info("Fetching project '{}' details for ACP sync".format(project_name))
+    res, err = ProjectInternalObj.read(project_uuid)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    project_payload = res.json()
+    project_payload.pop("status", None)
+    project_resources = project_payload["spec"]["project_detail"].get("resources", {})
+
+    new_role_uuids = {}
+    for role_name in roles:
+        role_cache_data = Cache.get_entity_data(
+            entity_type=CACHE.ENTITY.ROLE, name=role_name
+        )
+
+        if not role_cache_data or not role_cache_data.get("uuid"):
+            LOG.error(
+                "Role '{}' not found. Please run: calm update cache".format(role_name)
+            )
+            sys.exit("Role '{}' not found.".format(role_name))
+        new_role_uuids[role_name] = role_cache_data["uuid"]
+
+    acp_list = project_payload["spec"].get("access_control_policy_list", [])
+
+    # Build a map of role_uuid -> desired user/group names from the DSL
+    role_uuid_to_members = {}
+    for role_name, role_members in roles.items():
+        role_uuid = new_role_uuids[role_name]
+        role_uuid_to_members[role_uuid] = {
+            "role_name": role_name,
+            "users": [
+                m.get("name", "") for m in role_members if m.get("kind") == "user"
+            ],
+            "groups": [
+                m.get("name", "") for m in role_members if m.get("kind") == "user_group"
+            ],
+        }
+
+    # Resolve user/group names to references once
+    client_user_map = client.user.get_name_uuid_map(limit=1000)
+    client_group_map = client.user_group.get_name_uuid_map(limit=1000)
+
+    handled_role_uuids = set()
+    updated_acp_list = []
+
+    for _acp in acp_list:
+        existing_role_uuid = (
+            _acp.get("acp", {})
+            .get("resources", {})
+            .get("role_reference", {})
+            .get("uuid", "")
+        )
+
+        if existing_role_uuid in role_uuid_to_members:
+            # Update existing ACP in place with new user/group lists
+            members = role_uuid_to_members[existing_role_uuid]
+            user_refs = []
+            for u in members["users"]:
+                u_uuid = client_user_map.get(u)
+                if not u_uuid:
+                    LOG.error("User {} not found".format(u))
+                    sys.exit("User {} not found".format(u))
+                user_refs.append({"kind": "user", "name": u, "uuid": u_uuid[0]})
+
+            group_refs = []
+            for g in members["groups"]:
+                g_uuid = client_group_map.get(g)
+                if not g_uuid:
+                    LOG.error("User Group {} not found".format(g))
+                    sys.exit("User Group {} not found".format(g))
+                if isinstance(g_uuid, list):
+                    g_uuid = g_uuid[0]
+                group_refs.append({"kind": "user_group", "name": g, "uuid": g_uuid})
+
+            if append_only:
+                # Preserve existing ACP members and merge in DSL members
+                # (deduped by uuid) so that previously-assigned users/groups
+                # are not wiped from the ACP.
+                existing_users = _acp["acp"]["resources"].get("user_reference_list", [])
+                existing_groups = _acp["acp"]["resources"].get(
+                    "user_group_reference_list", []
+                )
+                existing_user_uuids = {u["uuid"] for u in existing_users}
+                existing_group_uuids = {g["uuid"] for g in existing_groups}
+
+                merged_users = list(existing_users)
+                for u_ref in user_refs:
+                    if u_ref["uuid"] not in existing_user_uuids:
+                        merged_users.append(u_ref)
+                        existing_user_uuids.add(u_ref["uuid"])
+
+                merged_groups = list(existing_groups)
+                for g_ref in group_refs:
+                    if g_ref["uuid"] not in existing_group_uuids:
+                        merged_groups.append(g_ref)
+                        existing_group_uuids.add(g_ref["uuid"])
+
+                _acp["acp"]["resources"]["user_reference_list"] = merged_users
+                _acp["acp"]["resources"]["user_group_reference_list"] = merged_groups
+            else:
+                _acp["acp"]["resources"]["user_reference_list"] = user_refs
+                _acp["acp"]["resources"]["user_group_reference_list"] = group_refs
+
+            _acp["operation"] = "UPDATE"
+            handled_role_uuids.add(existing_role_uuid)
+        elif not append_only:
+            # Role has been removed from the DSL: delete its ACP so that the
+            # role (and its user/group assignments) is unassigned from the
+            # project on the server.
+            _acp["operation"] = "DELETE"
+        else:
+            _acp["operation"] = "UPDATE"
+
+        updated_acp_list.append(_acp)
+
+    # Add new ACPs for roles that don't have an existing ACP
+    for role_name, role_members in roles.items():
+        role_uuid = new_role_uuids[role_name]
+        if role_uuid in handled_role_uuids:
+            continue
+
+        acp_users = [m.get("name", "") for m in role_members if m.get("kind") == "user"]
+        acp_groups = [
+            m.get("name", "") for m in role_members if m.get("kind") == "user_group"
+        ]
+        acp_name = "nuCalmAcp-{}".format(str(uuid.uuid4()))
+
+        acp_payload = construct_acp_payload(
+            project_resources,
+            project_uuid,
+            role_name,
+            role_uuid,
+            acp_name,
+            acp_users,
+            acp_groups,
+        )
+        updated_acp_list.append(acp_payload)
+
+    project_payload["spec"]["access_control_policy_list"] = updated_acp_list
+
+    LOG.info("Syncing ACPs for project '{}'".format(project_name))
+    res, err = ProjectInternalObj.update(project_uuid, project_payload)
+    if err:
+        LOG.error(err)
+        sys.exit("Failed to sync ACPs for project '{}'".format(project_name))
+
+    res = res.json()
+    LOG.info("Polling on project updation task for ACP sync")
+    task_state = watch_project_task(
+        project_uuid,
+        res["status"]["execution_context"]["task_uuid"],
+        poll_interval=4,
+    )
+    if task_state in PROJECT_TASK.FAILURE_STATES:
+        LOG.exception("ACP sync task went to {} state".format(task_state))
+        sys.exit("ACP sync task went to {} state".format(task_state))
+
+    LOG.info("ACPs synced successfully for project '{}'".format(project_name))
+
+
 def create_project(project_payload, name="", description=""):
 
     client = get_api_client()
@@ -333,7 +521,7 @@ def create_project(project_payload, name="", description=""):
 
     project = res.json()
     stdout_dict = {
-        "name": project["spec"]["name"],
+        "name": project["metadata"]["name"],
         "uuid": project["metadata"]["uuid"],
         "execution_context": project["status"]["execution_context"],
     }
@@ -495,6 +683,11 @@ def create_project_from_dsl(
     LOG.info("Updating projects cache")
     Cache.add_one(entity_type=CACHE.ENTITY.PROJECT, uuid=project_uuid)
     LOG.info("[Done]")
+
+    roles = getattr(UserProject, "__roles__", None)
+
+    if roles:
+        _sync_acps_for_roles(roles, project_name, project_uuid)
 
     if envs:
 
@@ -965,8 +1158,12 @@ def update_project_from_dsl(
         project_uuid, res["status"]["execution_context"]["task_uuid"], poll_interval=4
     )
     if task_state not in PROJECT_TASK.FAILURE_STATES:
-        # Remove project removed user and groups from acps
-        if acp_remove_user_list or acp_remove_group_list:
+        roles = getattr(UserProject, "__roles__", None)
+        if roles:
+            _sync_acps_for_roles(
+                roles, project_name, project_uuid, append_only=append_only
+            )
+        elif acp_remove_user_list or acp_remove_group_list:
             LOG.info("Updating project acps")
             remove_users_from_project_acps(
                 project_uuid=project_uuid,

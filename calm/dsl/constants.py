@@ -5,6 +5,41 @@ Calm-DSL constants
 from enum import Enum
 
 
+MACRO_SUPPORT_AHV_SPEC_MIN_VERSION = "4.4.0"
+
+RUNBOOK_JSON_SUPPORT_MIN_VERSION = "4.4.0"
+
+
+class AHV_MACRO_FIELDS:
+    """AHV substrate fields that accept @@{...}@@ macros since Calm
+    ``MACRO_SUPPORT_AHV_SPEC_MIN_VERSION``. Any other field carrying a
+    macro is rejected by ``macro_helper.validate_ahv_macro_fields``.
+    """
+
+    # Single source of truth: (schema_name, field_key, data_type).
+    # `BY_ENTITY` is derived below so adding a row here auto-updates it.
+    _SPEC = (
+        ("AhvVm", "name", "string"),
+        ("AhvVm", "cluster_reference", "json"),
+        ("AhvVm", "categories", "json"),
+        ("AhvVmResources", "num_sockets", "int"),
+        ("AhvVmResources", "num_vcpus_per_socket", "int"),
+        ("AhvVmResources", "memory_size_mib", "int"),
+        ("AhvVmResources", "power_state", "string"),
+        ("AhvVmResources", "guest_customization", "json"),
+        ("AhvVmResources", "disk_list", "json-per-item"),
+        ("AhvVmResources", "nic_list", "json-per-item"),
+        ("AhvDisk", "data_source_reference", "json"),
+        ("AhvDisk", "disk_size_mib", "int"),
+        ("AhvNic", "subnet_reference", "json"),
+    )
+
+    BY_ENTITY = {}
+    for _entity, _field, _dtype in _SPEC:
+        BY_ENTITY.setdefault(_entity, {})[_field] = _dtype
+    del _entity, _field, _dtype
+
+
 class CACHE:
     """Cache constants"""
 
@@ -473,6 +508,12 @@ class CONFIG_TYPE:
         VMWARE = "VMWARE_RESTORE"
         TYPE = [AHV, VMWARE]
 
+        class RESTORE_TYPE(Enum):
+            CLONE = "CLONE"
+            REVERT = "REVERT"
+
+        RESTORE_TYPE_MIN_VERSION = "4.4.0"
+
     CONFIG_TYPE_MAP = {
         "AHV_VM_snapshot": SNAPSHOT.AHV,
         "VMWARE_VM_snapshot": SNAPSHOT.VMWARE,
@@ -484,6 +525,8 @@ class CONFIG_TYPE:
 
 class PROJECT:
     INTERNAL = "_internal"
+    AUTO_NCM_DEFAULT = "auto_ncm_default"
+    INTERNAL_PROJECT_UUID = "00000000-0000-0000-0000-000000000000"
 
 
 # storing it as set because it optimizes the lookup to constant time.
@@ -548,6 +591,7 @@ class RESOURCE:
         "nutanix/v1/clusters",
         "nutanix/v1/vpcs",
         "nutanix/v1/groups",
+        "nutanix/v1/categories",
         # AWS api's
         "aws/machine_types",
         "aws/volume_types",
@@ -662,7 +706,7 @@ class MARKETPLACE:
     class APP_NAME:
         INFRASTRUCTURE = "Infrastructure"
         NCM = "Nutanix Cloud Manager"
-        NCM_CENTRAL_PROJECT = "Manage Nutanix Central Projects"
+        NCM_CENTRAL_PROJECT = "Cloud Manager Projects"
         NC = "Nutanix Central"
 
     FETCH_APP_DETAILS_PAYLOAD = {

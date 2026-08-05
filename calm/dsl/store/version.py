@@ -5,6 +5,7 @@ from calm.dsl.api import get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.db.table_config import VersionTable
 from calm.dsl.log import get_logging_handle
+from calm.dsl.api.ncm_config_util import is_nc_enabled_by_config
 
 LOG = get_logging_handle(__name__)
 
@@ -59,11 +60,13 @@ class Version:
             cls.create("Calm", pc_ip, calm_version)
 
             # Update pc_version of PC(if host exist)
-            res, err = client.version.get_pc_version()
-            if not err:
-                res = res.json()
-                pc_version = res["version"]
-                cls.create("PC", pc_ip, pc_version)
+            # Sync pc version only for onprem setups
+            if not is_nc_enabled_by_config():
+                res, err = client.version.get_pc_version()
+                if not err:
+                    res = res.json()
+                    pc_version = res["version"]
+                    cls.create("PC", pc_ip, pc_version)
 
         except (peewee.OperationalError, peewee.IntegrityError):
             db_handle = get_db_handle()

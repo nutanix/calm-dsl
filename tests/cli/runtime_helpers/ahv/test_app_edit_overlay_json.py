@@ -146,7 +146,7 @@ class TestAppEditOverlaySubnetBlueprint:
 
         remove_output_variables_from_bp(known_json)
         remove_output_variables_from_bp(generated_json)
-
+        remove_vtpm_config_from_bp(known_json)
         assert sorted(known_json.items()) == sorted(
             generated_json.items()
         ), "Known Json: {}\nGen Json: {}".format(

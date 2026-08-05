@@ -3,6 +3,7 @@ import time
 import json
 import traceback
 import pytest
+from distutils.version import LooseVersion as LV
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
@@ -12,23 +13,25 @@ from calm.dsl.cli.constants import APPLICATION, RUNLOG
 from calm.dsl.tools import make_file_dir
 from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins import read_local_file
+from calm.dsl.constants import CONFIG_TYPE
 from tests.utils import Application as ApplicationHelper
 
 LOG = get_logging_handle(__name__)
+
+CALM_VERSION = Version.get_version("Calm")
 
 NORMAL_DSL_BP_FILEPATH = "tests/vm_recovery_point/normal_bp.py"
 VRC_DSL_BP_FILEPATH = "tests/vm_recovery_point/blueprint.py"
 LOCAL_RP_NAME_PATH = "tests/vm_recovery_point/.local/vm_rp_name"
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 
-ENV_NAME = DSL_CONFIG["AHV_SNAPSHOT_PROJECTS"]["PROJECT1"]["ENVIRONMENTS"][0]["NAME"]
-ACC_UUID = DSL_CONFIG["AHV_SNAPSHOT_PROJECTS"]["PROJECT1"]["ACCOUNTS"]["NUTANIX_PC"][0][
-    "UUID"
-]
+AHV_SNAPSHOT_PROJECTS = DSL_CONFIG.get("AHV_SNAPSHOT_PROJECTS", {})
+PROJECT = AHV_SNAPSHOT_PROJECTS.get("PROJECT1") or {}
 
-_SNAPSHOT_POLICY = DSL_CONFIG["AHV_SNAPSHOT_PROJECTS"]["PROJECT1"].get(
-    "SNAPSHOT_POLICY", [{}]
-)[0]
+ENV_NAME = (PROJECT.get("ENVIRONMENTS") or [{}])[0].get("NAME", "")
+ACC_UUID = (PROJECT.get("ACCOUNTS", {}).get("NUTANIX_PC") or [{}])[0].get("UUID", "")
+
+_SNAPSHOT_POLICY = PROJECT.get("SNAPSHOT_POLICY", [{}])[0] if PROJECT else {}
 SNAPSHOT_POLICY_NAME = _SNAPSHOT_POLICY.get("NAME", "")
 LOCAL_RULE_NAME = _SNAPSHOT_POLICY.get("RULE", "")
 # Path where the dynamically generated launch_params file is written
@@ -37,12 +40,9 @@ SNAPSHOT_LAUNCH_PARAMS_PATH = "tests/vm_recovery_point/.local/snapshot_launch_pa
 # Name of the snapshot action auto-generated from the "s1" SnapshotConfig in normal_bp.py
 SNAPSHOT_ACTION_NAME = "Snapshot_s1"
 
-# calm_version
-CALM_VERSION = Version.get_version("Calm")
-
 
 @pytest.mark.skipif(
-    DSL_CONFIG["AHV_SNAPSHOT_PROJECTS"]["PROJECT1"] is None,
+    not PROJECT,
     reason="Snapshot Project is not present on the setup or is not configured correctly",
 )
 @pytest.mark.slow
@@ -482,29 +482,59 @@ class TestVmRecoveryPointBp:
                 "Snapshot action did not complete within {} seconds".format(max_wait)
             )
 
-        # Fetch the newly created VM recovery point UUID by name
-        res, err = client.vm_recovery_point.list(
-            params={
-                "filter": "account_uuid=={};name=={}".format(
-                    ACC_UUID, vm_recovery_point_name
+        # Fetch the newly created VM recovery point UUID by name.
+        #
+        # NOTE: The backend requires an account_uuid filter, but does not reliably
+        # support server-side filtering by name for vm_recovery_points. So we
+        # page through the account-scoped list and match by entity status.name.
+        rp_max_wait = 3 * 60
+        rp_elapsed = 0
+        rp_poll_interval = 10
+        vm_recovery_point_uuid = ""
+
+        while rp_elapsed < rp_max_wait and not vm_recovery_point_uuid:
+            page_len = 50
+            offset = 0
+            total_matches = None
+
+            while total_matches is None or offset < total_matches:
+                res, err = client.vm_recovery_point.list(
+                    params={
+                        "filter": "account_uuid=={}".format(ACC_UUID),
+                        "length": page_len,
+                        "offset": offset,
+                    }
                 )
-            }
-        )
-        if err:
-            pytest.fail(
-                "Failed to list VM recovery points: [{}] - {}".format(
-                    err["code"], err["error"]
-                )
-            )
-        entities = res.json().get("entities", [])
-        if not entities:
+                if err:
+                    pytest.fail(
+                        "Failed to list VM recovery points: [{}] - {}".format(
+                            err["code"], err["error"]
+                        )
+                    )
+
+                payload = res.json()
+                total_matches = payload.get("metadata", {}).get("total_matches", 0)
+                entities = payload.get("entities", [])
+                for entity in entities:
+                    if entity.get("status", {}).get("name") == vm_recovery_point_name:
+                        vm_recovery_point_uuid = entity["metadata"]["uuid"]
+                        break
+
+                if vm_recovery_point_uuid:
+                    break
+                offset += page_len
+
+            if not vm_recovery_point_uuid:
+                time.sleep(rp_poll_interval)
+                rp_elapsed += rp_poll_interval
+
+        if not vm_recovery_point_uuid:
             pytest.fail(
                 "VM recovery point '{}' not found after snapshot action".format(
                     vm_recovery_point_name
                 )
             )
 
-        vm_recovery_point_uuid = entities[0]["metadata"]["uuid"]
         LOG.info(
             "VM recovery point '{}' created with UUID: {}".format(
                 vm_recovery_point_name, vm_recovery_point_uuid
@@ -581,3 +611,60 @@ class TestVmRecoveryPointBp:
         # Wait for app creation completion
         self.app_helper._wait_for_non_busy_state(app_name)
         LOG.info("Application {} created successfully".format(app_name))
+
+    @pytest.mark.skipif(
+        LV(CALM_VERSION) < LV(CONFIG_TYPE.RESTORE.RESTORE_TYPE_MIN_VERSION),
+        reason="restore_type REVERT not supported (requires Calm >= {})".format(
+            CONFIG_TYPE.RESTORE.RESTORE_TYPE_MIN_VERSION
+        ),
+    )
+    def test_inplace_restore_preserves_vm_uuid(self):
+        """
+        Verifies that in-place restore (revert) preserves the VM UUID.
+
+        Steps:
+            1. Create blueprint
+            2. Launch app
+            3. Record the VM UUID
+            4. Take a snapshot
+            5. Run in-place restore
+            6. Verify VM UUID is unchanged
+        """
+
+        bp_name = "InPlaceRP-{}".format(str(uuid.uuid4())[:10])
+        self._create_bp(bp_name, NORMAL_DSL_BP_FILEPATH)
+        self.created_bp_list.append(bp_name)
+
+        app_name = "InPlaceApp-{}".format(str(uuid.uuid4())[:10])
+        self._launch_bp(bp_name, app_name)
+        self.created_app_list.append(app_name)
+
+        self.app_helper._wait_for_non_busy_state(app_name)
+        LOG.info("Application {} created successfully".format(app_name))
+
+        vm_uuid_before = self.app_helper.get_vm_uuid_from_app(app_name)
+        assert vm_uuid_before, "Could not extract VM UUID from app '{}'".format(
+            app_name
+        )
+        LOG.info("VM UUID before snapshot: {}".format(vm_uuid_before))
+
+        snapshot_name = "InPlaceSnap-{}".format(str(uuid.uuid4())[:10])
+        self._run_snapshot_action(app_name, snapshot_name, "Snapshot_s1")
+        self.app_helper._wait_for_non_busy_state(app_name)
+        LOG.info("Snapshot {} created".format(snapshot_name))
+
+        self.app_helper.run_restore_action(app_name, "Restore_r1")
+        self.app_helper._wait_for_non_busy_state(app_name)
+        LOG.info("In-place restore completed")
+
+        vm_uuid_after = self.app_helper.get_vm_uuid_from_app(app_name)
+        assert (
+            vm_uuid_after
+        ), "Could not extract VM UUID from app '{}' after restore".format(app_name)
+        LOG.info("VM UUID after restore: {}".format(vm_uuid_after))
+
+        assert (
+            vm_uuid_before == vm_uuid_after
+        ), "VM UUID changed after in-place restore: before={}, after={}".format(
+            vm_uuid_before, vm_uuid_after
+        )

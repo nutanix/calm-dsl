@@ -228,7 +228,7 @@ class TestACPCommands:
         """
 
         runner = CliRunner()
-        LOG.info("Testing 'calm update project' command using cli switches")
+        LOG.info("Testing 'calm update acp' command using cli switches")
         result = runner.invoke(
             cli,
             [

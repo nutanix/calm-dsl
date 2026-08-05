@@ -298,7 +298,6 @@ def get_brownfield_deployment_classes(brownfield_deployment_file=None):
 
 
 def compile_blueprint(bp_file, brownfield_deployment_file=None):
-
     # Constructing metadata payload
     # Note: This should be constructed before loading bp module. As metadata will be used while getting bp_payload
     metadata_payload = get_metadata_payload(bp_file)
@@ -373,7 +372,6 @@ def create_blueprint(
 ):
 
     bp_payload.pop("status", None)
-
     credential_list = bp_payload["spec"]["resources"]["credential_definition_list"]
     for cred in credential_list:
         if cred["secret"].get("secret", None):
@@ -468,7 +466,6 @@ def create_blueprint_from_json(
 def create_blueprint_from_dsl(
     client, bp_file, name=None, description=None, force_create=False
 ):
-
     decompiled_secrets = decrypt_decompiled_secrets_file(pth=bp_file.rsplit("/", 1)[0])
     if decompiled_secrets:
         LOG.warning(

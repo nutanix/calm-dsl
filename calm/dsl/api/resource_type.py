@@ -21,7 +21,7 @@ class ResourceTypeAPI(ResourceAPI):
             timeout=(5, 300),
         )
 
-    def list(self, payload={}):
+    def list(self, payload={}, ignore_error=False):
         if not payload.get("length"):
             payload["length"] = 20
         return self.connection._call(
@@ -29,6 +29,7 @@ class ResourceTypeAPI(ResourceAPI):
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,
+            ignore_error=ignore_error,
         )
 
     def update(self, uuid, resource_type_payload):

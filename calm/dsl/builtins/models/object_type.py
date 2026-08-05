@@ -1,7 +1,14 @@
+"""ObjectDict validator for object/DICT-schema fields.
+
+Mirrors the ``PropertyValidator`` macro bypass: whole-reference macro
+strings on object fields are accepted as-is by validate/decompile.
+"""
+
 import copy
 
 from .validator import PropertyValidator
 from .entity import EntityDict
+from .macro_helper import is_macro as _is_macro
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -79,6 +86,11 @@ class ObjectDict(EntityDict):
         if not cdict:
             return cdict
 
+        # If the entire object value is a macro string (DICT-type variable used as
+        # a whole-reference macro), return it as-is without trying to call .items().
+        if _is_macro(cdict):
+            return cdict
+
         cdict = cls.pre_decompile(cdict, context=context, prefix=prefix)
         attrs = {}
         display_map = copy.deepcopy(cls.display_map)
@@ -109,19 +121,30 @@ class ObjectDict(EntityDict):
                 if is_array:
                     new_value = []
                     for val in v:
-                        new_value.append(entity_type.decompile(val, prefix=prefix))
+                        if _is_macro(val):
+                            new_value.append(val)
+                        else:
+                            new_value.append(entity_type.decompile(val, prefix=prefix))
 
                 else:
-                    new_value = entity_type.decompile(v, prefix=prefix)
+                    if _is_macro(v):
+                        new_value = v
+                    else:
+                        new_value = entity_type.decompile(v, prefix=prefix)
 
                 attrs[k] = new_value
 
-            # validate the new data
-            validator.validate(attrs[k], is_array)
+            # validate the new data; skip if value is or contains a macro
+            if not _is_macro(attrs[k]):
+                validator.validate(attrs[k], is_array)
 
         return attrs
 
     def _validate_item(self, value):
+        # Macro strings (@@{variable_name}@@) are resolved by the server at
+        # runtime to the actual dict value.  Accept them for any object field.
+        if _is_macro(value):
+            return value
         if not isinstance(value, dict):
             raise TypeError("{} is not of type {}".format(value, "dict"))
         new_value = self.__class__(self.validators, self.defaults, self.display_map)
@@ -133,6 +156,9 @@ class ObjectDict(EntityDict):
         if not is_array:
             if isinstance(value, type(None)):
                 return
+            # Macro strings bypass object-type validation; server resolves at runtime.
+            if _is_macro(value):
+                return value
             return self._validate_item(value)
 
         else:
@@ -141,8 +167,11 @@ class ObjectDict(EntityDict):
 
             res_value = []
             for entity in value:
-                new_value = self._validate_item(entity)
-                res_value.append(new_value)
+                # A whole-list-item macro is also accepted as-is.
+                if _is_macro(entity):
+                    res_value.append(entity)
+                else:
+                    res_value.append(self._validate_item(entity))
             return res_value
 
 

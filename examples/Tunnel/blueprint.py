@@ -9,6 +9,7 @@ from calm.dsl.builtins import CalmTask as CalmVarTask
 from calm.dsl.builtins import *  # no_qa
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
 from calm.dsl.runbooks import read_local_file
+from calm.dsl.constants import PROJECT
 
 # Secret Variables
 BP_CRED_cred_PASSWORD = "dummy_password"
@@ -317,4 +318,4 @@ class bp_with_tunnels(Blueprint):
 class BpMetadata(Metadata):
 
     categories = {"TemplateType": "Vm"}
-    project = Ref.Project("default")
+    project = Ref.Project(PROJECT.AUTO_NCM_DEFAULT)

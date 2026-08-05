@@ -8,7 +8,7 @@ input:
 - "21"  # Machine Type = f1-micro
 - "n"   # Use existing Disk
 - "2"   # Storage type = pd-ssd
-- "4"   # Source image = centos-7
+- "4"   # Source image = dnd-rocky89-devops
 - "10"  # Size of disk
 - "y"   # Delete disk when instance is deleted
 - "n"   # Add Additional Disks
@@ -39,7 +39,7 @@ cli_assertions:
 spec_assertions:
 - "zone: us-central1-c" # Zone
 - "machineType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/machineTypes/f1-micro"   # Machine Type
-- "sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7"   # Source image of boot disk
+- "sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/dnd-rocky89-devops"   # Source image of boot disk
 - "diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/diskTypes/pd-ssd"   # Disk type for boot disk
 - "diskSizeGb: 10"    # Size of boot disk
 - "email: 108048128720-compute@developer.gserviceaccount.com" # Service account email

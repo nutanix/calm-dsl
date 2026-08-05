@@ -1,3 +1,6 @@
+import json
+
+from requests.models import Response
 from .connection import REQUEST
 from calm.dsl.log import get_logging_handle
 from calm.dsl.api.api_connectivity_details_resolver import (
@@ -91,19 +94,18 @@ class ResourceAPI:
         )
 
     def get_name_uuid_map(self, params={}):
-        res_entities, err = self.list_all(base_params=params, ignore_error=True)
+        res, err = self.list_all(base_params=params, ignore_error=True)
 
-        if not err:
-            response = res_entities
-        else:
+        if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        total_matches = len(response)
-        if total_matches == 0:
+        res = res.json()
+        entities = res.get("entities", [])
+        if not entities:
             return {}
         name_uuid_map = {}
 
-        for entity in response:
+        for entity in entities:
             entity_name = entity["status"]["name"]
             entity_uuid = entity["metadata"]["uuid"]
 
@@ -125,18 +127,17 @@ class ResourceAPI:
         return name_uuid_map
 
     def get_uuid_name_map(self, params={}):
-        res_entities, err = self.list_all(base_params=params, ignore_error=True)
-        if not err:
-            response = res_entities
-        else:
+        res, err = self.list_all(base_params=params, ignore_error=True)
+        if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        total_matches = len(response)
-        if total_matches == 0:
+        res = res.json()
+        entities = res.get("entities", [])
+        if not entities:
             return {}
 
         uuid_name_map = {}
-        for entity in response:
+        for entity in entities:
             entity_name = entity["status"]["name"]
             entity_uuid = entity["metadata"]["uuid"]
 
@@ -144,9 +145,19 @@ class ResourceAPI:
 
         return uuid_name_map
 
-    # TODO: Fix return type of list_all helper
     def list_all(self, api_limit=250, base_params=None, ignore_error=False):
-        """returns the list of entities"""
+        """Returns all entities by paginating through list API.
+
+        Args:
+            api_limit (int): Page size for each API call. Defaults to 250.
+            base_params (dict): Base query parameters (filter, etc.).
+            ignore_error (bool): If True, return error tuple instead of raising.
+
+        Returns:
+            tuple: (res, err)
+                res (Response): A Response object
+                err (dict or None): None if no error occurred, else the error dictionary.
+        """
         final_list = []
         offset = 0
         if base_params is None:
@@ -159,6 +170,9 @@ class ResourceAPI:
             params["sort_attribute"] = "_created_timestamp_usecs_"
         if params.get("sort_order", None) is None:
             params["sort_order"] = "ASCENDING"
+
+        LOG.debug(f"Fetching all entities using list_all routine")
+
         while True:
             params["offset"] = offset
             response, err = self.list(params, ignore_error=ignore_error)
@@ -166,7 +180,8 @@ class ResourceAPI:
                 response = response.json()
             else:
                 if ignore_error:
-                    return [], err
+                    res = Response()
+                    return res, err
                 else:
                     raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -178,10 +193,12 @@ class ResourceAPI:
 
             offset += length
 
-        if ignore_error:
-            return final_list, None
+        res = Response()
+        res.status_code = 200
+        res._content = json.dumps({"entities": final_list}).encode("utf-8")
+        res.headers["Content-Type"] = "application/json"
 
-        return final_list
+        return res, None
 
 
 def get_resource_api(

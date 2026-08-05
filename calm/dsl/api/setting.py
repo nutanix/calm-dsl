@@ -37,12 +37,13 @@ class AccountsAPI(ResourceAPI):
     def get_uuid_type_map(self, params=dict()):
         """returns map containing {account_uuid: account_type} details"""
 
-        res_entities, err = self.list_all(base_params=params, ignore_error=True)
+        res, err = self.list_all(base_params=params, ignore_error=True)
         if err:
             raise Exception(err)
 
+        res = res.json()
         uuid_type_map = {}
-        for entity in res_entities:
+        for entity in res.get("entities", []):
             a_uuid = entity["metadata"]["uuid"]
             a_type = entity["status"]["resources"]["type"]
             uuid_type_map[a_uuid] = a_type

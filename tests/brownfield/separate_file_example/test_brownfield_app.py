@@ -16,6 +16,7 @@ from tests.utils import Application as ApplicationHelper
 from calm.dsl.builtins import read_local_file
 from calm.dsl.api import get_api_client
 from tests.utils import verify_platform_sync_task
+from calm.dsl.constants import PROJECT
 
 LOG = get_logging_handle(__name__)
 
@@ -236,7 +237,7 @@ class TestBrownFieldCommands:
     @pytest.mark.parametrize(
         "vm_type", ["AHV_VM", "AWS_VM", "AZURE_VM", "GCP_VM", "VMWARE_VM"]
     )
-    @pytest.mark.parametrize("project", ["default"])
+    @pytest.mark.parametrize("project", [PROJECT.AUTO_NCM_DEFAULT])
     def test_get_brownfield_vms(self, vm_type, project):
         """Test get command on brownfield vms"""
 

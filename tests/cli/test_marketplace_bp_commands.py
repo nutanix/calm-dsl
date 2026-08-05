@@ -23,6 +23,7 @@ from calm.dsl.log import get_logging_handle
 from tests.utils import Application as ApplicationHelper
 from calm.dsl.store import Version
 from tests.constants import PROVIDER, BP_SPEC
+from calm.dsl.constants import PROJECT
 
 LOG = get_logging_handle(__name__)
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))

@@ -1,6 +1,10 @@
 {%- macro ahv_vm_disk_scsi_clone_from_image(obj) -%}
-{% if obj.bootable %}
+{% if obj.bootable and obj.size %}
+AhvVmDisk.Disk.Scsi.cloneFromImageService("{{obj.name}}", bootable=True, disk_size_mib={{obj.size}})
+{% elif obj.bootable %}
 AhvVmDisk.Disk.Scsi.cloneFromImageService("{{obj.name}}", bootable=True)
+{% elif obj.size %}
+AhvVmDisk.Disk.Scsi.cloneFromImageService("{{obj.name}}", disk_size_mib={{obj.size}})
 {% else %}
 AhvVmDisk.Disk.Scsi.cloneFromImageService("{{obj.name}}")
 {% endif %}

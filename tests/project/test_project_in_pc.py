@@ -1,9 +1,13 @@
 import json
 
+from distutils.version import LooseVersion as LV
+
 from calm.dsl.builtins import Project
 from calm.dsl.builtins import Provider, Ref, read_local_file
+from calm.dsl.store import Version
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+CALM_VERSION = Version.get_version("Calm")
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
 
 NTNX_ACCOUNT = ACCOUNTS["NUTANIX_PC"][0]
@@ -46,5 +50,10 @@ class TestDslProject(Project):
     ]
 
     users = [Ref.User(name=USER_NAME)]
+
+    if LV(CALM_VERSION) >= LV("4.4.0"):
+        roles = {
+            "Project Admin": [Ref.User(name=USER_NAME)],
+        }
 
     quotas = {"vcpus": 1, "storage": 2, "memory": 1}

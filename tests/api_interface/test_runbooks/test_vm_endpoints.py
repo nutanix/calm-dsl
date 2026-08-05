@@ -14,6 +14,7 @@ from tests.api_interface.test_runbooks.utils import (
 )
 from calm.dsl.builtins import read_local_file
 from calm.dsl.log import get_logging_handle
+from calm.dsl.constants import PROJECT
 
 
 LOG = get_logging_handle(__name__)
@@ -72,7 +73,7 @@ class TestVMEndpoints:
         if not res:
             pytest.fail(err)
 
-        project_list_params = {"filter": "name=={}".format("default")}
+        project_list_params = {"filter": "name=={}".format(PROJECT.AUTO_NCM_DEFAULT)}
         res, err = client.project.list(params=project_list_params)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -82,7 +83,7 @@ class TestVMEndpoints:
 
         endpoint["metadata"]["project_reference"] = {
             "uuid": default_project_uuid,
-            "name": "default",
+            "name": PROJECT.AUTO_NCM_DEFAULT,
             "kind": "project",
         }
 
@@ -262,7 +263,7 @@ class TestVMEndpoints:
         print(">> Downloading endpoint (uuid={})".format(ep_uuid))
         file_path = client.endpoint.export_file(ep_uuid, passphrase="test_passphrase")
 
-        project_list_params = {"filter": "name=={}".format("default")}
+        project_list_params = {"filter": "name=={}".format(PROJECT.AUTO_NCM_DEFAULT)}
         res, err = client.project.list(params=project_list_params)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))

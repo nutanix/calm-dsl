@@ -3,7 +3,7 @@ import json
 
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import ConfigSpecType, get_valid_identifier
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import PROVIDER, CONFIG_TYPE
 from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins import ConfigAttrs
 from calm.dsl.decompile.action import render_action_template
@@ -32,10 +32,16 @@ def render_restore_config_template(cls, entity_context):
 
     user_attrs["description"] = attrs.get("snapshot_description", "")
     user_attrs["delete_vm_post_restore"] = attrs.get("delete_vm_post_restore", None)
+    user_attrs["restore_type"] = attrs.get(
+        "restore_type", CONFIG_TYPE.RESTORE.RESTORE_TYPE.CLONE.value
+    )
 
     if _user_attrs["type"] == "AHV_RESTORE":
         user_attrs["provider"] = "Ahv"
         user_attrs["delete_vm_post_restore"] = attrs["delete_vm_post_restore"]
+        user_attrs["restore_type"] = attrs.get(
+            "restore_type", CONFIG_TYPE.RESTORE.RESTORE_TYPE.CLONE.value
+        )
     elif _user_attrs["type"] == "VMWARE_RESTORE":
         user_attrs["provider"] = "Vmware"
     else:

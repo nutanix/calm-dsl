@@ -4,19 +4,21 @@ import uuid
 import os
 import sys
 
+from distutils.version import LooseVersion as LV
+
 from .entity import EntityType, Entity
 from .ref import ref
 from .utils import read_file
 from .validator import PropertyValidator
 from .variable import CalmVariable
-from calm.dsl.api import get_resource_api, get_api_client
+from calm.dsl.api import get_resource_api
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from .runbook import runbook_create
 from .action import _action_create
 from calm.dsl.builtins import get_valid_identifier, PatchDataField
-from calm.dsl.constants import PROVIDER
-from calm.dsl.store import Cache
+from calm.dsl.constants import PROVIDER, CONFIG_TYPE
+from calm.dsl.store import Cache, Version
 from calm.dsl.builtins.models.config_attrs import ahv_disk_ruleset, ahv_nic_ruleset
 
 LOG = get_logging_handle(__name__)
@@ -469,10 +471,41 @@ def _update_vmw_snapshot_config(attrs, **kwargs):
 
 
 def _update_ahv_restore_config(
-    attrs, snapshot_location_type, delete_vm_post_restore, **kwargs
+    attrs,
+    snapshot_location_type,
+    delete_vm_post_restore,
+    restore_type=CONFIG_TYPE.RESTORE.RESTORE_TYPE.CLONE.value,
+    **kwargs,
 ):
     attrs["delete_vm_post_restore"] = delete_vm_post_restore
     attrs["snapshot_location_type"] = snapshot_location_type
+
+    calm_version = (Version.get_version("Calm") or "").strip()
+    if calm_version and LV(calm_version) >= LV(
+        CONFIG_TYPE.RESTORE.RESTORE_TYPE_MIN_VERSION
+    ):
+        try:
+            CONFIG_TYPE.RESTORE.RESTORE_TYPE(restore_type)
+        except ValueError:
+            valid = [e.value for e in CONFIG_TYPE.RESTORE.RESTORE_TYPE]
+            sys.exit(
+                "Invalid restore_type '{}'. Must be one of: {}".format(
+                    restore_type, valid
+                )
+            )
+
+        if (
+            restore_type == CONFIG_TYPE.RESTORE.RESTORE_TYPE.REVERT.value
+            and delete_vm_post_restore
+        ):
+            sys.exit(
+                "'restore_type=REVERT' and 'delete_vm_post_restore' are mutually exclusive. "
+                "Revert operation reverts the existing VM in-place, and therefore there is no cloned VM to "
+                "delete. Please set delete_vm_post_restore=False when using restore_type='REVERT'."
+            )
+
+        attrs["restore_type"] = restore_type
+
     delete_vm_post_restore = CalmVariable.Simple(
         str(delete_vm_post_restore).lower(),
         name="delete_vm_post_restore",
@@ -501,10 +534,25 @@ def snapshot_config_create(
     # therefore not setting snapshot location in config reference for VMWARE
     if config_references:
         if provider == PROVIDER.TYPE.AHV:
+            calm_version = (Version.get_version("Calm") or "").strip()
+            validate_revert = (
+                calm_version
+                and LV(calm_version) >= LV(CONFIG_TYPE.RESTORE.RESTORE_TYPE_MIN_VERSION)
+                and snapshot_location_type == "REMOTE"
+            )
             for config_ref in config_references:
                 config_ref.__self__.attrs_list[0][
                     "snapshot_location_type"
                 ] = snapshot_location_type
+
+                if validate_revert:
+                    restore_type = config_ref.__self__.attrs_list[0].get("restore_type")
+                    if restore_type == CONFIG_TYPE.RESTORE.RESTORE_TYPE.REVERT.value:
+                        sys.exit(
+                            "'restore_type=REVERT' is not supported with snapshot_location_type='REMOTE'. "
+                            "In-place revert requires the snapshot to be on the same cluster as the VM. "
+                            "Please use restore_type='CLONE' for remote snapshots."
+                        )
 
     attrs = {
         "target_any_local_reference": target,
@@ -540,6 +588,7 @@ def restore_config_create(
     target,
     snapshot_location_type="LOCAL",
     delete_vm_post_restore=False,
+    restore_type=CONFIG_TYPE.RESTORE.RESTORE_TYPE.CLONE.value,
     description="",
 ):
     attrs = {
@@ -560,7 +609,11 @@ def restore_config_create(
 
     if provider == PROVIDER.TYPE.AHV:
         _update_ahv_restore_config(
-            attrs, snapshot_location_type, delete_vm_post_restore, **kwargs
+            attrs,
+            snapshot_location_type,
+            delete_vm_post_restore,
+            restore_type,
+            **kwargs,
         )
     elif provider == PROVIDER.TYPE.VMWARE:
         _update_vmw_restore_config(attrs, **kwargs)

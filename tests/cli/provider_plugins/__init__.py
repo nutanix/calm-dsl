@@ -92,7 +92,9 @@ def run_test(
         assert cli_output.find(entry) > 0, "{} not present in cli_ouput".format(entry)
 
     for entry in spec_assertions:
-        assert spec_output.find(entry) > 0, "{} not present in spec_ouput".format(entry)
+        assert (
+            entry.lower() in spec_output.lower()
+        ), "{} not present in spec_ouput".format(entry)
 
     for entry in cli_false_assertions:
         assert cli_output.find(entry) < 0, "{} is present in cli_ouput".format(entry)

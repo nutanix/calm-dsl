@@ -19,8 +19,11 @@
 ##### Input  Parameters
 - <ins>name</ins>
 - target (optional) - corresponding deployment reference (defaults to the first deployment in the profile)
-- delete_vm_post_restore (optional) - boolean (<b>True</b>)
+- delete_vm_post_restore (optional) - boolean (<b>False</b>) - delete the original VM after creating the restored clone
+- restore_type (optional) - <b>"CLONE"</b> or "REVERT" - CLONE creates a new VM from the snapshot; REVERT restores the existing VM in-place (AHV only). Defaults to "CLONE"
 - description (optional)
+
+> **Note:** `restore_type="REVERT"` and `delete_vm_post_restore=True` are mutually exclusive. Revert restores the original VM in-place, so there is no cloned VM to delete.
 
 #### Protection Policy
 `AppProtection.ProtectionPolicy`
@@ -39,4 +42,12 @@ class HelloProfile(Profile):
     deployments = [HelloDeployment]
     restore_configs = [AppProtection.RestoreConfig("Sample Config1")]
     snapshot_configs = [AppProtection.SnapshotConfig("Sample Config2", policy=AppProtection.ProtectionPolicy("policy1"), restore_config=ref(restore_configs[0]))]
+```
+
+- #### In-place Restore (AHV only)
+```python
+restore_configs = [
+    AppProtection.RestoreConfig("r1", target=ref(HelloDeployment)),
+    AppProtection.RestoreConfig("r1_in_place", target=ref(HelloDeployment), restore_type="REVERT"),
+]
 ```

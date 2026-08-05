@@ -1,5 +1,7 @@
 from copy import deepcopy
 
+from .macro_helper import is_macro as _is_macro
+
 
 class _PropertyValidatorBase:
     subclasses = {}
@@ -46,15 +48,29 @@ class PropertyValidator(_PropertyValidatorBase, openapi_type=None):
         if isinstance(value, type(None)):
             return
 
+        # Macro strings (@@{variable_name}@@) are runtime-resolved by the server.
+        # Accept them for any field type — the server validates the resolved value.
+        if _is_macro(value):
+            return
+
         kind = cls.get_kind()
-        # Value may be a class or an object
-        # If not an class, check for metaclass for object's class(Ex: Provider Spec)
-        if not (
-            isinstance(value, kind)
-            or isinstance(type(value), kind)
-            or (hasattr(kind, "validate_dict") and (not kind.validate_dict(value)))
-        ):
-            raise TypeError("{} is not of type {}".format(value, kind))
+
+        # Fast path: standard isinstance checks.
+        if isinstance(value, kind) or isinstance(type(value), kind):
+            return
+
+        # Slow path: validate via JSON schema if the kind supports it.
+        # validate_dict() raises a jsonschema exception on failure (it doesn't
+        # return False).  Catch that exception so it doesn't escape as an
+        # unexpected jsonschema error — convert it to the standard TypeError below.
+        if hasattr(kind, "validate_dict"):
+            try:
+                kind.validate_dict(value)
+                return  # validate_dict succeeded → value is acceptable
+            except Exception:
+                pass  # fall through to TypeError
+
+        raise TypeError("{} is not of type {}".format(value, kind))
 
     @staticmethod
     def _validate_list(values):

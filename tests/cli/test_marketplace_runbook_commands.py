@@ -16,6 +16,7 @@ from calm.dsl.builtins import read_local_file
 from calm.dsl.cli.constants import MARKETPLACE_ITEM
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Version
+from calm.dsl.constants import PROJECT
 
 LOG = get_logging_handle(__name__)
 CALM_VERSION = Version.get_version("Calm")

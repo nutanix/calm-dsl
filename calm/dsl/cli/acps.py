@@ -172,94 +172,19 @@ def get_system_roles():
     return ["Project Admin", "Operator", "Consumer", "Developer"]
 
 
-def create_acp(role, project, acp_users, acp_groups, name):
-
-    if not (acp_users or acp_groups):
-        LOG.error("Atleast single user/group should be given")
-        sys.exit(-1)
+def construct_acp_payload(
+    project_resources,
+    project_uuid,
+    role,
+    role_uuid,
+    acp_name,
+    acp_users,
+    acp_groups,
+):
+    """Constructs and returns the ACP payload dict for a project."""
 
     client = get_api_client()
-    acp_name = name or "nuCalmAcp-{}".format(str(uuid.uuid4()))
 
-    # Check whether there is an existing acp with this name
-    entities, _ = client.authorization_policy.list(
-        _filter=f"displayName eq '{acp_name}'"
-    )
-
-    if entities:
-        LOG.error("ACP {} already exists.".format(acp_name))
-        sys.exit(-1)
-
-    params = {"length": 250}
-    project_name_uuid_map = client.project.get_name_uuid_map(params)
-
-    project_uuid = project_name_uuid_map.get(project, "")
-    if not project_uuid:
-        LOG.error("Project '{}' not found".format(project))
-        sys.exit(-1)
-
-    LOG.info("Fetching project '{}' details".format(project))
-    ProjectInternalObj = get_resource_api("projects_internal", client.connection)
-    entities, err = ProjectInternalObj.read(project_uuid)
-    if err:
-        LOG.error(err)
-        sys.exit(-1)
-
-    project_payload = entities.json()
-    project_payload.pop("status", None)
-    project_resources = project_payload["spec"]["project_detail"].get("resources", "")
-
-    # Check if users are present in project
-    project_users = []
-    for user in project_resources.get("user_reference_list", []):
-        project_users.append(user["name"])
-
-    if not set(acp_users).issubset(set(project_users)):
-        LOG.error(
-            "Users {} are not registered in project".format(
-                set(acp_users).difference(set(project_users))
-            )
-        )
-        sys.exit(-1)
-
-    # Check if groups are present in project
-    project_groups = []
-    for group in project_resources.get("external_user_group_reference_list", []):
-        project_groups.append(group["name"])
-
-    if not set(acp_groups).issubset(set(project_groups)):
-        LOG.error(
-            "Groups {} are not registered in project".format(
-                set(acp_groups).difference(set(project_groups))
-            )
-        )
-        sys.exit(-1)
-
-    role_cache_data = Cache.get_entity_data(entity_type=CACHE.ENTITY.ROLE, name=role)
-    if not role_cache_data.get("uuid"):
-        LOG.error("Role with name {} not found".format(role))
-        sys.exit(-1)
-    role_uuid = role_cache_data.get("uuid")
-
-    limit = 250
-    entities, err = get_acps_from_project(
-        client, project_uuid, role_uuid=role_uuid, limit=limit
-    )
-    if err:
-        return None, err
-
-    if entities["metadata"]["total_matches"] > 0:
-        entities = entities.get("entities", [])
-        LOG.error(
-            "ACP {} already exists for given role in project".format(
-                entities[0]["status"]["name"]
-            )
-        )
-        sys.exit(-1)
-
-    # Constructing ACP payload --------
-
-    # Getting the cluster uuids for acp
     whitelisted_subnets = []
     whiltelisted_clusters = []
     for subnet in project_resources.get("subnet_reference_list", []):
@@ -376,10 +301,17 @@ def create_acp(role, project, acp_users, acp_groups, name):
 
     usergroup_name_uuid_map = client.user_group.get_name_uuid_map(limit=1000)
     group_references = []
+
     for g in acp_groups:
-        group_references.append(
-            {"kind": "user_group", "name": g, "uuid": usergroup_name_uuid_map[g]}
-        )
+        if not usergroup_name_uuid_map.get(g, None):
+            LOG.error("User Group {} not found".format(g))
+            sys.exit("User Group {} not found".format(g))
+
+        group_uuid = usergroup_name_uuid_map[g]
+        if isinstance(group_uuid, list):
+            group_uuid = group_uuid[0]
+
+        group_references.append({"kind": "user_group", "name": g, "uuid": group_uuid})
 
     context_list = [default_context]
     if entity_filter_expression_list:
@@ -388,7 +320,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
         )
     context_list.append(project_collab_context)
 
-    acp_payload = {
+    return {
         "acp": {
             "name": acp_name,
             "resources": {
@@ -402,6 +334,82 @@ def create_acp(role, project, acp_users, acp_groups, name):
         "operation": "ADD",
     }
 
+
+def create_acp(role, project, acp_users, acp_groups, name):
+
+    if name is not None:
+        LOG.warning(
+            "WARNING: custom acp name is deprecated and will be removed in a future release."
+        )
+
+    if not (acp_users or acp_groups):
+        LOG.error("Atleast single user/group should be given")
+        sys.exit(-1)
+
+    client = get_api_client()
+    acp_name = name or "nuCalmAcp-{}".format(str(uuid.uuid4()))
+
+    # Check whether there is an existing acp with this name
+    entities, _ = client.authorization_policy.list(
+        _filter=f"displayName eq '{acp_name}'"
+    )
+
+    if entities:
+        LOG.error("ACP {} already exists.".format(acp_name))
+        sys.exit(-1)
+
+    params = {"length": 250}
+    project_name_uuid_map = client.project.get_name_uuid_map(params)
+
+    project_uuid = project_name_uuid_map.get(project, "")
+    if not project_uuid:
+        LOG.error("Project '{}' not found".format(project))
+        sys.exit(-1)
+
+    LOG.info("Fetching project '{}' details".format(project))
+    ProjectInternalObj = get_resource_api("projects_internal", client.connection)
+    entities, err = ProjectInternalObj.read(project_uuid)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    project_payload = entities.json()
+    project_payload.pop("status", None)
+    project_resources = project_payload["spec"]["project_detail"].get("resources", "")
+
+    role_cache_data = Cache.get_entity_data(entity_type=CACHE.ENTITY.ROLE, name=role)
+
+    if not role_cache_data.get("uuid"):
+        LOG.error("Role with name {} not found".format(role))
+        sys.exit(-1)
+    role_uuid = role_cache_data.get("uuid")
+
+    limit = 250
+    entities, err = get_acps_from_project(
+        client, project_uuid, role_uuid=role_uuid, limit=limit
+    )
+    if err:
+        return None, err
+
+    if entities["metadata"]["total_matches"] > 0:
+        entities = entities.get("entities", [])
+        LOG.error(
+            "ACP {} already exists for given role in project".format(
+                entities[0]["status"]["name"]
+            )
+        )
+        sys.exit(-1)
+
+    acp_payload = construct_acp_payload(
+        project_resources,
+        project_uuid,
+        role,
+        role_uuid,
+        acp_name,
+        acp_users,
+        acp_groups,
+    )
+
     # Appending acp payload to project
     acp_list = project_payload["spec"].get("access_control_policy_list", [])
     for _acp in acp_list:
@@ -410,7 +418,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
     acp_list.append(acp_payload)
     project_payload["spec"]["access_control_policy_list"] = acp_list
 
-    LOG.info("Creating acp {}".format(acp_name))
+    LOG.info("Creating acp")
     entities, err = ProjectInternalObj.update(project_uuid, project_payload)
     if err:
         LOG.error(err)
@@ -418,7 +426,6 @@ def create_acp(role, project, acp_users, acp_groups, name):
 
     entities = entities.json()
     stdout_dict = {
-        "name": acp_name,
         "execution_context": entities["status"]["execution_context"],
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))

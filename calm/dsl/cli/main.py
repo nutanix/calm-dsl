@@ -60,7 +60,7 @@ SELF_SERVICE_DISABLED = "DISABLED"
     default=False,
     help="Update cache before running command",
 )
-@click.version_option("4.3.1")
+@click.version_option("4.4.0")
 @click.pass_context
 def main(ctx, config_file, sync):
     """Calm CLI
@@ -85,7 +85,16 @@ def main(ctx, config_file, sync):
     ctx.obj["verbose"] = True
     try:
         ContextObj = get_context()
-        old_pc_ip = Version.get_version_data("PC").get("pc_ip", "")
+
+        if ctx.invoked_subcommand != "init" and is_nc_enabled_by_config():
+            LOG.debug("Checking if NC host has changed")
+            nc_server_config = ContextObj.get_nc_server_config()
+            old_host = nc_server_config.get("host", "")
+            LOG.debug("Old NC host: {}".format(old_host))
+        else:
+            server_config = ContextObj.get_server_config()
+            old_host = server_config.get("pc_ip", "")
+
         if config_file:
             if not os.path.exists(config_file):
                 raise ValueError("file not found {}".format(config_file))
@@ -111,9 +120,15 @@ def main(ctx, config_file, sync):
             sys.exit("DSL config incompatible with latest configuration")
 
         if ctx.invoked_subcommand != "init":
-            server_config = ContextObj.get_server_config()
+            if is_nc_enabled_by_config():
+                nc_server_config = ContextObj.get_nc_server_config()
+                new_host = nc_server_config.get("host", "")
+                LOG.debug("New NC host: {}".format(new_host))
+            else:
+                server_config = ContextObj.get_server_config()
+                new_host = server_config.get("pc_ip", "")
 
-            if old_pc_ip != server_config.get("pc_ip", ""):
+            if old_host != new_host:
                 LOG.warning("Host IP changed.")
 
                 if not sync:
@@ -382,11 +397,13 @@ def get_server_status():
     LOG.info("Server URL: {}".format(client.connection.base_url))
     LOG.info("Calm Version: {}".format(calm_version))
 
-    res, err = client.version.get_pc_version()
-    if not err:
-        res = res.json()
-        pc_version = res["version"]
-        LOG.info("PC Version: {}".format(pc_version))
+    # Fetch PC version only for onprem setups
+    if not is_nc_enabled_by_config():
+        res, err = client.version.get_pc_version()
+        if not err:
+            res = res.json()
+            pc_version = res["version"]
+            LOG.info("PC Version: {}".format(pc_version))
 
 
 @main.group(cls=FeatureFlagGroup)
@@ -615,6 +632,30 @@ def library_describe():
 @delete.group("library")
 def library_delete():
     """Delete Library entities"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def share():
+    """Share entities with projects"""
+    pass
+
+
+@share.group("library")
+def library_share():
+    """Share Library entities with projects"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def unshare():
+    """Unshare entities from projects"""
+    pass
+
+
+@unshare.group("library")
+def library_unshare():
+    """Unshare Library entities with projects"""
     pass
 
 
