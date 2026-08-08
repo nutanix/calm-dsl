@@ -1,6 +1,6 @@
 backports.zoneinfo==0.2.1;python_version<"3.9"
 j2cli[yaml]==0.3.10
-ipython==7.16.3
+ipython==8.10.0
 pytest>=4.2.0,<=5.3.5
 pytest-sugar==0.9.4
 pytest-html==3.1.1
