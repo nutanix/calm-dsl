@@ -1,0 +1,21 @@
+version = 1
+
+test_patterns = ["tests/**"]
+
+exclude_patterns = [
+    "docs/**",
+    "examples/**"
+]
+
+[[analyzers]]
+name = "python"
+enabled = true
+dependency_file_paths = [
+  "dev-requirements.txt",
+  "requirements.txt",
+  "gui-requirements.txt"
+]
+
+  [analyzers.meta]
+  runtime_version = "3.x.x"
+
