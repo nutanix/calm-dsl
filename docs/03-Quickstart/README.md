@@ -239,4 +239,4 @@ Speaking of git lets contiue on and push our blueprint to git.  We will need a g
 
     ## Looking back
 
-    As you went through this module we pushed our original blueprint to Git and we made edits to that blueprint using sed.  Then we pushed the blueprint back to Git where we started mainitaing different versions.
+    As you went through this module we pushed our original blueprint to Git and we made edits to that blueprint using sed. Then we pushed the blueprint back to Git where we started mainitaing different versions.
