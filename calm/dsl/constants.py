@@ -190,6 +190,7 @@ class NETWORK_GROUP_TUNNEL_TASK:
 class ACCOUNT:
     """Account constants"""
 
+    LOCAL_AZ = "NTNX_LOCAL_AZ"
     PE_ACCOUNT_TYPE = "nutanix"
 
     class STATES:
