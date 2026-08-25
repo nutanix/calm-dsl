@@ -152,6 +152,26 @@ class ProjectType(EntityType):
                     )
 
             if "account_reference" in provider_data:
+                account_uuid = provider_data["account_reference"]["uuid"]
+                account_cache_data = Cache.get_entity_data_using_uuid(
+                    entity_type=CACHE.ENTITY.ACCOUNT, uuid=account_uuid
+                )
+                if (
+                    account_cache_data
+                    and account_cache_data.get("provider_type", "")
+                    == ACCOUNT.PE_ACCOUNT_TYPE
+                ):
+                    LOG.error(
+                        "Nutanix PE account: {} is not supposed to be added individually to the project.".format(
+                            account_cache_data["uuid"]
+                        )
+                    )
+                    sys.exit(
+                        "Nutanix PE account: {} is not supposed to be added individually to the project.".format(
+                            account_cache_data["uuid"]
+                        )
+                    )
+
                 cdict["account_reference_list"].append(
                     provider_data["account_reference"]
                 )

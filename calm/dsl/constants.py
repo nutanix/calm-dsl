@@ -190,6 +190,8 @@ class NETWORK_GROUP_TUNNEL_TASK:
 class ACCOUNT:
     """Account constants"""
 
+    PE_ACCOUNT_TYPE = "nutanix"
+
     class STATES:
         DELETED = "DELETED"
         VERIFIED = "VERIFIED"
