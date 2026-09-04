@@ -90,4 +90,4 @@ class test_azure_bp(Blueprint):
 
 class BpMetadata(Metadata):
 
-    project = Ref.Project(PROJECT_CONSTANTS.AUTO_NCM_DEFAULT)
+    project = Ref.Project(PROJECT_CONSTANTS.DEFAULT_PROJECT_NAME)

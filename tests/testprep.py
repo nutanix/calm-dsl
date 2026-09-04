@@ -265,7 +265,7 @@ def add_directory_service_user_groups(config):
 
 
 def add_project_details(
-    config, config_header="PROJECTS", default_project_name=PROJECT.AUTO_NCM_DEFAULT
+    config, config_header="PROJECTS", default_project_name=PROJECT.DEFAULT_PROJECT_NAME
 ):
 
     client = get_api_client()
@@ -409,7 +409,7 @@ def add_tunnel_details(config):
     config["VPC_TUNNELS"] = config_tunnels_dict
 
 
-def check_project_exists(project_name=PROJECT.AUTO_NCM_DEFAULT):
+def check_project_exists(project_name=PROJECT.DEFAULT_PROJECT_NAME):
     client = get_api_client()
 
     payload = {
@@ -602,7 +602,7 @@ def add_http_endpoint(config):
         f.write(dsl_http_endpoint)
 
     ContextObj = get_context()
-    ContextObj.update_project_context(PROJECT.AUTO_NCM_DEFAULT)
+    ContextObj.update_project_context(PROJECT.DEFAULT_PROJECT_NAME)
 
     runner = CliRunner()
     result = runner.invoke(

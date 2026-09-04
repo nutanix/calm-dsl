@@ -23,4 +23,4 @@ SimpleGlobalVar1 = GlobalVariable(
 
 
 class GlobalVariableMetadata(Metadata):
-    project = Ref.Project(PROJECT_CONSTANTS.AUTO_NCM_DEFAULT)
+    project = Ref.Project(PROJECT_CONSTANTS.DEFAULT_PROJECT_NAME)

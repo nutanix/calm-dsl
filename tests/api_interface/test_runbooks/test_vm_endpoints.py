@@ -73,7 +73,9 @@ class TestVMEndpoints:
         if not res:
             pytest.fail(err)
 
-        project_list_params = {"filter": "name=={}".format(PROJECT.AUTO_NCM_DEFAULT)}
+        project_list_params = {
+            "filter": "name=={}".format(PROJECT.DEFAULT_PROJECT_NAME)
+        }
         res, err = client.project.list(params=project_list_params)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -83,7 +85,7 @@ class TestVMEndpoints:
 
         endpoint["metadata"]["project_reference"] = {
             "uuid": default_project_uuid,
-            "name": PROJECT.AUTO_NCM_DEFAULT,
+            "name": PROJECT.DEFAULT_PROJECT_NAME,
             "kind": "project",
         }
 
@@ -263,7 +265,9 @@ class TestVMEndpoints:
         print(">> Downloading endpoint (uuid={})".format(ep_uuid))
         file_path = client.endpoint.export_file(ep_uuid, passphrase="test_passphrase")
 
-        project_list_params = {"filter": "name=={}".format(PROJECT.AUTO_NCM_DEFAULT)}
+        project_list_params = {
+            "filter": "name=={}".format(PROJECT.DEFAULT_PROJECT_NAME)
+        }
         res, err = client.project.list(params=project_list_params)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))

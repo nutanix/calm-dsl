@@ -2,8 +2,11 @@
 """constants"""
 #
 # pylint: disable=missing-docstring, invalid-name, line-too-long
+from calm.dsl.constants import PROJECT
+
+
 class BP_SPEC:
-    PROJECT_NAME_DEFAULT = "auto_ncm_default"
+    PROJECT_NAME_DEFAULT = PROJECT.DefaultProjectName()
 
 
 class PROVIDER:

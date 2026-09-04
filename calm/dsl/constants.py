@@ -528,8 +528,24 @@ class CONFIG_TYPE:
 
 class PROJECT:
     INTERNAL = "_internal"
-    AUTO_NCM_DEFAULT = "auto_ncm_default"
     INTERNAL_PROJECT_UUID = "00000000-0000-0000-0000-000000000000"
+
+    class DefaultProjectName:
+        """Self Service < 4.4.0 uses ``default``; Self Service >= 4.4.0 uses ``auto_ncm_default``."""
+
+        _LEGACY_PROJECT = "default"
+        _NEW_PROJECT = "auto_ncm_default"
+
+        def __get__(self, obj, objtype=None):
+            from distutils.version import LooseVersion as LV
+            from calm.dsl.store.version import Version
+
+            calm_version = (Version.get_version("Calm") or "").strip()
+            if calm_version and LV(calm_version) >= LV("4.4.0"):
+                return self._NEW_PROJECT
+            return self._LEGACY_PROJECT
+
+    DEFAULT_PROJECT_NAME = DefaultProjectName()
 
 
 # storing it as set because it optimizes the lookup to constant time.
