@@ -1075,13 +1075,14 @@ def describe_account(account_name):
 def sync_account(account_name):
     """Sync account with corresponding account name"""
 
+    client = get_api_client()
+
     if account_name == ACCOUNT.LOCAL_AZ and is_calm_vm_setup(client):
         LOG.error(
             "Syncing Account: {} is not supported on Calm VM".format(account_name)
         )
         sys.exit("Syncing local AZ account is not supported on Calm VM")
 
-    client = get_api_client()
     account_uuid = client.account.get_name_uuid_map().get(account_name, "")
 
     if not account_uuid:
@@ -1101,13 +1102,14 @@ def sync_account(account_name):
 def verify_account(account_name, watch=False):
     """Verify an account with corresponding account name"""
 
+    client = get_api_client()
+
     if account_name == ACCOUNT.LOCAL_AZ and is_calm_vm_setup(client):
         LOG.error(
             "Verifying Account: {} is not supported on Calm VM".format(account_name)
         )
         sys.exit("Verifying local AZ account is not supported on Calm VM")
 
-    client = get_api_client()
     account_uuid = client.account.get_name_uuid_map().get(account_name, "")
 
     if not account_uuid:
