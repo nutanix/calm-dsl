@@ -60,7 +60,7 @@ SELF_SERVICE_DISABLED = "DISABLED"
     default=False,
     help="Update cache before running command",
 )
-@click.version_option("4.4.0")
+@click.version_option("4.4.0.1")
 @click.pass_context
 def main(ctx, config_file, sync):
     """Calm CLI
@@ -92,8 +92,7 @@ def main(ctx, config_file, sync):
             old_host = nc_server_config.get("host", "")
             LOG.debug("Old NC host: {}".format(old_host))
         else:
-            server_config = ContextObj.get_server_config()
-            old_host = server_config.get("pc_ip", "")
+            old_host = Version.get_version_data("PC").get("pc_ip", "")
 
         if config_file:
             if not os.path.exists(config_file):

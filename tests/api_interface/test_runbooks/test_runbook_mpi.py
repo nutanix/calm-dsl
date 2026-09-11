@@ -377,7 +377,7 @@ class TestMarketplaceRunbook:
         assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
 
         # TEST PUBLISH AND SHARE
-        projects_shared_with = [PROJECT.AUTO_NCM_DEFAULT]
+        projects_shared_with = [PROJECT.DEFAULT_PROJECT_NAME]
         mpi_data = change_marketplace_state(
             client,
             mpi_uuid,
@@ -484,7 +484,7 @@ class TestMarketplaceRunbook:
             client,
             mpi_uuid,
             MARKETPLACE_ITEM.STATES.PUBLISHED,
-            project_list=[PROJECT.AUTO_NCM_DEFAULT],
+            project_list=[PROJECT.DEFAULT_PROJECT_NAME],
         )
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
@@ -492,7 +492,7 @@ class TestMarketplaceRunbook:
 
         cloned_rb_name = self.runbook_name + "_cloned_" + str(uuid.uuid4())[-10:]
         res, err = clone_marketplace_runbook(
-            client, mpi_uuid, cloned_rb_name, project_name=PROJECT.AUTO_NCM_DEFAULT
+            client, mpi_uuid, cloned_rb_name, project_name=PROJECT.DEFAULT_PROJECT_NAME
         )
 
         if err:
@@ -686,7 +686,7 @@ class TestMarketplaceRunbook:
             client,
             mpi_uuid,
             MARKETPLACE_ITEM.STATES.PUBLISHED,
-            project_list=[PROJECT.AUTO_NCM_DEFAULT],
+            project_list=[PROJECT.DEFAULT_PROJECT_NAME],
         )
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
@@ -704,7 +704,7 @@ class TestMarketplaceRunbook:
             mpi_uuid,
             default_endpoint_uuid=default_endpoint_uuid,
             endpoints_mapping=endpoints_mapping,
-            project_name=PROJECT.AUTO_NCM_DEFAULT,
+            project_name=PROJECT.DEFAULT_PROJECT_NAME,
         )
 
         if err:
@@ -921,7 +921,7 @@ class TestMarketplaceRunbook:
             client,
             mpi_uuid,
             MARKETPLACE_ITEM.STATES.PUBLISHED,
-            project_list=[PROJECT.AUTO_NCM_DEFAULT],
+            project_list=[PROJECT.DEFAULT_PROJECT_NAME],
         )
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
@@ -944,7 +944,7 @@ class TestMarketplaceRunbook:
             expected_output = "\nxx\nxx\nxx\nHello Mr X LASTNAME\n"
 
         res, err = execute_marketplace_runbook(
-            client, mpi_uuid, args=args, project_name=PROJECT.AUTO_NCM_DEFAULT
+            client, mpi_uuid, args=args, project_name=PROJECT.DEFAULT_PROJECT_NAME
         )
 
         if err:
@@ -1075,7 +1075,7 @@ class TestMarketplaceRunbook:
             client,
             mpi_uuid,
             MARKETPLACE_ITEM.STATES.PUBLISHED,
-            project_list=[PROJECT.AUTO_NCM_DEFAULT],
+            project_list=[PROJECT.DEFAULT_PROJECT_NAME],
         )
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
@@ -1083,7 +1083,7 @@ class TestMarketplaceRunbook:
 
         print("Neg testing clone without name")
         res, err = clone_marketplace_runbook(
-            client, mpi_uuid, runbook_name="", project_name=PROJECT.AUTO_NCM_DEFAULT
+            client, mpi_uuid, runbook_name="", project_name=PROJECT.DEFAULT_PROJECT_NAME
         )
         if not err:
             print("Clone of mpi without runbook name is successful")
@@ -1093,7 +1093,7 @@ class TestMarketplaceRunbook:
 
         print("Neg testing execute without endpoint mapping")
         res, err = execute_marketplace_runbook(
-            client, mpi_uuid, project_name=PROJECT.AUTO_NCM_DEFAULT
+            client, mpi_uuid, project_name=PROJECT.DEFAULT_PROJECT_NAME
         )
 
         if not err:
@@ -1117,7 +1117,10 @@ class TestMarketplaceRunbook:
 
         print("Neg testing clone of deleted mpi")
         res, err = clone_marketplace_runbook(
-            client, mpi_uuid, runbook_name="rb", project_name=PROJECT.AUTO_NCM_DEFAULT
+            client,
+            mpi_uuid,
+            runbook_name="rb",
+            project_name=PROJECT.DEFAULT_PROJECT_NAME,
         )
         if not err:
             print("Clone of deleted mpi is successful")
@@ -1127,7 +1130,7 @@ class TestMarketplaceRunbook:
 
         print("Neg testing execute of delete mpi")
         res, err = execute_marketplace_runbook(
-            client, mpi_uuid, project_name=PROJECT.AUTO_NCM_DEFAULT
+            client, mpi_uuid, project_name=PROJECT.DEFAULT_PROJECT_NAME
         )
 
         if not err:
@@ -1188,7 +1191,7 @@ class TestMarketplaceRunbook:
             client,
             mpi_uuid,
             MARKETPLACE_ITEM.STATES.PUBLISHED,
-            project_list=[PROJECT.AUTO_NCM_DEFAULT],
+            project_list=[PROJECT.DEFAULT_PROJECT_NAME],
         )
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
@@ -1201,7 +1204,7 @@ class TestMarketplaceRunbook:
             mpi_uuid,
             default_endpoint_uuid=default_endpoint_uuid,
             endpoints_mapping=endpoints_mapping,
-            project_name=PROJECT.AUTO_NCM_DEFAULT,
+            project_name=PROJECT.DEFAULT_PROJECT_NAME,
         )
 
         if err:
@@ -1315,7 +1318,7 @@ class TestMarketplaceRunbook:
             client,
             mpi_uuid,
             MARKETPLACE_ITEM.STATES.PUBLISHED,
-            project_list=[PROJECT.AUTO_NCM_DEFAULT],
+            project_list=[PROJECT.DEFAULT_PROJECT_NAME],
         )
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
@@ -1340,7 +1343,7 @@ class TestMarketplaceRunbook:
             mpi_uuid,
             default_endpoint_uuid=default_endpoint_uuid,
             endpoints_mapping=endpoints_mapping,
-            project_name=PROJECT.AUTO_NCM_DEFAULT,
+            project_name=PROJECT.DEFAULT_PROJECT_NAME,
             args=[{"name": var_name, "value": var_value}],
         )
 

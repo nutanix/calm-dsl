@@ -237,7 +237,7 @@ class TestBrownFieldCommands:
     @pytest.mark.parametrize(
         "vm_type", ["AHV_VM", "AWS_VM", "AZURE_VM", "GCP_VM", "VMWARE_VM"]
     )
-    @pytest.mark.parametrize("project", [PROJECT.AUTO_NCM_DEFAULT])
+    @pytest.mark.parametrize("project", [PROJECT.DEFAULT_PROJECT_NAME])
     def test_get_brownfield_vms(self, vm_type, project):
         """Test get command on brownfield vms"""
 

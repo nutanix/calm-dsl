@@ -128,4 +128,4 @@ class SimpleBlueprintWithGlobalVariable(Blueprint):
 class BpMetadata(Metadata):
 
     categories = {"TemplateType": "Vm"}
-    project = Ref.Project(PROJECT.AUTO_NCM_DEFAULT)
+    project = Ref.Project(PROJECT.DEFAULT_PROJECT_NAME)

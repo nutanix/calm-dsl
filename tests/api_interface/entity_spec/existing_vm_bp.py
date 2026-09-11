@@ -80,7 +80,7 @@ class ExistingVM(Substrate):
     """CentOS VM"""
 
     provider_type = "EXISTING_VM"
-    provider_spec = provider_spec({"address": "10.46.8.98"})
+    provider_spec = provider_spec({"address": "10.163.38.207"})
     readiness_probe = {
         "disabled": False,
         "delay_secs": "0",

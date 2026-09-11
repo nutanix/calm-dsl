@@ -48,6 +48,7 @@ from calm.dsl.cli.providers import get_provider_uuid_from_runlog
 from calm.dsl.api.ncm_config_util import is_nc_enabled_by_config
 from calm.dsl.db.table_config import DomainsCache
 from calm.dsl.cli.helper.common import url_builder
+from calm.dsl.api.util import is_calm_vm_setup
 
 LOG = get_logging_handle(__name__)
 
@@ -234,6 +235,10 @@ def create_account(client, account_payload, name=None, force_create=False):
     """
     create account with the provided payload
     """
+
+    if name == ACCOUNT.LOCAL_AZ and is_calm_vm_setup(client):
+        LOG.error("Creating Account: {} is not supported on Calm VM".format(name))
+        sys.exit("Creating local AZ account is not supported on Calm VM")
 
     account_type = (
         account_payload.get("account", {})
@@ -1071,6 +1076,13 @@ def sync_account(account_name):
     """Sync account with corresponding account name"""
 
     client = get_api_client()
+
+    if account_name == ACCOUNT.LOCAL_AZ and is_calm_vm_setup(client):
+        LOG.error(
+            "Syncing Account: {} is not supported on Calm VM".format(account_name)
+        )
+        sys.exit("Syncing local AZ account is not supported on Calm VM")
+
     account_uuid = client.account.get_name_uuid_map().get(account_name, "")
 
     if not account_uuid:
@@ -1091,6 +1103,13 @@ def verify_account(account_name, watch=False):
     """Verify an account with corresponding account name"""
 
     client = get_api_client()
+
+    if account_name == ACCOUNT.LOCAL_AZ and is_calm_vm_setup(client):
+        LOG.error(
+            "Verifying Account: {} is not supported on Calm VM".format(account_name)
+        )
+        sys.exit("Verifying local AZ account is not supported on Calm VM")
+
     account_uuid = client.account.get_name_uuid_map().get(account_name, "")
 
     if not account_uuid:
@@ -1136,6 +1155,10 @@ def verify_account(account_name, watch=False):
 
 
 def update_account(client, account_payload, name=None, updated_name=None):
+
+    if name == ACCOUNT.LOCAL_AZ and is_calm_vm_setup(client):
+        LOG.error("Updating Account: {} is not supported on Calm VM".format(name))
+        sys.exit("Updating local AZ account is not supported on Calm VM")
 
     account_payload.pop("status", None)
 

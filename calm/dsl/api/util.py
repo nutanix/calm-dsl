@@ -1314,3 +1314,50 @@ def replace_host_port_in_url(url, new_host, new_port=None):
             )
         )
         sys.exit("Error while replacing host and port in URL: {}".format(url))
+
+
+def is_calm_vm_setup(client):
+    """
+    Checks if the current setup is a Calm VM by making call to api: dm/v3/groups. Only CALM VM doesn't return 'Infrastructure' App in response.
+
+    Args:
+        client (object): The DSL client object.
+
+    Returns:
+        bool: True if the current setup is a Calm VM, False otherwise.
+    """
+
+    is_calm_vm = False
+
+    if isinstance(client.connection, MultiConnection):
+        try:
+            Obj = get_resource_api(
+                "dm/v3/groups",
+                getattr(client.connection, MULTICONNECT.PC_OBJ),
+                dm_api=True,
+            )
+        except Exception as e:
+            LOG.debug("Error while fetching Infrastruce App: {}".format(e))
+    else:
+        try:
+            Obj = get_resource_api("dm/v3/groups", client.connection, dm_api=True)
+        except Exception as e:
+            LOG.debug("Error while fetching Infrastruce App: {}".format(e))
+
+    payload = deepcopy(MARKETPLACE.FETCH_APP_DETAILS_PAYLOAD)
+
+    payload["filter"] += ";app_name=={}".format(MARKETPLACE.APP_NAME.INFRASTRUCTURE)
+
+    res, err = Obj.create(payload)
+    if err:
+        click.echo("[Fail]")
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+
+    result = json.loads(res.content)
+
+    for group in result.get("group_results", []):
+        if not group.get("entity_results", []):
+            is_calm_vm = True
+            break
+
+    return is_calm_vm

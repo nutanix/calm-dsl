@@ -2,8 +2,11 @@
 """constants"""
 #
 # pylint: disable=missing-docstring, invalid-name, line-too-long
+from calm.dsl.constants import PROJECT
+
+
 class BP_SPEC:
-    PROJECT_NAME_DEFAULT = "auto_ncm_default"
+    PROJECT_NAME_DEFAULT = PROJECT.DefaultProjectName()
 
 
 class PROVIDER:
@@ -48,7 +51,7 @@ class PROVIDER:
         PUBLIC_IMAGE_PUBLISHER = "Canonical"
         PUBLIC_IMAGE_OFFER = "0001-com-ubuntu-server-jammy"
         PUBLIC_IMAGE_SKU = "22_04-lts-gen2"
-        PUBLIC_IMAGE_VERSION = "22.04.202506200"
+        PUBLIC_IMAGE_VERSION = "22.04.202606110"
         IMAGE_MARKETPLACE = "Marketplace"
         SECURITY_GROUP = "calm-nsg1"
         VIRTUAL_NETWORK = "calm-virtual-network-eastus2"

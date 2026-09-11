@@ -58,6 +58,10 @@ clean:
 	rm -rf venv/ && mkdir venv/ && touch venv/.empty
 	rm -rf ~/.calm/dsl.db
 
+clean-all: clean
+	rm -rf ~/.calm/config.ini 
+	rm -rf ~/.calm/init.ini
+
 test-verbose: dev
 	venv/bin/py.test -s -vv
 

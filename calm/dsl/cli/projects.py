@@ -36,7 +36,7 @@ from calm.dsl.builtins.models.helper.quotas import (
     read_quota_resources,
 )
 from calm.dsl.store import Cache, Version
-from calm.dsl.constants import CACHE, PROJECT_TASK, QUOTA
+from calm.dsl.constants import CACHE, PROJECT_TASK, QUOTA, ACCOUNT
 from calm.dsl.builtins.models.project import ProjectType
 
 
@@ -1333,6 +1333,18 @@ def update_project_using_cli_switches(
             LOG.error("Account (name={}) not found. Please update cache".format(_acc))
             sys.exit("Account (name={}) not found".format(_acc))
 
+        if account_cache_data.get("provider_type", "") == ACCOUNT.PE_ACCOUNT_TYPE:
+            LOG.error(
+                "Nutanix PE account: {} is not supposed to be added individually to the projects.".format(
+                    account_cache_data["uuid"]
+                )
+            )
+            sys.exit(
+                "Nutanix PE account: {} is not supposed to be added individually to the projects.".format(
+                    account_cache_data["uuid"]
+                )
+            )
+
         # Account already present
         if account_cache_data["uuid"] in project_account_uuids:
             continue
@@ -1606,6 +1618,24 @@ def update_payload_from_old_project_data(project_payload, old_project_payload):
     for _account_reference in project_payload["spec"]["resources"].get(
         "account_reference_list", []
     ):
+        account_cache_data = Cache.get_entity_data_using_uuid(
+            entity_type="account", uuid=_account_reference["uuid"]
+        )
+        if (
+            account_cache_data
+            and account_cache_data.get("provider_type", "") == ACCOUNT.PE_ACCOUNT_TYPE
+        ):
+            LOG.error(
+                "Nutanix PE account: {} is not supposed to be added individually to the projects.".format(
+                    _account_reference["uuid"]
+                )
+            )
+            sys.exit(
+                "Nutanix PE account: {} is not supposed to be added individually to the projects.".format(
+                    _account_reference["uuid"]
+                )
+            )
+
         updated_project_account_reference_list.append(_account_reference["uuid"])
 
     updated_project_vpc_reference_list = []
@@ -1654,6 +1684,21 @@ def update_payload_from_old_project_data(project_payload, old_project_payload):
         "account_reference_list", []
     ):
         if _account_reference["uuid"] not in updated_project_account_reference_list:
+            account_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type="account", uuid=_account_reference["uuid"]
+            )
+            if (
+                account_cache_data
+                and account_cache_data.get("provider_type", "")
+                == ACCOUNT.PE_ACCOUNT_TYPE
+            ):
+                LOG.error(
+                    "Nutanix PE accounts (clusters) are not supposed to be added individually to the projects."
+                )
+                sys.exit(
+                    "Nutanix PE accounts (clusters) are not supposed to be added individually to the projects."
+                )
+
             project_payload["spec"]["resources"]["account_reference_list"].append(
                 _account_reference
             )
