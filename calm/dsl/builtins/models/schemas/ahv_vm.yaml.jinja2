@@ -220,7 +220,7 @@ properties:
       $ref: '#/components/schemas/AhvDisk'
   boot_type:      # Will merge to boot_config at compile time
     type: string
-    enum: [LEGACY, UEFI]
+    enum: [LEGACY, UEFI, SECURE_BOOT]
     default: LEGACY
   guest_customization:
     $ref : '#/components/schemas/AhvGuestCustomization'

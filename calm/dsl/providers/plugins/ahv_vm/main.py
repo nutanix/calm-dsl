@@ -35,6 +35,13 @@ class AhvVmProvider(Provider):
     spec_template_file = "ahv_vm_provider_spec.yaml.jinja2"
 
     @classmethod
+    def validate_spec(cls, spec):
+        super().validate_spec(spec)
+        resources = spec.get("resources", {})
+        if (resources.get("boot_config") or {}).get("boot_type") == "SECURE_BOOT":
+            resources["machine_type"] = "Q35"
+
+    @classmethod
     def create_spec(cls):
         client = get_api_client()
         create_spec(client)
