@@ -207,6 +207,8 @@ class APIConnectivityDetailsResolver(metaclass=SingletonMeta):
                 api_type, RESOURCE.API_PREFIX.V3_API_PATH_PREFIX
             )
 
+        if not root_path:
+            return resource_type
         return f"{root_path}/{resource_type}"
 
     def _get_pc_connection(self, connection) -> Connection:
