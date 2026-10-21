@@ -1224,6 +1224,7 @@ def is_ncm_enabled(client):
     if err:
         click.echo("[Fail]")
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        return ncm_enabled, ncm_url
 
     result = json.loads(res.content)
 

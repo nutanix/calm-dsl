@@ -5,7 +5,12 @@ from calm.dsl.api.api_connectivity_details_resolver import (
     APIConnectivityDetailsResolver,
 )
 from calm.dsl.constants import RESOURCE
-from calm.dsl.api.connection import Connection, NCMultiConnection, MultiConnection
+from calm.dsl.api.connection import (
+    Connection,
+    NCMultiConnection,
+    MultiConnection,
+    build_url,
+)
 
 
 API_RESOURCE_PATH_OWNER_PARAMS = [
@@ -253,3 +258,21 @@ class TestAPIConnectivityDetailsResolver:
             connectivity_details.connection == multi_connection.get_pc_object()
         ), "Connection mismatch"
         assert connectivity_details.api_path == "dm/v3/groups", "API path mismatch"
+
+    @pytest.mark.parametrize(
+        "resource_type",
+        ["internal/healthz", "multidomain"],
+    )
+    def test_get_api_path_nc_api_empty_prefix(self, resource_type):
+        """
+        NC_API uses an empty prefix; the path must not gain a leading slash
+        (build_url would otherwise produce //resource).
+        """
+        api_path = self._api_connectivity_details_resolver._get_api_path(
+            RESOURCE.API_TYPE.NC_API, resource_type
+        )
+        assert api_path == resource_type
+        assert not api_path.startswith("/")
+        url = build_url("nc.example", 443, endpoint=api_path)
+        assert f"/{resource_type}" in url
+        assert f"//{resource_type}" not in url
